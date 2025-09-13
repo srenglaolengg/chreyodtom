@@ -171,7 +171,7 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
                         {!loading && comments.map(comment => (
                             <article key={comment.id} className="flex items-start space-x-4 p-4 bg-stone-50 rounded-lg" aria-label={`Comment by ${comment.user.displayName}`}>
                                 <img src={comment.user.photoURL || ''} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1" />
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     <div className="flex items-baseline space-x-2">
                                         <p className="font-bold text-stone-800">{comment.user.displayName}</p>
                                         <p className="text-xs text-stone-400">
@@ -180,7 +180,7 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
                                             </time>
                                         </p>
                                     </div>
-                                    <p className={`text-stone-700 whitespace-pre-line break-words ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
+                                    <p className={`text-stone-700 whitespace-pre-line break-all ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
                                 </div>
                             </article>
                         ))}

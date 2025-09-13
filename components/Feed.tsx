@@ -286,7 +286,19 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
                                             li: ({node, ...props}) => <li className="pl-2" {...props} />,
                                             blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-amber-200 pl-4 italic my-4 text-stone-500" {...props} />,
                                             pre: ({node, ...props}) => <pre className="bg-stone-800 text-white p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
-                                            code: ({node, inline, ...props}) => <code className={inline ? "bg-stone-200 text-stone-800 text-sm rounded px-1.5 py-1" : ""} {...props} />,
+                                            // Fix: The 'inline' prop is deprecated in react-markdown. Using 'className' to distinguish code blocks.
+                                            code: ({node, className, children, ...props}) => {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                return !match ? (
+                                                  <code className="bg-stone-200 text-stone-800 text-sm rounded px-1.5 py-1" {...props}>
+                                                    {children}
+                                                  </code>
+                                                ) : (
+                                                  <code className={className} {...props}>
+                                                    {children}
+                                                  </code>
+                                                );
+                                            },
                                             table: ({node, ...props}) => <div className="overflow-x-auto"><table className="table-auto w-full my-4 border-collapse border border-amber-200" {...props} /></div>,
                                             thead: ({node, ...props}) => <thead className="bg-amber-100" {...props} />,
                                             th: ({node, ...props}) => <th className="border border-amber-200 px-4 py-2 text-left font-bold text-amber-800" {...props} />,
