@@ -7,6 +7,10 @@ import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import { ADMIN_U_IDS } from '../constants';
 import { GitHubIcon } from './icons/GitHubIcon';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import PostSkeleton from './skeletons/PostSkeleton';
 
 type FormState = Omit<Post, 'id' | 'timestamp' | 'author'> & { id?: string };
 
@@ -164,8 +168,8 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
     const currentContent = content[language];
 
     const adminContent = {
-        en: { createBtn: "Create New Post", adminPanel: "Admin Panel", editPost: "Edit Post", createPost: "Create New Post", title: "Title", content: "Content", imgUrl: "Image URL (Optional)", save: "Save Post", update: "Update Post", saving: "Saving...", cancel: "Cancel", login: "Admin Login"},
-        km: { createBtn: "បង្កើតโพสต์ថ្មី", adminPanel: "ផ្ទាំងគ្រប់គ្រង", editPost: "កែសម្រួលโพสต์", createPost: "បង្កើតโพสต์ថ្មី", title: "ចំណងជើង", content: "เนื้อหา", imgUrl: "URL រូបភាព (ស្រេចចិត្ត)", save: "រក្សាទុកโพสต์", update: "ធ្វើបច្ចុប្បន្នភាពโพสต์", saving: "កំពុងរក្សាទុក...", cancel: "បោះបង់", login: "ចូលគ្រប់គ្រង" }
+        en: { createBtn: "Create New Post", adminPanel: "Admin Panel", editPost: "Edit Post", createPost: "Create New Post", title: "Title", content: "Content (Markdown supported)", imgUrl: "Image URL (Optional)", save: "Save Post", update: "Update Post", saving: "Saving...", cancel: "Cancel", login: "Admin Login"},
+        km: { createBtn: "បង្កើតโพสต์ថ្មី", adminPanel: "ផ្ទាំងគ្រប់គ្រង", editPost: "កែសម្រួលโพสต์", createPost: "បង្កើតโพสต์ថ្មី", title: "ចំណងជើង", content: "เนื้อหา (គាំទ្រ Markdown)", imgUrl: "URL រូបភាព (ស្រេចចិត្ត)", save: "រក្សាទុកโพสต์", update: "ធ្វើបច្ចុប្បន្នភាពโพสต์", saving: "កំពុងរក្សាទុក...", cancel: "បោះបង់", login: "ចូលគ្រប់គ្រង" }
     }
     const currentAdminContent = adminContent[language];
 
@@ -210,7 +214,7 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
                                             </div>
                                             <div>
                                                 <label htmlFor="content" className="block text-sm font-medium text-stone-600 mb-1">{currentAdminContent.content}</label>
-                                                <textarea name="content" id="content" value={formState.content} onChange={handleInputChange} required rows={8} className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500"></textarea>
+                                                <textarea name="content" id="content" value={formState.content} onChange={handleInputChange} required rows={8} className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm"></textarea>
                                             </div>
                                             <div>
                                                 <label htmlFor="imageUrl" className="block text-sm font-medium text-stone-600 mb-1">{currentAdminContent.imgUrl}</label>
@@ -246,7 +250,12 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
 
                 {/* POSTS LIST */}
                 <div className="max-w-3xl mx-auto space-y-8">
-                    {loading && <p className="text-center text-stone-500">{currentContent.loading}</p>}
+                    {loading && (
+                        <>
+                            <PostSkeleton />
+                            <PostSkeleton />
+                        </>
+                    )}
                     {error && <p className="text-center text-red-500">{error}</p>}
                     {!loading && posts.length === 0 && (
                         <p className={`text-center text-stone-500 ${language === 'km' ? 'font-khmer' : ''}`}>{currentContent.noPosts}</p>
@@ -259,11 +268,35 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
                             <div className="p-6 md:p-8">
                                 <h3 className={`text-2xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{post.title}</h3>
                                 <div className="text-sm text-stone-500 mb-4">
-                                    <span className={`${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? `โดย ` : 'By '}<strong>{post.author}</strong></span>
+                                    <span className={`${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong></span>
                                     <span className="mx-2">&bull;</span>
                                     <time dateTime={post.timestamp ? new Date(post.timestamp.seconds * 1000).toISOString() : ''}>{formatTimestamp(post.timestamp)}</time>
                                 </div>
-                                <p className={`text-stone-600 leading-relaxed whitespace-pre-wrap ${language === 'km' ? 'font-khmer' : ''}`}>{post.content}</p>
+                                <div className={`text-stone-600 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                                        components={{
+                                            h1: ({node, ...props}) => <h1 className="text-3xl font-bold my-4" {...props} />,
+                                            h2: ({node, ...props}) => <h2 className="text-2xl font-bold my-3" {...props} />,
+                                            h3: ({node, ...props}) => <h3 className="text-xl font-bold my-2" {...props} />,
+                                            p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                                            a: ({node, ...props}) => <a className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                            ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                                            ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                                            li: ({node, ...props}) => <li className="pl-2" {...props} />,
+                                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-amber-200 pl-4 italic my-4 text-stone-500" {...props} />,
+                                            pre: ({node, ...props}) => <pre className="bg-stone-800 text-white p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
+                                            code: ({node, inline, ...props}) => <code className={inline ? "bg-stone-200 text-stone-800 text-sm rounded px-1.5 py-1" : ""} {...props} />,
+                                            table: ({node, ...props}) => <div className="overflow-x-auto"><table className="table-auto w-full my-4 border-collapse border border-amber-200" {...props} /></div>,
+                                            thead: ({node, ...props}) => <thead className="bg-amber-100" {...props} />,
+                                            th: ({node, ...props}) => <th className="border border-amber-200 px-4 py-2 text-left font-bold text-amber-800" {...props} />,
+                                            td: ({node, ...props}) => <td className="border border-amber-200 px-4 py-2" {...props} />,
+                                            hr: ({node, ...props}) => <hr className="border-amber-200 my-8" {...props} />
+                                        }}
+                                    >
+                                        {post.content}
+                                    </ReactMarkdown>
+                                </div>
                             </div>
                              {isAdmin && (
                                 <div className="absolute top-4 right-4 flex space-x-2 bg-black/30 p-2 rounded-lg">

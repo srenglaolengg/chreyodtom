@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, db, githubProvider } from '../firebase';
@@ -7,6 +6,7 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/auth';
 import 'firebase/compat/firestore';
 import { GitHubIcon } from './icons/GitHubIcon';
+import CommentSkeleton from './skeletons/CommentSkeleton';
 
 interface CommentsProps {
   language: Language;
@@ -159,10 +159,16 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
                     )}
 
                     <div className="space-y-6">
-                        {loading && <p className="text-center text-stone-500">{currentContent.loading}</p>}
+                        {loading && (
+                            <>
+                                <CommentSkeleton />
+                                <CommentSkeleton />
+                                <CommentSkeleton />
+                            </>
+                        )}
                         {error && <p className="text-center text-red-500">{error}</p>}
                         {!loading && comments.length === 0 && <p className="text-center text-stone-500">{currentContent.noComments}</p>}
-                        {comments.map(comment => (
+                        {!loading && comments.map(comment => (
                             <article key={comment.id} className="flex items-start space-x-4 p-4 bg-stone-50 rounded-lg" aria-label={`Comment by ${comment.user.displayName}`}>
                                 <img src={comment.user.photoURL || ''} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1" />
                                 <div className="flex-1">
@@ -174,7 +180,7 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
                                             </time>
                                         </p>
                                     </div>
-                                    <p className={`text-stone-700 whitespace-pre-wrap ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
+                                    <p className={`text-stone-700 whitespace-pre-line break-words ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
                                 </div>
                             </article>
                         ))}
