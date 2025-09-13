@@ -10,8 +10,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
   const navLinks = {
-    en: ["About", "Gallery", "Teachings", "Events", "Contact", "Comments"],
-    km: ["អំពីវត្ត", "រូបភាព", "ព្រះធម៌", "ពិធីបុណ្យ", "ទំនាក់ទំនង", "មតិយោបល់"]
+    en: ["About", "Gallery", "Teachings", "Events", "Feed", "Contact", "Comments"],
+    km: ["អំពីវត្ត", "រូបភាព", "ព្រះធម៌", "ពិធីបុណ្យ", "ព័ត៌មាន", "ទំនាក់ទំនង", "មតិយោបល់"]
   };
 
   const navLinksMap: { [key: string]: string } = {
@@ -19,12 +19,14 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
     "Gallery": "#gallery",
     "Teachings": "#teachings",
     "Events": "#events",
+    "Feed": "#feed",
     "Contact": "#contact",
     "Comments": "#comments",
     "អំពីវត្ត": "#about",
     "រូបភាព": "#gallery",
     "ព្រះធម៌": "#teachings",
     "ពិធីបុណ្យ": "#events",
+    "ព័ត៌មាន": "#feed",
     "ទំនាក់ទំនង": "#contact",
     "មតិយោបល់": "#comments"
   };

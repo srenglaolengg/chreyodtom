@@ -41,3 +41,12 @@ export interface Comment {
   createdAt: any; // Firestore Timestamp
   user: FirebaseUser;
 }
+
+export interface Post {
+  id: string;
+  title: string;
+  content: string;
+  author: string;
+  timestamp: any; // Firestore Timestamp
+  imageUrl?: string;
+}

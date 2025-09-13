@@ -2,8 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, db, githubProvider } from '../firebase';
-import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from 'firebase/firestore';
+// Fix: Use Firebase v8 compat API to resolve import errors
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
 import { GitHubIcon } from './icons/GitHubIcon';
 
 interface CommentsProps {
@@ -18,7 +20,8 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: User | null) => {
+        // Fix: Use auth.onAuthStateChanged from v8 compat API
+        const unsubscribeAuth = auth.onAuthStateChanged((currentUser: firebase.User | null) => {
             if (currentUser) {
                 setUser({
                     uid: currentUser.uid,
@@ -33,8 +36,10 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
     }, []);
 
     useEffect(() => {
-        const q = query(collection(db, "comments"), orderBy("createdAt", "desc"));
-        const unsubscribeFirestore = onSnapshot(q, (querySnapshot) => {
+        // Fix: Use db.collection and .orderBy from v8 compat API
+        const q = db.collection("comments").orderBy("createdAt", "desc");
+        // Fix: Use q.onSnapshot from v8 compat API
+        const unsubscribeFirestore = q.onSnapshot((querySnapshot) => {
             const commentsData: CommentType[] = [];
             querySnapshot.forEach((doc) => {
                 commentsData.push({ id: doc.id, ...doc.data() } as CommentType);
@@ -52,7 +57,8 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
 
     const handleLogin = async () => {
         try {
-            await signInWithPopup(auth, githubProvider);
+            // Fix: Use auth.signInWithPopup from v8 compat API
+            await auth.signInWithPopup(githubProvider);
         } catch (error) {
             console.error("Authentication error: ", error);
         }
@@ -60,7 +66,8 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
 
     const handleLogout = async () => {
         try {
-            await signOut(auth);
+            // Fix: Use auth.signOut from v8 compat API
+            await auth.signOut();
         } catch (error) {
             console.error("Sign out error: ", error);
         }
@@ -71,9 +78,10 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
         if (newComment.trim() === '' || !user) return;
 
         try {
-            await addDoc(collection(db, "comments"), {
+            // Fix: Use db.collection().add() and serverTimestamp from v8 compat API
+            await db.collection("comments").add({
                 text: newComment,
-                createdAt: serverTimestamp(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 user: {
                     uid: user.uid,
                     displayName: user.displayName,

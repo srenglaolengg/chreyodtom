@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Language } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';

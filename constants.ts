@@ -1,5 +1,8 @@
-
 import { GalleryImage, Teaching, Event, ScheduleItem } from './types';
+
+// Add the Firebase UIDs of authorized admin users here.
+// You can get a user's UID after they log in from the Firebase Authentication console.
+export const ADMIN_U_IDS = ['your-admin-uid-here', 'another-admin-uid'];
 
 export const GALLERY_IMAGES: GalleryImage[] = [
   { id: 1, src: "https://picsum.photos/seed/pagoda1/800/600", alt: "Pagoda interior view with golden statues." },

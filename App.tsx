@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Language } from './types';
 import Header from './components/Header';
@@ -12,6 +11,7 @@ import Contact from './components/Contact';
 import Donation from './components/Donation';
 import Comments from './components/Comments';
 import Footer from './components/Footer';
+import Feed from './components/Feed';
 
 const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>(Language.Khmer);
@@ -29,6 +29,7 @@ const App: React.FC = () => {
         <Gallery language={language} />
         <Teachings language={language} />
         <Events language={language} />
+        <Feed language={language} />
         <Schedule language={language} />
         <Contact language={language} />
         <Donation language={language} />

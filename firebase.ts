@@ -1,7 +1,7 @@
 
-import { initializeApp } from "firebase/app";
-import { getAuth, GithubAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -14,9 +14,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
 
 // Export Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const githubProvider = new GithubAuthProvider();
+export const auth = firebase.auth();
+export const db = firebase.firestore();
+export const githubProvider = new firebase.auth.GithubAuthProvider();
