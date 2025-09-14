@@ -1,7 +1,9 @@
 import React from 'react';
 import { Language } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { FacebookIcon } from './icons/FacebookIcon';
+import { TelegramIcon } from './icons/TelegramIcon';
 
 interface FooterProps {
   language: Language;
@@ -9,6 +11,18 @@ interface FooterProps {
 
 const Footer: React.FC<FooterProps> = ({ language }) => {
   const year = new Date().getFullYear();
+  const location = useLocation();
+  
+  // Sharing functionality
+  const siteUrl = window.location.origin + location.pathname;
+  const shareText = language === 'km' 
+    ? 'សូមទស្សនាគេហទំព័រវត្តសិរីមង្គល' 
+    : 'Visit the Wat Serei Mongkol Website';
+  const encodedUrl = encodeURIComponent(siteUrl);
+  const encodedText = encodeURIComponent(shareText);
+
+  const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+  const telegramShareUrl = `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`;
 
   const text = {
     en: `© ${year} Wat Serei Mongkol Hou Chray Ut Dom. All Rights Reserved.`,
@@ -60,6 +74,28 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
               {link.label}
             </Link>
           ))}
+        </div>
+
+        {/* Social Media Sharing */}
+        <div className="flex justify-center space-x-6 my-6">
+            <a 
+              href={facebookShareUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              aria-label="Share on Facebook" 
+              className="text-stone-400 hover:text-white transition-colors duration-300"
+            >
+                <FacebookIcon className="w-7 h-7" />
+            </a>
+            <a 
+              href={telegramShareUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              aria-label="Share on Telegram" 
+              className="text-stone-400 hover:text-white transition-colors duration-300"
+            >
+                <TelegramIcon className="w-7 h-7" />
+            </a>
         </div>
 
         {/* Copyright */}

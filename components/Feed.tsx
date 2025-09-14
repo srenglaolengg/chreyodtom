@@ -15,6 +15,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import PostSkeleton from './skeletons/PostSkeleton';
+import PageMeta from './PageMeta';
 
 interface FeedProps {
   language: Language;
@@ -22,6 +23,19 @@ interface FeedProps {
   isAdmin: boolean;               // pass from App/Header
   onEditPost?: (post: Post) => void; // callback for editing
 }
+
+const metaContent = {
+  en: {
+    title: 'News & Updates | Wat Serei Mongkol',
+    description: 'Read the latest news, announcements, and updates from the Wat Serei Mongkol community.',
+    keywords: 'Pagoda News, Community Updates, Wat Serei Mongkol Feed, Announcements',
+  },
+  km: {
+    title: 'ព័ត៌មាន និងបច្ចុប្បន្នភាព | វត្តសិរីមង្គល',
+    description: 'អានព័ត៌មាន សេចក្តីជូនដំណឹង និងបច្ចុប្បន្នភាពចុងក្រោយពីសហគមន៍វត្តសិរីមង្គល។',
+    keywords: 'ព័ត៌មានវត្ត, បច្ចុប្បន្នភាពសហគមន៍, ព្រឹត្តិបត្រវត្តសិរីមង្គល, សេចក្តីជូនដំណឹង',
+  }
+};
 
 const Feed: React.FC<FeedProps> = ({ language, user, isAdmin, onEditPost }) => {
     const [posts, setPosts] = useState<Post[]>([]);
@@ -68,91 +82,99 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin, onEditPost }) => {
         km: { title: "ព័ត៌មាន និងបច្ចុប្បន្នភាពចុងក្រោយ", loading: "កំពុងផ្ទុកព័ត៌មាន...", noPosts: "មិនទាន់មានព័ត៌មាននៅឡើយទេ។" }
     };
     const currentContent = content[language];
+    const currentMeta = metaContent[language];
 
     return (
-        <section id="feed" className="py-20 bg-amber-50/30">
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-6">
-                    <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
-                        {currentContent.title}
-                    </h2>
-                </div>
+        <>
+            <PageMeta 
+                title={currentMeta.title}
+                description={currentMeta.description}
+                keywords={currentMeta.keywords}
+            />
+            <section id="feed" className="py-20 bg-amber-50/30">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-6">
+                        <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
+                            {currentContent.title}
+                        </h2>
+                    </div>
 
-                <div className="max-w-3xl mx-auto space-y-8">
-                    {loading && (
-                        <>
-                            <PostSkeleton />
-                            <PostSkeleton />
-                        </>
-                    )}
-                    {error && <p className="text-center text-red-500">{error}</p>}
-                    {!loading && posts.length === 0 && (
-                        <p className={`text-center text-stone-500 ${language === 'km' ? 'font-khmer' : ''}`}>
-                            {currentContent.noPosts}
-                        </p>
-                    )}
-                    {!loading && posts.map(post => (
-                        <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden transition-shadow hover:shadow-xl relative">
-                            {post.imageUrl && (
-                                <img src={post.imageUrl} alt={post.title} className="w-full h-64 object-cover" />
-                            )}
-                            <div className="p-6 md:p-8">
-                                <h3 className={`text-2xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>
-                                    {post.title}
-                                </h3>
-                                <div className="text-sm text-stone-500 mb-4">
-                                    <span className={`${language === 'km' ? 'font-khmer' : ''}`}>
-                                        {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
-                                    </span>
-                                    <span className="mx-2">&bull;</span>
-                                    <time dateTime={post.timestamp ? post.timestamp.toDate().toISOString() : ''}>
-                                        {formatTimestamp(post.timestamp)}
-                                    </time>
+                    <div className="max-w-3xl mx-auto space-y-8">
+                        {loading && (
+                            <>
+                                <PostSkeleton />
+                                <PostSkeleton />
+                            </>
+                        )}
+                        {error && <p className="text-center text-red-500">{error}</p>}
+                        {!loading && posts.length === 0 && (
+                            <p className={`text-center text-stone-500 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                {currentContent.noPosts}
+                            </p>
+                        )}
+                        {!loading && posts.map(post => (
+                            <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden transition-shadow hover:shadow-xl relative">
+                                {post.imageUrl && (
+                                    <img src={post.imageUrl} alt={post.title} className="w-full h-64 object-cover" />
+                                )}
+                                <div className="p-6 md:p-8">
+                                    <h3 className={`text-2xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                        {post.title}
+                                    </h3>
+                                    <div className="text-sm text-stone-500 mb-4">
+                                        <span className={`${language === 'km' ? 'font-khmer' : ''}`}>
+                                            {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
+                                        </span>
+                                        <span className="mx-2">&bull;</span>
+                                        <time dateTime={post.timestamp ? post.timestamp.toDate().toISOString() : ''}>
+                                            {formatTimestamp(post.timestamp)}
+                                        </time>
+                                    </div>
+                                    <div className={`text-stone-600 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm, remarkBreaks]}
+                                            children={post.content}
+                                            components={{
+                                                h1: ({node, ...props}) => <h1 className="text-3xl font-bold my-4" {...props} />,
+                                                h2: ({node, ...props}) => <h2 className="text-2xl font-bold my-3" {...props} />,
+                                                h3: ({node, ...props}) => <h3 className="text-xl font-bold my-2" {...props} />,
+                                                p: ({node, ...props}) => <p className="mb-4" {...props} />,
+                                                a: ({node, ...props}) => <a className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
+                                                ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
+                                                li: ({node, ...props}) => <li className="pl-2" {...props} />,
+                                                blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-amber-200 pl-4 italic my-4 text-stone-500" {...props} />,
+                                                pre: ({node, ...props}) => <pre className="bg-stone-800 text-white p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
+                                                code: ({node, className, children, ...props}) => {
+                                                    const match = /language-(\w+)/.exec(className || '');
+                                                    return !match ? (
+                                                      <code className="bg-stone-200 text-stone-800 text-sm rounded px-1.5 py-1" {...props}>
+                                                        {children}
+                                                      </code>
+                                                    ) : (
+                                                      <code className={className} {...props}>
+                                                        {children}
+                                                      </code>
+                                                    );
+                                                },
+                                            }}
+                                        />
+                                    </div>
                                 </div>
-                                <div className={`text-stone-600 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
-                                    <ReactMarkdown
-                                        remarkPlugins={[remarkGfm, remarkBreaks]}
-                                        children={post.content}
-                                        components={{
-                                            h1: ({node, ...props}) => <h1 className="text-3xl font-bold my-4" {...props} />,
-                                            h2: ({node, ...props}) => <h2 className="text-2xl font-bold my-3" {...props} />,
-                                            h3: ({node, ...props}) => <h3 className="text-xl font-bold my-2" {...props} />,
-                                            p: ({node, ...props}) => <p className="mb-4" {...props} />,
-                                            a: ({node, ...props}) => <a className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                            ul: ({node, ...props}) => <ul className="list-disc list-inside mb-4 space-y-2" {...props} />,
-                                            ol: ({node, ...props}) => <ol className="list-decimal list-inside mb-4 space-y-2" {...props} />,
-                                            li: ({node, ...props}) => <li className="pl-2" {...props} />,
-                                            blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-amber-200 pl-4 italic my-4 text-stone-500" {...props} />,
-                                            pre: ({node, ...props}) => <pre className="bg-stone-800 text-white p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
-                                            code: ({node, className, children, ...props}) => {
-                                                const match = /language-(\w+)/.exec(className || '');
-                                                return !match ? (
-                                                  <code className="bg-stone-200 text-stone-800 text-sm rounded px-1.5 py-1" {...props}>
-                                                    {children}
-                                                  </code>
-                                                ) : (
-                                                  <code className={className} {...props}>
-                                                    {children}
-                                                  </code>
-                                                );
-                                            },
-                                        }}
-                                    />
-                                </div>
-                            </div>
 
-                            {/* ADMIN EDIT/DELETE */}
-                            {isAdmin && (
-                                <div className="absolute top-4 right-4 flex space-x-2 bg-black/30 p-2 rounded-lg">
-                                    <button onClick={() => onEditPost?.(post)} className="text-xs font-bold text-white hover:text-yellow-300">EDIT</button>
-                                    <button onClick={() => handleDelete(post.id)} className="text-xs font-bold text-white hover:text-red-400">DELETE</button>
-                                </div>
-                            )}
-                        </article>
-                    ))}
+                                {/* ADMIN EDIT/DELETE */}
+                                {isAdmin && (
+                                    <div className="absolute top-4 right-4 flex space-x-2 bg-black/30 p-2 rounded-lg">
+                                        <button onClick={() => onEditPost?.(post)} className="text-xs font-bold text-white hover:text-yellow-300">EDIT</button>
+                                        <button onClick={() => handleDelete(post.id)} className="text-xs font-bold text-white hover:text-red-400">DELETE</button>
+                                    </div>
+                                )}
+                            </article>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+        </>
     );
 };
 

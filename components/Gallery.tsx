@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
 import { GALLERY_IMAGES } from '../constants';
+import PageMeta from './PageMeta';
 
 interface GalleryProps {
   language: Language;
@@ -26,37 +27,58 @@ const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({
   );
 };
 
+const metaContent = {
+  en: {
+    title: 'Gallery | Wat Serei Mongkol',
+    description: 'Explore the beauty and tranquility of Wat Serei Mongkol through our photo gallery. View images of the pagoda, statues, and serene environment.',
+    keywords: 'Pagoda Photos, Buddhist Temple Images, Wat Serei Mongkol Gallery, Khmer Architecture',
+  },
+  km: {
+    title: 'រូបភាព | វត្តសិរីមង្គល',
+    description: 'ទស្សនារូបភាពដែលបង្ហាញពីភាពស្រស់ស្អាតនិងភាពស្ងប់ស្ងាត់នៃវត្តសិរីមង្គល។ មើលរូបភាពវត្ត ព្រះពុទ្ធរូប និងបរិយាកាសដ៏ស្ងប់ស្ងាត់។',
+    keywords: 'រូបភាពវត្ត, រូបថតវត្តអារាម, វិចិត្រសាលវត្តសិរីមង្គល, ស្ថាបត្យកម្មខ្មែរ',
+  }
+};
+
 const Gallery: React.FC<GalleryProps> = ({ language }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   
   const title = language === 'km' ? 'ទស្សនាវត្ត' : 'Pagoda Tour';
+  const currentMeta = metaContent[language];
 
   return (
-    <section id="gallery" className="py-20 bg-stone-50">
-      <div className="container mx-auto px-6">
-        <div className="text-center mb-12">
-          <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
-            {title}
-          </h2>
-          <p className={`mt-2 text-stone-500 ${language === 'km' ? 'font-khmer' : ''}`}>
-            {language === 'km' ? 'ស្វែងយល់ពីភាពស្ងប់ស្ងាត់នៅខាងក្នុង' : 'Explore the tranquility within'}
-          </p>
+    <>
+      <PageMeta 
+        title={currentMeta.title}
+        description={currentMeta.description}
+        keywords={currentMeta.keywords}
+      />
+      <section id="gallery" className="py-20 bg-stone-50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
+              {title}
+            </h2>
+            <p className={`mt-2 text-stone-500 ${language === 'km' ? 'font-khmer' : ''}`}>
+              {language === 'km' ? 'ស្វែងយល់ពីភាពស្ងប់ស្ងាត់នៅខាងក្នុង' : 'Explore the tranquility within'}
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {GALLERY_IMAGES.map((image) => (
+              <div
+                key={image.id}
+                className="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer"
+                onClick={() => setSelectedImage(image.src)}
+              >
+                <img src={image.src} alt={image.alt} className="w-full h-72 object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors"></div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {GALLERY_IMAGES.map((image) => (
-            <div
-              key={image.id}
-              className="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer"
-              onClick={() => setSelectedImage(image.src)}
-            >
-              <img src={image.src} alt={image.alt} className="w-full h-72 object-cover transform group-hover:scale-110 transition-transform duration-500" />
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {selectedImage && <Lightbox src={selectedImage} alt="Enlarged view" onClose={() => setSelectedImage(null)} />}
-    </section>
+        {selectedImage && <Lightbox src={selectedImage} alt="Enlarged view" onClose={() => setSelectedImage(null)} />}
+      </section>
+    </>
   );
 };
 

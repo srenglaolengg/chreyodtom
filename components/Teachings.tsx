@@ -3,10 +3,24 @@ import React, { useState } from 'react';
 import { Language } from '../types';
 import { TEACHINGS_DATA } from '../constants';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
+import PageMeta from './PageMeta';
 
 interface TeachingsProps {
   language: Language;
 }
+
+const metaContent = {
+  en: {
+    title: 'Buddhist Teachings | Wat Serei Mongkol',
+    description: 'Explore core Buddhist teachings such as The Four Noble Truths and The Eightfold Path, as shared at Wat Serei Mongkol.',
+    keywords: 'Buddhist Teachings, Dharma, Four Noble Truths, Eightfold Path, Metta',
+  },
+  km: {
+    title: 'ព្រះធម៌ | វត្តសិរីមង្គល',
+    description: 'ស្វែងយល់ពីគោលคำสอนសំខាន់ៗក្នុងព្រះពុទ្ធសាសនា ដូចជា អរិយសច្ច៤ និងមគ្គ៨ ដែលត្រូវបានចែករំលែកនៅវត្តសិរីមង្គល។',
+    keywords: 'ពុទ្ធឱវាទ, ព្រះធម៌, អរិយសច្ច៤, មគ្គ៨, មេត្តា',
+  }
+};
 
 const TeachingItem: React.FC<{ title: string; content: string; isOpen: boolean; onClick: () => void, lang: Language }> = ({ title, content, isOpen, onClick, lang }) => {
     return (
@@ -33,36 +47,44 @@ const TeachingItem: React.FC<{ title: string; content: string; isOpen: boolean; 
 const Teachings: React.FC<TeachingsProps> = ({ language }) => {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
     const teachings = TEACHINGS_DATA[language];
+    const currentMeta = metaContent[language];
 
     const handleToggle = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
     };
 
     return (
-        <section id="teachings" className="py-20 bg-amber-50/30">
-            <div className="container mx-auto px-6">
-                <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center space-x-4">
-                        <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
-                        <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
-                            {language === 'km' ? 'ពុទ្ធឱវាទ' : 'Buddhist Teachings'}
-                        </h2>
+        <>
+            <PageMeta 
+                title={currentMeta.title}
+                description={currentMeta.description}
+                keywords={currentMeta.keywords}
+            />
+            <section id="teachings" className="py-20 bg-amber-50/30">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-12">
+                        <div className="inline-flex items-center justify-center space-x-4">
+                            <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
+                            <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                {language === 'km' ? 'ពុទ្ធឱវាទ' : 'Buddhist Teachings'}
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="max-w-3xl mx-auto bg-amber-50 rounded-lg shadow-lg overflow-hidden">
+                        {teachings.map((item, index) => (
+                            <TeachingItem 
+                                key={item.id} 
+                                title={item.title} 
+                                content={item.content}
+                                isOpen={openIndex === index}
+                                onClick={() => handleToggle(index)}
+                                lang={language}
+                            />
+                        ))}
                     </div>
                 </div>
-                <div className="max-w-3xl mx-auto bg-amber-50 rounded-lg shadow-lg overflow-hidden">
-                    {teachings.map((item, index) => (
-                        <TeachingItem 
-                            key={item.id} 
-                            title={item.title} 
-                            content={item.content}
-                            isOpen={openIndex === index}
-                            onClick={() => handleToggle(index)}
-                            lang={language}
-                        />
-                    ))}
-                </div>
-            </div>
-        </section>
+            </section>
+        </>
     );
 };
 
