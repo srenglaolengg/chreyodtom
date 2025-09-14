@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, db, githubProvider } from '../firebase';
@@ -133,14 +134,14 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                     <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 text-center mb-12 ${language === 'km' ? 'font-khmer' : ''}`}>
                         {currentContent.title}
                     </h2>
-                    <div className="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+                    <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg">
                         {user ? (
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center space-x-3">
-                                    <img src={user.photoURL || ''} alt={user.displayName || 'User'} className="w-12 h-12 rounded-full" />
-                                    <span className="font-semibold text-stone-700">{user.displayName}</span>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+                                <div className="flex items-center space-x-3 min-w-0">
+                                    <img src={user.photoURL || ''} alt={user.displayName || 'User'} className="w-12 h-12 rounded-full flex-shrink-0" />
+                                    <span className="font-semibold text-stone-700 truncate">{user.displayName}</span>
                                 </div>
-                                <button onClick={handleLogout} className="bg-stone-500 text-white px-4 py-2 rounded-full hover:bg-stone-600 transition-colors text-sm font-semibold">
+                                <button onClick={handleLogout} className="bg-stone-500 text-white px-4 py-2 rounded-full hover:bg-stone-600 transition-colors text-sm font-semibold self-start sm:self-center flex-shrink-0">
                                     {currentContent.logout}
                                 </button>
                             </div>

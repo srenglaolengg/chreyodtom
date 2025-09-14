@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
 import { db } from '../firebase';
@@ -117,15 +118,15 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                 {post.imageUrl && (
                                     <img src={post.imageUrl} alt={post.title} className="w-full h-64 object-cover" />
                                 )}
-                                <div className="p-6 md:p-8">
+                                <div className="p-4 sm:p-6 md:p-8">
                                     <h3 className={`text-2xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>
                                         {post.title}
                                     </h3>
-                                    <div className="text-sm text-stone-500 mb-4">
+                                    <div className="text-sm text-stone-500 mb-4 flex flex-col sm:flex-row sm:items-center sm:gap-x-2">
                                         <span className={`${language === 'km' ? 'font-khmer' : ''}`}>
                                             {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
                                         </span>
-                                        <span className="mx-2">&bull;</span>
+                                        <span className="hidden sm:inline">&bull;</span>
                                         <time dateTime={post.timestamp ? post.timestamp.toDate().toISOString() : ''}>
                                             {formatTimestamp(post.timestamp)}
                                         </time>
