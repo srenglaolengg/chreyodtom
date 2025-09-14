@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { auth, githubProvider } from '../firebase';
 import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUserType } from 'firebase/auth';
 import { GitHubIcon } from './icons/GitHubIcon';
+import { ADMIN_U_IDS } from '../constants';
 
 interface HeaderProps {
   language: Language;
@@ -14,18 +15,21 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Auth listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
       if (currentUser) {
-        setUser({
+        const userObj = {
           uid: currentUser.uid,
           displayName: currentUser.displayName,
           photoURL: currentUser.photoURL,
-        });
+        };
+        setUser(userObj);
+        setIsAdmin(ADMIN_U_IDS.includes(currentUser.uid));
       } else {
         setUser(null);
+        setIsAdmin(false);
       }
     });
     return () => unsubscribe();
@@ -47,7 +51,6 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
     }
   };
 
-  // Navigation
   const navLinks = {
     en: [
       { label: "About", path: "/about" },
@@ -57,6 +60,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
       { label: "Teachings", path: "/teachings" },
       { label: "Comments", path: "/comments" },
       { label: "Contact", path: "/contact" },
+      ...(isAdmin ? [{ label: "Admin Panel", path: "/admin" }] : []),
     ],
     km: [
       { label: "អំពីវត្ត", path: "/about" },
@@ -66,11 +70,12 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
       { label: "ព្រះធម៌", path: "/teachings" },
       { label: "មតិយោបល់", path: "/comments" },
       { label: "ទំនាក់ទំនង", path: "/contact" },
+      ...(isAdmin ? [{ label: "ផ្ទៃប្រព័ន្ធគ្រប់គ្រង", path: "/admin" }] : []),
     ],
   };
+
   const currentLinks = language === 'km' ? navLinks.km : navLinks.en;
 
-  // Disable body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
@@ -105,7 +110,6 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
               </Link>
             ))}
 
-            {/* Login/Logout */}
             {user ? (
               <div className="flex items-center space-x-3 ml-4">
                 {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-8 h-8 rounded-full" />}
@@ -169,7 +173,6 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
             </Link>
           ))}
 
-          {/* Mobile Login/Logout */}
           {user ? (
             <div className="flex items-center space-x-3 mt-4">
               {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-10 h-10 rounded-full" />}
