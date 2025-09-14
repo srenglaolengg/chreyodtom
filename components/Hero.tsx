@@ -11,7 +11,7 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
   return (
     <section 
       className="relative h-[80vh] min-h-[500px] flex items-center justify-center text-center text-white bg-cover bg-center"
-      style={{ backgroundImage: "url('https://picsum.photos/seed/hero/1920/1080')" }}
+      style={{ backgroundImage: "url('https://i.postimg.cc/02xqb4Yy/photo-2025-09-08-23-20-58.jpg')" }}
     >
       <div className="absolute inset-0 bg-black/40 bg-gradient-to-t from-amber-900/50 to-transparent"></div>
       <div className="relative z-10 p-8">
