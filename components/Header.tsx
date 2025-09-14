@@ -70,7 +70,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
       { label: "ព្រះធម៌", path: "/teachings" },
       { label: "មតិយោបល់", path: "/comments" },
       { label: "ទំនាក់ទំនង", path: "/contact" },
-      ...(isAdmin ? [{ label: "ផ្ទៃប្រព័ន្ធគ្រប់គ្រង", path: "/admin" }] : []),
+      ...(isAdmin ? [{ label: "ផ្ទៃប្រព័ន្ធគ្រប់គ្រង", path: "pages/admin" }] : []),
     ],
   };
 
