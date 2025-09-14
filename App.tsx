@@ -32,13 +32,6 @@ const App: React.FC = () => {
             <Route path="/" element={
               <>
                 <Hero language={language} />
-                <About language={language} />
-                <Gallery language={language} />
-                <Events language={language} />
-                <Feed language={language} />
-                <Teachings language={language} />
-                <Comments language={language} />
-                <Contact language={language} />
               </>
             } />
             <Route path="/about" element={<About language={language} />} />
