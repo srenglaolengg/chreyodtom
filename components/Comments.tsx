@@ -1,10 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, db, githubProvider } from '../firebase';
-// Fix: Use Firebase v8 compat API to resolve import errors
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import { 
+    onAuthStateChanged, 
+    signInWithPopup, 
+    signOut,
+    User as FirebaseUserType
+} from 'firebase/auth';
+import { 
+    collection, 
+    query, 
+    orderBy, 
+    onSnapshot, 
+    addDoc, 
+    serverTimestamp 
+} from 'firebase/firestore';
 import { GitHubIcon } from './icons/GitHubIcon';
 import CommentSkeleton from './skeletons/CommentSkeleton';
 
@@ -20,8 +31,7 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fix: Use auth.onAuthStateChanged from v8 compat API
-        const unsubscribeAuth = auth.onAuthStateChanged((currentUser: firebase.User | null) => {
+        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
             if (currentUser) {
                 setUser({
                     uid: currentUser.uid,
@@ -36,10 +46,10 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
     }, []);
 
     useEffect(() => {
-        // Fix: Use db.collection and .orderBy from v8 compat API
-        const q = db.collection("comments").orderBy("createdAt", "desc");
-        // Fix: Use q.onSnapshot from v8 compat API
-        const unsubscribeFirestore = q.onSnapshot((querySnapshot) => {
+        const commentsCollection = collection(db, "comments");
+        const q = query(commentsCollection, orderBy("createdAt", "desc"));
+        
+        const unsubscribeFirestore = onSnapshot(q, (querySnapshot) => {
             const commentsData: CommentType[] = [];
             querySnapshot.forEach((doc) => {
                 commentsData.push({ id: doc.id, ...doc.data() } as CommentType);
@@ -57,8 +67,7 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
 
     const handleLogin = async () => {
         try {
-            // Fix: Use auth.signInWithPopup from v8 compat API
-            await auth.signInWithPopup(githubProvider);
+            await signInWithPopup(auth, githubProvider);
         } catch (error) {
             console.error("Authentication error: ", error);
         }
@@ -66,8 +75,7 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
 
     const handleLogout = async () => {
         try {
-            // Fix: Use auth.signOut from v8 compat API
-            await auth.signOut();
+            await signOut(auth);
         } catch (error) {
             console.error("Sign out error: ", error);
         }
@@ -78,10 +86,10 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
         if (newComment.trim() === '' || !user) return;
 
         try {
-            // Fix: Use db.collection().add() and serverTimestamp from v8 compat API
-            await db.collection("comments").add({
+            const commentsCollection = collection(db, "comments");
+            await addDoc(commentsCollection, {
                 text: newComment,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdAt: serverTimestamp(),
                 user: {
                     uid: user.uid,
                     displayName: user.displayName,
@@ -175,8 +183,8 @@ const Comments: React.FC<CommentsProps> = ({ language }) => {
                                     <div className="flex items-baseline space-x-2">
                                         <p className="font-bold text-stone-800">{comment.user.displayName}</p>
                                         <p className="text-xs text-stone-400">
-                                            <time dateTime={comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toISOString() : ''}>
-                                                {comment.createdAt ? new Date(comment.createdAt.seconds * 1000).toLocaleString() : '...'}
+                                            <time dateTime={comment.createdAt ? comment.createdAt.toDate().toISOString() : ''}>
+                                                {comment.createdAt ? comment.createdAt.toDate().toLocaleString() : '...'}
                                             </time>
                                         </p>
                                     </div>

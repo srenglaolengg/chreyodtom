@@ -1,10 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { FirebaseUser, Post } from '../types';
 import { auth, db, githubProvider } from '../firebase';
-// Fix: Use Firebase v8 compat API to resolve import errors
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import {
+    onAuthStateChanged,
+    signInWithPopup,
+    signOut,
+    User as FirebaseUserType,
+} from 'firebase/auth';
+import {
+    collection,
+    query,
+    orderBy,
+    onSnapshot,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    serverTimestamp,
+} from 'firebase/firestore';
 import { ADMIN_U_IDS } from '../constants';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 
@@ -26,8 +39,8 @@ const Admin: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fix: Use auth.onAuthStateChanged from v8 compat API
-        const unsubscribeAuth = auth.onAuthStateChanged((currentUser: firebase.User | null) => {
+        // Fix: Use onAuthStateChanged from v9 modular API
+        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
             if (currentUser) {
                 const userIsAdmin = ADMIN_U_IDS.includes(currentUser.uid);
                 setIsAdmin(userIsAdmin);
@@ -51,10 +64,10 @@ const Admin: React.FC = () => {
             return;
         }
 
-        // Fix: Use db.collection and .orderBy from v8 compat API
-        const q = db.collection("posts").orderBy("timestamp", "desc");
-        // Fix: Use q.onSnapshot from v8 compat API
-        const unsubscribeFirestore = q.onSnapshot((querySnapshot) => {
+        // Fix: Use collection, query, orderBy, and onSnapshot from v9 modular API
+        const postsCollection = collection(db, "posts");
+        const q = query(postsCollection, orderBy("timestamp", "desc"));
+        const unsubscribeFirestore = onSnapshot(q, (querySnapshot) => {
             const postsData: Post[] = [];
             querySnapshot.forEach((doc) => {
                 postsData.push({ id: doc.id, ...doc.data() } as Post);
@@ -68,10 +81,10 @@ const Admin: React.FC = () => {
         return () => unsubscribeFirestore();
     }, [isAdmin]);
 
-    // Fix: Use auth.signInWithPopup from v8 compat API
-    const handleLogin = async () => await auth.signInWithPopup(githubProvider);
-    // Fix: Use auth.signOut from v8 compat API
-    const handleLogout = async () => await auth.signOut();
+    // Fix: Use signInWithPopup from v9 modular API
+    const handleLogin = async () => await signInWithPopup(auth, githubProvider);
+    // Fix: Use signOut from v9 modular API
+    const handleLogout = async () => await signOut(auth);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -97,8 +110,9 @@ const Admin: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this post?')) {
             try {
-                // Fix: Use db.collection().doc().delete() from v8 compat API
-                await db.collection("posts").doc(id).delete();
+                // Fix: Use doc and deleteDoc from v9 modular API
+                const postDoc = doc(db, "posts", id);
+                await deleteDoc(postDoc);
             } catch (error) {
                 console.error("Error deleting document: ", error);
                 setError('Failed to delete post.');
@@ -115,21 +129,22 @@ const Admin: React.FC = () => {
 
         try {
             if (isEditing && formState.id) {
-                // Fix: Use db.collection().doc().update() from v8 compat API
-                const postRef = db.collection("posts").doc(formState.id);
-                await postRef.update({
+                // Fix: Use doc and updateDoc from v9 modular API
+                const postDoc = doc(db, "posts", formState.id);
+                await updateDoc(postDoc, {
                     title: formState.title,
                     content: formState.content,
                     imageUrl: formState.imageUrl || '',
                 });
             } else {
-                // Fix: Use db.collection().add() and serverTimestamp from v8 compat API
-                await db.collection("posts").add({
+                // Fix: Use collection, addDoc, and serverTimestamp from v9 modular API
+                const postsCollection = collection(db, "posts");
+                await addDoc(postsCollection, {
                     title: formState.title,
                     content: formState.content,
                     imageUrl: formState.imageUrl || '',
                     author: user.displayName || 'Admin',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    timestamp: serverTimestamp(),
                 });
             }
             handleCancelEdit();
@@ -224,7 +239,8 @@ const Admin: React.FC = () => {
                                 <div>
                                     <h3 className="font-bold text-stone-800">{post.title}</h3>
                                     <p className="text-sm text-stone-500">
-                                        By {post.author} on {post.timestamp ? new Date(post.timestamp.seconds * 1000).toLocaleDateString() : '...'}
+                                        {/* Fix: Use .toDate() method for Firestore Timestamps */}
+                                        By {post.author} on {post.timestamp ? post.timestamp.toDate().toLocaleDateString() : '...'}
                                     </p>
                                 </div>
                                 <div className="flex items-center space-x-3 mt-3 sm:mt-0">

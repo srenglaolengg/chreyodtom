@@ -1,4 +1,6 @@
 
+import { Timestamp } from 'firebase/firestore';
+
 export enum Language {
   Khmer = 'km',
   English = 'en',
@@ -38,7 +40,7 @@ export interface FirebaseUser {
 export interface Comment {
   id: string;
   text: string;
-  createdAt: any; // Firestore Timestamp
+  createdAt: Timestamp; // Firestore Timestamp
   user: FirebaseUser;
 }
 
@@ -47,6 +49,6 @@ export interface Post {
   title: string;
   content: string;
   author: string;
-  timestamp: any; // Firestore Timestamp
+  timestamp: Timestamp; // Firestore Timestamp
   imageUrl?: string;
 }

@@ -1,10 +1,25 @@
+
 import React, { useState, useEffect } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
 import { db, auth, githubProvider } from '../firebase';
-// Fix: Use Firebase v8 compat API to resolve import errors
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
+import {
+    onAuthStateChanged,
+    signInWithPopup,
+    signOut,
+    User as FirebaseUserType
+} from 'firebase/auth';
+import {
+    collection,
+    query,
+    orderBy,
+    onSnapshot,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    doc,
+    serverTimestamp,
+    Timestamp,
+} from 'firebase/firestore';
 import { ADMIN_U_IDS } from '../constants';
 import { GitHubIcon } from './icons/GitHubIcon';
 import ReactMarkdown from 'react-markdown';
@@ -38,8 +53,7 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
     const [adminLoading, setAdminLoading] = useState(false);
 
     useEffect(() => {
-        // Fix: Use auth.onAuthStateChanged from v8 compat API
-        const unsubscribeAuth = auth.onAuthStateChanged((currentUser: firebase.User | null) => {
+        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
             if (currentUser) {
                 const userIsAdmin = ADMIN_U_IDS.includes(currentUser.uid);
                 setIsAdmin(userIsAdmin);
@@ -54,11 +68,10 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
             }
         });
 
-        const postsCollection = db.collection("posts");
-        // Fix: Use .orderBy from v8 compat API
-        const q = postsCollection.orderBy("timestamp", "desc");
-        // Fix: Use q.onSnapshot from v8 compat API
-        const unsubscribePosts = q.onSnapshot((querySnapshot) => {
+        const postsCollection = collection(db, "posts");
+        const q = query(postsCollection, orderBy("timestamp", "desc"));
+
+        const unsubscribePosts = onSnapshot(q, (querySnapshot) => {
             const postsData: Post[] = [];
             querySnapshot.forEach((doc) => {
                 postsData.push({ id: doc.id, ...doc.data() } as Post);
@@ -77,19 +90,17 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
         };
     }, [language]);
 
-    const formatTimestamp = (timestamp: any) => {
+    const formatTimestamp = (timestamp: Timestamp) => {
         if (!timestamp) return '';
-        return new Date(timestamp.seconds * 1000).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', {
+        return timestamp.toDate().toLocaleString(language === 'km' ? 'km-KH' : 'en-US', {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     };
 
     // Admin handlers
-    // Fix: Use auth.signInWithPopup from v8 compat API
-    const handleLogin = async () => await auth.signInWithPopup(githubProvider);
+    const handleLogin = async () => await signInWithPopup(auth, githubProvider);
     const handleLogout = async () => {
-        // Fix: Use auth.signOut from v8 compat API
-        await auth.signOut();
+        await signOut(auth);
         setFormVisible(false);
         setIsEditing(false);
         setFormState(initialFormState);
@@ -121,8 +132,8 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
 
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this post?')) {
-            // Fix: Use db.collection().doc().delete() from v8 compat API
-            await db.collection("posts").doc(id).delete();
+            const postDoc = doc(db, "posts", id);
+            await deleteDoc(postDoc);
         }
     };
 
@@ -135,21 +146,20 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
 
         try {
             if (isEditing && formState.id) {
-                // Fix: Use db.collection().doc().update() from v8 compat API
-                const postRef = db.collection("posts").doc(formState.id);
-                await postRef.update({
+                const postDoc = doc(db, "posts", formState.id);
+                await updateDoc(postDoc, {
                     title: formState.title,
                     content: formState.content,
                     imageUrl: formState.imageUrl || '',
                 });
             } else {
-                // Fix: Use db.collection().add() and serverTimestamp from v8 compat API
-                await db.collection("posts").add({
+                const postsCollection = collection(db, "posts");
+                await addDoc(postsCollection, {
                     title: formState.title,
                     content: formState.content,
                     imageUrl: formState.imageUrl || '',
                     author: user.displayName || 'Admin',
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    timestamp: serverTimestamp(),
                 });
             }
             handleCancelEdit();
@@ -270,7 +280,7 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
                                 <div className="text-sm text-stone-500 mb-4">
                                     <span className={`${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong></span>
                                     <span className="mx-2">&bull;</span>
-                                    <time dateTime={post.timestamp ? new Date(post.timestamp.seconds * 1000).toISOString() : ''}>{formatTimestamp(post.timestamp)}</time>
+                                    <time dateTime={post.timestamp ? post.timestamp.toDate().toISOString() : ''}>{formatTimestamp(post.timestamp)}</time>
                                 </div>
                                 <div className={`text-stone-600 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
                                     <ReactMarkdown
@@ -286,7 +296,6 @@ const Feed: React.FC<FeedProps> = ({ language }) => {
                                             li: ({node, ...props}) => <li className="pl-2" {...props} />,
                                             blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-amber-200 pl-4 italic my-4 text-stone-500" {...props} />,
                                             pre: ({node, ...props}) => <pre className="bg-stone-800 text-white p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
-                                            // Fix: The 'inline' prop is deprecated in react-markdown. Using 'className' to distinguish code blocks.
                                             code: ({node, className, children, ...props}) => {
                                                 const match = /language-(\w+)/.exec(className || '');
                                                 return !match ? (
