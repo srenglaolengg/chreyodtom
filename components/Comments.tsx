@@ -191,7 +191,7 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                                                 </time>
                                             </p>
                                         </div>
-                                        <p className={`text-stone-700 whitespace-pre-line break-all ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
+                                        <p className={`text-stone-700 whitespace-pre-line break-words ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
                                     </div>
                                 </article>
                             ))}

@@ -16,12 +16,12 @@ import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import PostSkeleton from './skeletons/PostSkeleton';
 import PageMeta from './PageMeta';
+import { Link } from 'react-router-dom';
 
 interface FeedProps {
   language: Language;
   user: FirebaseUser | null;      // pass from App/Header
   isAdmin: boolean;               // pass from App/Header
-  onEditPost?: (post: Post) => void; // callback for editing
 }
 
 const metaContent = {
@@ -37,7 +37,7 @@ const metaContent = {
   }
 };
 
-const Feed: React.FC<FeedProps> = ({ language, user, isAdmin, onEditPost }) => {
+const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -71,7 +71,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin, onEditPost }) => {
 
     const handleDelete = async (id: string) => {
         if (!isAdmin) return;
-        if (window.confirm(language === 'km' ? 'តើអ្នកប្រាកដជាចង់លុបโพสต์នេះទេ?' : 'Are you sure you want to delete this post?')) {
+        if (window.confirm(language === 'km' ? 'តើអ្នកប្រាកដជាចង់លុបប្រកាសនេះទេ?' : 'Are you sure you want to delete this post?')) {
             const postDoc = doc(db, "posts", id);
             await deleteDoc(postDoc);
         }
@@ -165,7 +165,9 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin, onEditPost }) => {
                                 {/* ADMIN EDIT/DELETE */}
                                 {isAdmin && (
                                     <div className="absolute top-4 right-4 flex space-x-2 bg-black/30 p-2 rounded-lg">
-                                        <button onClick={() => onEditPost?.(post)} className="text-xs font-bold text-white hover:text-yellow-300">EDIT</button>
+                                        <Link to="/admin" state={{ postToEdit: post }}>
+                                          <span className="text-xs font-bold text-white hover:text-yellow-300 px-1">EDIT</span>
+                                        </Link>
                                         <button onClick={() => handleDelete(post.id)} className="text-xs font-bold text-white hover:text-red-400">DELETE</button>
                                     </div>
                                 )}

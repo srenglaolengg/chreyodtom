@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FirebaseUser, Post } from '../types';
 import { auth, db, githubProvider } from '../firebase';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     signInWithPopup,
     signOut,
@@ -39,6 +40,18 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const postToEditFromState = location.state?.postToEdit as Post | undefined;
+        if (postToEditFromState) {
+            handleEditClick(postToEditFromState);
+            // Clear the state from location to prevent re-triggering on refresh
+            navigate(location.pathname, { replace: true, state: {} });
+        }
+    }, [location.state]);
 
     useEffect(() => {
         if (!isAdmin) {

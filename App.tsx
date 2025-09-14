@@ -7,7 +7,6 @@ import { ADMIN_U_IDS } from './constants';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
-import Hero from './components/Hero';
 import About from './components/About';
 import Gallery from './components/Gallery';
 import Teachings from './components/Teachings';
@@ -16,6 +15,7 @@ import Contact from './components/Contact';
 import Comments from './components/Comments';
 import Feed from './components/Feed';
 import Admin from './pages/Admin';
+import Home from './pages/Home';
 
 const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>(Language.Khmer);
@@ -62,7 +62,7 @@ const App: React.FC = () => {
         {/* Page content */}
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={<Hero language={language} />} />
+            <Route path="/" element={<Home language={language} />} />
             <Route path="/about" element={<About language={language} />} />
             <Route path="/gallery" element={<Gallery language={language} />} />
             <Route path="/events" element={<Events language={language} />} />

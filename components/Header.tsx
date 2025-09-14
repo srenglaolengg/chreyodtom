@@ -91,6 +91,13 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
               </Link>
             ))}
 
+            <button
+              onClick={toggleLanguage}
+              className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors text-sm"
+            >
+              {language === 'km' ? 'English' : 'ភាសាខ្មែរ'}
+            </button>
+
             {user ? (
               <div className="flex items-center space-x-3 ml-4">
                 {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-8 h-8 rounded-full" />}
