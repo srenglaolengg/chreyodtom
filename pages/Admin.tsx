@@ -2,10 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { FirebaseUser, Post } from '../types';
 import { auth, db, githubProvider } from '../firebase';
 import {
-    onAuthStateChanged,
     signInWithPopup,
     signOut,
-    User as FirebaseUserType,
 } from 'firebase/auth';
 import {
     collection,
@@ -18,7 +16,6 @@ import {
     doc,
     serverTimestamp,
 } from 'firebase/firestore';
-import { ADMIN_U_IDS } from '../constants';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 
 type FormState = Omit<Post, 'id' | 'timestamp' | 'author'> & { id?: string };
@@ -29,34 +26,18 @@ const initialFormState: FormState = {
     imageUrl: '',
 };
 
-const Admin: React.FC = () => {
-    const [user, setUser] = useState<FirebaseUser | null>(null);
-    const [isAdmin, setIsAdmin] = useState(false);
+interface AdminProps {
+    user: FirebaseUser | null;
+    isAdmin: boolean;
+    authLoading: boolean;
+}
+
+const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [formState, setFormState] = useState<FormState>(initialFormState);
     const [isEditing, setIsEditing] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        // Fix: Use onAuthStateChanged from v9 modular API
-        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
-            if (currentUser) {
-                const userIsAdmin = ADMIN_U_IDS.includes(currentUser.uid);
-                setIsAdmin(userIsAdmin);
-                setUser({
-                    uid: currentUser.uid,
-                    displayName: currentUser.displayName,
-                    photoURL: currentUser.photoURL,
-                });
-            } else {
-                setUser(null);
-                setIsAdmin(false);
-            }
-            setLoading(false);
-        });
-        return () => unsubscribeAuth();
-    }, []);
 
     useEffect(() => {
         if (!isAdmin) {
@@ -64,7 +45,6 @@ const Admin: React.FC = () => {
             return;
         }
 
-        // Fix: Use collection, query, orderBy, and onSnapshot from v9 modular API
         const postsCollection = collection(db, "posts");
         const q = query(postsCollection, orderBy("timestamp", "desc"));
         const unsubscribeFirestore = onSnapshot(q, (querySnapshot) => {
@@ -81,9 +61,7 @@ const Admin: React.FC = () => {
         return () => unsubscribeFirestore();
     }, [isAdmin]);
 
-    // Fix: Use signInWithPopup from v9 modular API
     const handleLogin = async () => await signInWithPopup(auth, githubProvider);
-    // Fix: Use signOut from v9 modular API
     const handleLogout = async () => await signOut(auth);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -110,7 +88,6 @@ const Admin: React.FC = () => {
     const handleDelete = async (id: string) => {
         if (window.confirm('Are you sure you want to delete this post?')) {
             try {
-                // Fix: Use doc and deleteDoc from v9 modular API
                 const postDoc = doc(db, "posts", id);
                 await deleteDoc(postDoc);
             } catch (error) {
@@ -124,12 +101,11 @@ const Admin: React.FC = () => {
         e.preventDefault();
         if (!formState.title || !formState.content || !user) return;
 
-        setLoading(true);
+        setIsSubmitting(true);
         setError(null);
 
         try {
             if (isEditing && formState.id) {
-                // Fix: Use doc and updateDoc from v9 modular API
                 const postDoc = doc(db, "posts", formState.id);
                 await updateDoc(postDoc, {
                     title: formState.title,
@@ -137,7 +113,6 @@ const Admin: React.FC = () => {
                     imageUrl: formState.imageUrl || '',
                 });
             } else {
-                // Fix: Use collection, addDoc, and serverTimestamp from v9 modular API
                 const postsCollection = collection(db, "posts");
                 await addDoc(postsCollection, {
                     title: formState.title,
@@ -152,12 +127,12 @@ const Admin: React.FC = () => {
             console.error(err);
             setError('An error occurred while saving the post.');
         } finally {
-            setLoading(false);
+            setIsSubmitting(false);
         }
     };
 
-    if (loading && !user) {
-        return <div className="min-h-screen flex items-center justify-center bg-stone-100">Loading...</div>;
+    if (authLoading) {
+        return <div className="min-h-screen flex items-center justify-center bg-stone-100">Authenticating...</div>;
     }
 
     if (!user) {
@@ -219,8 +194,8 @@ const Admin: React.FC = () => {
                             <input type="url" name="imageUrl" id="imageUrl" value={formState.imageUrl} onChange={handleInputChange} className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500"/>
                         </div>
                         <div className="flex items-center space-x-4 pt-2">
-                             <button type="submit" disabled={loading} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 transition-colors shadow-md font-semibold disabled:bg-amber-300">
-                                {loading ? 'Saving...' : (isEditing ? 'Update Post' : 'Create Post')}
+                             <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 transition-colors shadow-md font-semibold disabled:bg-amber-300">
+                                {isSubmitting ? 'Saving...' : (isEditing ? 'Update Post' : 'Create Post')}
                             </button>
                             {isEditing && (
                                 <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 transition-colors font-semibold">
@@ -239,7 +214,6 @@ const Admin: React.FC = () => {
                                 <div>
                                     <h3 className="font-bold text-stone-800">{post.title}</h3>
                                     <p className="text-sm text-stone-500">
-                                        {/* Fix: Use .toDate() method for Firestore Timestamps */}
                                         By {post.author} on {post.timestamp ? post.timestamp.toDate().toLocaleDateString() : '...'}
                                     </p>
                                 </div>

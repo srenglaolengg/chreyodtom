@@ -3,37 +3,18 @@ import { Language, FirebaseUser } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import { Link } from 'react-router-dom';
 import { auth, githubProvider } from '../firebase';
-import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUserType } from 'firebase/auth';
+import { signInWithPopup, signOut } from 'firebase/auth';
 import { GitHubIcon } from './icons/GitHubIcon';
-import { ADMIN_U_IDS } from '../constants';
 
 interface HeaderProps {
   language: Language;
   toggleLanguage: () => void;
+  user: FirebaseUser | null;
+  isAdmin: boolean;
 }
 
-const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
+const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
-      if (currentUser) {
-        const userObj = {
-          uid: currentUser.uid,
-          displayName: currentUser.displayName,
-          photoURL: currentUser.photoURL,
-        };
-        setUser(userObj);
-        setIsAdmin(ADMIN_U_IDS.includes(currentUser.uid));
-      } else {
-        setUser(null);
-        setIsAdmin(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleLogin = async () => {
     try {
@@ -70,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage }) => {
       { label: "ព្រះធម៌", path: "/teachings" },
       { label: "មតិយោបល់", path: "/comments" },
       { label: "ទំនាក់ទំនង", path: "/contact" },
-      ...(isAdmin ? [{ label: "ផ្ទៃប្រព័ន្ធគ្រប់គ្រង", path: "pages/admin" }] : []),
+      ...(isAdmin ? [{ label: "ផ្ទៃប្រព័ន្ធគ្រប់គ្រង", path: "/admin" }] : []),
     ],
   };
 

@@ -1,12 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, db, githubProvider } from '../firebase';
 import { 
-    onAuthStateChanged, 
     signInWithPopup, 
     signOut,
-    User as FirebaseUserType
 } from 'firebase/auth';
 import { 
     collection, 
@@ -21,29 +18,14 @@ import CommentSkeleton from './skeletons/CommentSkeleton';
 
 interface CommentsProps {
   language: Language;
+  user: FirebaseUser | null;
 }
 
-const Comments: React.FC<CommentsProps> = ({ language }) => {
-    const [user, setUser] = useState<FirebaseUser | null>(null);
+const Comments: React.FC<CommentsProps> = ({ language, user }) => {
     const [comments, setComments] = useState<CommentType[]>([]);
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const unsubscribeAuth = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
-            if (currentUser) {
-                setUser({
-                    uid: currentUser.uid,
-                    displayName: currentUser.displayName,
-                    photoURL: currentUser.photoURL,
-                });
-            } else {
-                setUser(null);
-            }
-        });
-        return () => unsubscribeAuth();
-    }, []);
 
     useEffect(() => {
         const commentsCollection = collection(db, "comments");
