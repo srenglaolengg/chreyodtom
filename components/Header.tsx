@@ -93,7 +93,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
             <button
               onClick={toggleLanguage}
-              className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full hover:bg-amber-200 transition-colors text-sm"
+              className="bg-amber-500 text-white px-3 py-1 rounded-full hover:bg-amber-600 transition-colors text-sm"
             >
               {language === 'km' ? 'English' : 'ភាសាខ្មែរ'}
             </button>

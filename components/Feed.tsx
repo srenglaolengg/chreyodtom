@@ -71,7 +71,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
 
     const handleDelete = async (id: string) => {
         if (!isAdmin) return;
-        if (window.confirm(language === 'km' ? 'តើអ្នកប្រាកដជាចង់លុបប្រកាសនេះទេ?' : 'Are you sure you want to delete this post?')) {
+        if (window.confirm(language === 'km' ? 'តើអ្នកពិតជាចង់លុបប្រកាសនេះមែនទេ?' : 'Are you sure you want to delete this post?')) {
             const postDoc = doc(db, "posts", id);
             await deleteDoc(postDoc);
         }
