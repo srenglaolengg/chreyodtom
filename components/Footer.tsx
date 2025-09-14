@@ -49,8 +49,8 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
           </p>
         </div>
 
-        {/* Quick Links */}
-        <div className="flex justify-center space-x-6 mb-4">
+        {/* Quick Links (always horizontal / wrap on mobile) */}
+        <div className="flex flex-wrap justify-center gap-4 mb-4">
           {currentLinks.map(link => (
             <Link 
               key={link.path} 
