@@ -25,15 +25,13 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="bg-stone-50 text-stone-700 min-h-screen flex flex-col">
+        {/* Header always visible */}
         <Header language={language} toggleLanguage={toggleLanguage} />
 
+        {/* Page content */}
         <main className="flex-grow">
           <Routes>
-            <Route path="/" element={
-              <>
-                <Hero language={language} />
-              </>
-            } />
+            <Route path="/" element={<Hero language={language} />} />
             <Route path="/about" element={<About language={language} />} />
             <Route path="/gallery" element={<Gallery language={language} />} />
             <Route path="/events" element={<Events language={language} />} />
@@ -44,6 +42,7 @@ const App: React.FC = () => {
           </Routes>
         </main>
 
+        {/* Footer always visible */}
         <Footer language={language} />
       </div>
     </Router>
