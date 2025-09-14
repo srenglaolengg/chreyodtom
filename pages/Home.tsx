@@ -3,7 +3,6 @@ import { Language } from '../types';
 
 import Hero from '../components/Hero';
 import About from '../components/About';
-import Schedule from '../components/Schedule';
 import Donation from '../components/Donation';
 
 interface HomeProps {
@@ -15,7 +14,6 @@ const Home: React.FC<HomeProps> = ({ language }) => {
         <>
             <Hero language={language} />
             <About language={language} />
-            <Schedule language={language} />
             <Donation language={language} />
         </>
     );

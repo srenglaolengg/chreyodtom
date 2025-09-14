@@ -26,11 +26,6 @@ export interface Event {
   imgSrc: string;
 }
 
-export interface ScheduleItem {
-  time: string;
-  activity: string;
-}
-
 export interface FirebaseUser {
   uid: string;
   displayName: string | null;
@@ -51,4 +46,10 @@ export interface Post {
   author: string;
   timestamp: Timestamp; // Firestore Timestamp
   imageUrl?: string;
+}
+
+// FIX: Add Schedule interface for type safety.
+export interface Schedule {
+  time: string;
+  activity: string;
 }
