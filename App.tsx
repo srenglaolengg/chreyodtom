@@ -60,7 +60,7 @@ const App: React.FC = () => {
         />
 
         {/* Page content */}
-        <main className="flex-grow">
+        <main className="flex-grow pt-14">
           <Routes>
             <Route path="/" element={<Home language={language} />} />
             <Route path="/about" element={<About language={language} />} />

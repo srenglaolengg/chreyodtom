@@ -66,7 +66,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
   return (
     <>
-      <header className="bg-gradient-to-b from-stone-50 to-amber-50/50 sticky top-0 z-50 shadow-sm">
+      <header className="bg-gradient-to-b from-stone-50 to-amber-50/50 fixed w-full top-0 z-50 shadow-sm">
         <nav className="container mx-auto px-6 py-3 flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center space-x-2">
