@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, FormEvent } from 'react';
 import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
 import { auth, db, githubProvider } from '../firebase';
-// FIX: Replaced useNavigate (v6) with useHistory (v5) for compatibility.
-import { useLocation, useHistory } from 'react-router-dom';
+// Restored useNavigate (v6/v7) for compatibility.
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
     signInWithPopup,
     signOut,
@@ -60,17 +59,17 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [view, setView] = useState<ViewType>('feed');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
-    // FIX: Changed useNavigate to useHistory for v5 compatibility.
-    const history = useHistory();
+    // Restored useNavigate for v6/v7 compatibility.
+    const navigate = useNavigate();
 
     useEffect(() => {
-        // FIX: Adjusted state access for v5 and useHistory.
+        // Adjusted state access and clearing for v6/v7.
         const postToEditFromState = (location.state as any)?.postToEdit as Post | undefined;
         if (postToEditFromState) {
             setView('feed');
-            history.replace(location.pathname, {}); // Clear state
+            navigate(location.pathname, { replace: true }); // Clear state
         }
-    }, [location, history]);
+    }, [location, navigate]);
     
     const handleLogin = async () => await signInWithPopup(auth, githubProvider);
     const handleLogout = async () => await signOut(auth);

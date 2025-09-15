@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-// FIX: Changed import from Routes to Switch for react-router-dom v5 compatibility.
-import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+// Restored import for react-router-dom v6/v7 compatibility.
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Language, FirebaseUser } from './types';
 import { auth } from './firebase';
 import { onAuthStateChanged, User as FirebaseUserType } from 'firebase/auth';
@@ -66,46 +65,21 @@ const App: React.FC = () => {
 
         {/* Page content */}
         <main className="flex-grow pt-14">
-          {/* FIX: Replaced Routes with Switch and updated Route syntax for v5 compatibility.
-              Routes with more specific paths (e.g., /gallery/:id) are placed before less specific ones (e.g., /gallery). */}
-          <Switch>
-            <Route path="/about">
-              <About language={language} />
-            </Route>
-            <Route path="/gallery/:id">
-              <GalleryDetail language={language} />
-            </Route>
-            <Route path="/gallery">
-              <Gallery language={language} />
-            </Route>
-            <Route path="/events/:id">
-              <EventDetail language={language} />
-            </Route>
-            <Route path="/events">
-              <Events language={language} />
-            </Route>
-            <Route path="/feed">
-              <Feed language={language} user={user} isAdmin={isAdmin} />
-            </Route>
-            <Route path="/teachings/:id">
-              <TeachingDetail language={language} />
-            </Route>
-            <Route path="/teachings">
-              <Teachings language={language} />
-            </Route>
-            <Route path="/comments">
-              <Comments language={language} user={user} />
-            </Route>
-            <Route path="/contact">
-              <Contact language={language} />
-            </Route>
-            <Route path="/admin">
-              <Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />
-            </Route>
-            <Route path="/" exact>
-              <Home language={language} />
-            </Route>
-          </Switch>
+          {/* Restored Routes and Route syntax for v6/v7 compatibility. */}
+          <Routes>
+            <Route path="/about" element={<About language={language} />} />
+            <Route path="/gallery/:id" element={<GalleryDetail language={language} />} />
+            <Route path="/gallery" element={<Gallery language={language} />} />
+            <Route path="/events/:id" element={<EventDetail language={language} />} />
+            <Route path="/events" element={<Events language={language} />} />
+            <Route path="/feed" element={<Feed language={language} user={user} isAdmin={isAdmin} />} />
+            <Route path="/teachings/:id" element={<TeachingDetail language={language} />} />
+            <Route path="/teachings" element={<Teachings language={language} />} />
+            <Route path="/comments" element={<Comments language={language} user={user} />} />
+            <Route path="/contact" element={<Contact language={language} />} />
+            <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />} />
+            <Route path="/" element={<Home language={language} />} />
+          </Routes>
         </main>
 
         {/* Footer always visible */}
