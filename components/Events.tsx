@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { Language } from '../types';
-import { EVENTS_DATA } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { Language, Event } from '../types';
 import PageMeta from './PageMeta';
+import { db } from '../firebase';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 
 interface EventsProps {
   language: Language;
@@ -22,7 +23,22 @@ const metaContent = {
 };
 
 const Events: React.FC<EventsProps> = ({ language }) => {
-  const events = EVENTS_DATA[language];
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, "events"), orderBy("order", "asc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const eventsData: Event[] = [];
+        querySnapshot.forEach((doc) => {
+            eventsData.push({ id: doc.id, ...doc.data() } as Event);
+        });
+        setEvents(eventsData);
+        setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const title = language === 'km' ? 'ពិធីបុណ្យ' : 'Festivals & Events';
   const currentMeta = metaContent[language];
 
@@ -43,18 +59,22 @@ const Events: React.FC<EventsProps> = ({ language }) => {
               {language === 'km' ? 'ចូលរួមជាមួយពួកយើងក្នុងការប្រារព្ធពិធី' : 'Join us in celebration'}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {events.map((event) => (
-              <article key={event.id} className="bg-white rounded-lg shadow-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300">
-                <img src={event.imgSrc} alt={event.title} className="w-full h-56 object-cover" />
-                <div className="p-6">
-                  <p className={`text-sm font-semibold text-amber-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>{event.date}</p>
-                  <h3 className={`text-xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{event.title}</h3>
-                  <p className={`text-stone-600 ${language === 'km' ? 'font-khmer' : ''}`}>{event.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center">Loading events...</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {events.map((event) => (
+                <article key={event.id} className="bg-white rounded-lg shadow-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300">
+                  <img src={event.imgSrc} alt={language === 'km' ? event.title_km : event.title_en} className="w-full h-56 object-cover" />
+                  <div className="p-6">
+                    <p className={`text-sm font-semibold text-amber-600 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.date_km : event.date_en}</p>
+                    <h3 className={`text-xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.title_km : event.title_en}</h3>
+                    <p className={`text-stone-600 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.description_km : event.description_en}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </>

@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
-import { Language } from '../types';
-import { GALLERY_IMAGES } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { Language, GalleryImage } from '../types';
 import PageMeta from './PageMeta';
+import { db } from '../firebase';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 
 interface GalleryProps {
   language: Language;
@@ -19,6 +20,7 @@ const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({
         <button 
           onClick={onClose}
           className="absolute -top-4 -right-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold"
+          aria-label="Close lightbox"
         >
           &times;
         </button>
@@ -42,7 +44,25 @@ const metaContent = {
 
 const Gallery: React.FC<GalleryProps> = ({ language }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
   
+  useEffect(() => {
+    const q = query(collection(db, "gallery"), orderBy("order", "asc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const imagesData: GalleryImage[] = [];
+        querySnapshot.forEach((doc) => {
+            imagesData.push({ id: doc.id, ...doc.data() } as GalleryImage);
+        });
+        setImages(imagesData);
+        setLoading(false);
+    }, (error) => {
+        console.error("Error fetching gallery images: ", error);
+        setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
   const title = language === 'km' ? 'ទស្សនាវត្ត' : 'Pagoda Tour';
   const currentMeta = metaContent[language];
 
@@ -63,18 +83,24 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
               {language === 'km' ? 'ស្វែងយល់ពីភាពស្ងប់ស្ងាត់នៅខាងក្នុង' : 'Explore the tranquility within'}
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {GALLERY_IMAGES.map((image) => (
-              <div
-                key={image.id}
-                className="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer"
-                onClick={() => setSelectedImage(image.src)}
-              >
-                <img src={image.src} alt={image.alt} className="w-full h-72 object-cover transform group-hover:scale-110 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors"></div>
-              </div>
-            ))}
-          </div>
+          {loading ? (
+             <div className="text-center">Loading gallery...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {images.map((image) => (
+                <div
+                  key={image.id}
+                  className="group relative overflow-hidden rounded-lg shadow-lg cursor-pointer"
+                  onClick={() => setSelectedImage(image.src)}
+                >
+                  <img src={image.src} alt={image.alt} className="w-full h-72 object-cover transform group-hover:scale-110 transition-transform duration-500" />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors flex items-end p-4">
+                    <p className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">{image.caption}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         {selectedImage && <Lightbox src={selectedImage} alt="Enlarged view" onClose={() => setSelectedImage(null)} />}
       </section>

@@ -1,9 +1,10 @@
 
-import React, { useState } from 'react';
-import { Language } from '../types';
-import { TEACHINGS_DATA } from '../constants';
+import React, { useState, useEffect } from 'react';
+import { Language, Teaching } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
+import { db } from '../firebase';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 
 interface TeachingsProps {
   language: Language;
@@ -46,8 +47,22 @@ const TeachingItem: React.FC<{ title: string; content: string; isOpen: boolean; 
 
 const Teachings: React.FC<TeachingsProps> = ({ language }) => {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
-    const teachings = TEACHINGS_DATA[language];
+    const [teachings, setTeachings] = useState<Teaching[]>([]);
+    const [loading, setLoading] = useState(true);
     const currentMeta = metaContent[language];
+
+    useEffect(() => {
+        const q = query(collection(db, "teachings"), orderBy("order", "asc"));
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const teachingsData: Teaching[] = [];
+            querySnapshot.forEach((doc) => {
+                teachingsData.push({ id: doc.id, ...doc.data() } as Teaching);
+            });
+            setTeachings(teachingsData);
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleToggle = (index: number) => {
         setOpenIndex(openIndex === index ? null : index);
@@ -71,16 +86,20 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                         </div>
                     </div>
                     <div className="max-w-3xl mx-auto bg-amber-50 rounded-lg shadow-lg overflow-hidden">
-                        {teachings.map((item, index) => (
-                            <TeachingItem 
-                                key={item.id} 
-                                title={item.title} 
-                                content={item.content}
-                                isOpen={openIndex === index}
-                                onClick={() => handleToggle(index)}
-                                lang={language}
-                            />
-                        ))}
+                        {loading ? (
+                            <div className="p-6 text-center">Loading teachings...</div>
+                        ) : (
+                            teachings.map((item, index) => (
+                                <TeachingItem 
+                                    key={item.id} 
+                                    title={language === 'km' ? item.title_km : item.title_en} 
+                                    content={language === 'km' ? item.content_km : item.content_en}
+                                    isOpen={openIndex === index}
+                                    onClick={() => handleToggle(index)}
+                                    lang={language}
+                                />
+                            ))
+                        )}
                     </div>
                 </div>
             </section>

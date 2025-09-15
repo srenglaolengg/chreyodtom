@@ -7,23 +7,32 @@ export enum Language {
 }
 
 export interface GalleryImage {
-  id: number;
+  id: string;
   src: string;
   alt: string;
+  caption?: string;
+  order?: number;
 }
 
 export interface Teaching {
-  id: number;
-  title: string;
-  content: string;
+  id: string;
+  order: number;
+  title_en: string;
+  content_en: string;
+  title_km: string;
+  content_km: string;
 }
 
 export interface Event {
-  id: number;
-  date: string;
-  title: string;
-  description: string;
+  id: string;
+  order: number;
   imgSrc: string;
+  date_en: string;
+  title_en: string;
+  description_en: string;
+  date_km: string;
+  title_km: string;
+  description_km: string;
 }
 
 export interface FirebaseUser {
@@ -48,8 +57,21 @@ export interface Post {
   imageUrl?: string;
 }
 
-// FIX: Add Schedule interface for type safety.
 export interface Schedule {
   time: string;
   activity: string;
+}
+
+export interface AboutContent {
+  paragraph1_en: string;
+  paragraph2_en: string;
+  paragraph1_km: string;
+  paragraph2_km: string;
+}
+
+export interface ContactInfo {
+  address_en: string;
+  address_km: string;
+  phone: string;
+  email: string;
 }

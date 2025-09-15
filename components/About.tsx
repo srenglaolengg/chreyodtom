@@ -1,25 +1,15 @@
-import React from 'react';
-import { Language } from '../types';
+
+import React, { useState, useEffect } from 'react';
+import { Language, AboutContent } from '../types';
 import { LotusIcon } from './icons/LotusIcon';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
+import { db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 interface AboutProps {
   language: Language;
 }
-
-const content = {
-    en: {
-        title: "About Wat Serei Mongkol",
-        paragraph1: "Wat Serei Mongkol Hou Chray Ut Dom stands as a beacon of spiritual heritage and tranquility. Nestled in the heart of Prey Veng province, it has served as a center for Buddhist teachings, community gatherings, and cultural preservation for generations.",
-        paragraph2: "The pagoda's architecture is a testament to the rich traditions of Khmer craftsmanship, offering a serene environment for meditation, reflection, and the practice of Dharma. It is a sanctuary where the timeless wisdom of the Buddha is shared and cherished."
-    },
-    km: {
-        title: "អំពីវត្តសិរីមង្គល",
-        paragraph1: "វត្តសិរីមង្គលហៅជ្រៃឧត្តម គឺជាប្រទីបនៃបេតិកភណ្ឌខាងវិញ្ញាណ និងភាពស្ងប់ស្ងាត់។ ស្ថិតនៅចំកណ្តាលខេត្តព្រៃវែង វត្តនេះបានបម្រើជាមជ្ឈមណ្ឌលសម្រាប់ការអប់រំព្រះពុទ្ធសាសនា ការជួបជុំសហគមន៍ និងការអភិរក្សវប្បធម៌ជាច្រើនជំនាន់មកហើយ។",
-        paragraph2: "ស្ថាបត្យកម្មរបស់វត្ត គឺជាសក្ខីភាពនៃប្រពៃណីដ៏សម្បូរបែបនៃសិប្បកម្មខ្មែរ ដែលផ្តល់នូវបរិយាកាសស្ងប់ស្ងាត់សម្រាប់ការធ្វើសមាធិ ការឆ្លុះបញ្ចាំង និងការប្រតិបត្តិព្រះធម៌។ វាជាទីសក្ការៈបូជាមួយ ដែលប្រាជ្ញាដ៏អស់កល្បរបស់ព្រះពុទ្ធត្រូវបានចែករំលែក និងគោរពស្រលាញ់។"
-    }
-};
 
 const metaContent = {
   en: {
@@ -35,8 +25,29 @@ const metaContent = {
 };
 
 const About: React.FC<AboutProps> = ({ language }) => {
-    const currentContent = content[language];
+    const [content, setContent] = useState<AboutContent | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const docRef = doc(db, "pages", "about");
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setContent(docSnap.data() as AboutContent);
+            } else {
+                console.log("No such document for about page!");
+            }
+            setLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+    
+    const currentContent = {
+      title: language === 'km' ? "អំពីវត្តសិរីមង្គល" : "About Wat Serei Mongkol",
+      paragraph1: language === 'km' ? content?.paragraph1_km : content?.paragraph1_en,
+      paragraph2: language === 'km' ? content?.paragraph2_km : content?.paragraph2_en,
+    }
     const currentMeta = metaContent[language];
+
   return (
     <>
       <PageMeta 
@@ -56,8 +67,16 @@ const About: React.FC<AboutProps> = ({ language }) => {
             </div>
           </div>
           <div className={`max-w-3xl mx-auto text-lg text-stone-600 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
-            <p>{currentContent.paragraph1}</p>
-            <p>{currentContent.paragraph2}</p>
+            {loading ? (
+                <p>Loading content...</p>
+            ) : content ? (
+              <>
+                <p>{currentContent.paragraph1}</p>
+                <p>{currentContent.paragraph2}</p>
+              </>
+            ) : (
+              <p>Content could not be loaded.</p>
+            )}
           </div>
         </div>
       </section>
