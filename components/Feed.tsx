@@ -50,7 +50,8 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
         const unsubscribePosts = onSnapshot(q, (querySnapshot) => {
             const postsData: Post[] = [];
             querySnapshot.forEach((doc) => {
-                postsData.push({ id: doc.id, ...doc.data() } as Post);
+                // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+                postsData.push(Object.assign({ id: doc.id }, doc.data()) as Post);
             });
             setPosts(postsData);
             setLoading(false);

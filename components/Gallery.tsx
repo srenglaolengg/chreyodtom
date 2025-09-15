@@ -34,7 +34,8 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const albumsData: GalleryAlbum[] = [];
         querySnapshot.forEach((doc) => {
-            albumsData.push({ id: doc.id, ...doc.data() } as GalleryAlbum);
+            // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+            albumsData.push(Object.assign({ id: doc.id }, doc.data()) as GalleryAlbum);
         });
         setAlbums(albumsData);
         setLoading(false);

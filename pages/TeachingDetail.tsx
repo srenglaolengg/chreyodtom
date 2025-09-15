@@ -48,7 +48,8 @@ const TeachingDetail: React.FC<{ language: Language }> = ({ language }) => {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    setTeaching({ id: docSnap.id, ...docSnap.data() } as Teaching);
+                    // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+                    setTeaching(Object.assign({ id: docSnap.id }, docSnap.data()) as Teaching);
                 } else {
                     setError("Teaching not found.");
                 }

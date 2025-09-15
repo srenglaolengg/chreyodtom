@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
-import { auth, db, githubProvider } from '../firebase';
+import { auth, db, githubProvider, storage } from '../firebase';
 // Restored useNavigate (v6/v7) for compatibility.
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -21,6 +21,7 @@ import {
     Timestamp,
     getDoc,
 } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 import PageMeta from '../components/PageMeta';
 import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut } from 'lucide-react';
@@ -54,6 +55,152 @@ const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
     { id: 'about', label: 'About', icon: Info },
     { id: 'contact', label: 'Contact', icon: Phone },
 ];
+
+
+// --- FILE UPLOAD HELPERS ---
+const ImageUploadInput: React.FC<{
+    name: string;
+    label: string;
+    value: string;
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    folder: string;
+    helperText?: string;
+    required?: boolean;
+}> = ({ name, label, value, onChange, folder, helperText, required }) => {
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        setUploadError(null);
+
+        try {
+            const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            
+            const syntheticEvent = {
+                target: { name, value: downloadURL }
+            } as React.ChangeEvent<HTMLInputElement>;
+            
+            onChange(syntheticEvent);
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            setUploadError("File upload failed.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return (
+        <div>
+            <label htmlFor={name} className="block text-sm font-medium text-stone-600 mb-1">{label}</label>
+            <div className="flex items-center space-x-2">
+                <input 
+                    id={name} 
+                    name={name} 
+                    type="url"
+                    value={value}
+                    onChange={onChange}
+                    placeholder="Enter image URL or upload"
+                    className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500"
+                    required={required}
+                />
+                <label htmlFor={`${name}-file`} className="cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold px-4 py-2 rounded-md border border-stone-300 whitespace-nowrap">
+                    {isUploading ? 'Uploading...' : 'Upload'}
+                </label>
+                <input 
+                    id={`${name}-file`} 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    disabled={isUploading}
+                />
+            </div>
+            {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
+            {helperText && <p className="mt-1 text-xs text-stone-500">{helperText}</p>}
+        </div>
+    );
+};
+
+const MultiImageUploadInput: React.FC<{
+    name: string;
+    label: string;
+    value: string[];
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    folder: string;
+    helperText?: string;
+}> = ({ name, label, value, onChange, folder, helperText }) => {
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+
+        setIsUploading(true);
+        setUploadError(null);
+
+        try {
+            const uploadPromises = Array.from(files).map(async (file) => {
+                const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+                const snapshot = await uploadBytes(storageRef, file);
+                return await getDownloadURL(snapshot.ref);
+            });
+            
+            const downloadURLs = await Promise.all(uploadPromises);
+            
+            const newValue = [...value, ...downloadURLs].join('\n');
+
+            const syntheticEvent = {
+                target: { name, value: newValue }
+            } as React.ChangeEvent<HTMLTextAreaElement>;
+            
+            onChange(syntheticEvent);
+
+        } catch (error) {
+            console.error("Upload error:", error);
+            setUploadError("File upload failed.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    return (
+        <div>
+            <label htmlFor={name} className="block text-sm font-medium text-stone-600 mb-1">{label}</label>
+            <textarea 
+                id={name} 
+                name={name}
+                value={value.join('\n')}
+                onChange={onChange}
+                rows={6}
+                placeholder="Enter one image URL per line, or upload files."
+                className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm"
+            />
+             <label htmlFor={`${name}-file`} className="mt-2 cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-700 font-semibold px-4 py-2 rounded-md border border-stone-300 inline-block">
+                {isUploading ? 'Uploading...' : 'Upload Files'}
+            </label>
+            <input 
+                id={`${name}-file`} 
+                type="file" 
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+                disabled={isUploading}
+                multiple
+            />
+            {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
+            {helperText && <p className="mt-1 text-xs text-stone-500">{helperText}</p>}
+        </div>
+    );
+};
+
 
 const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [view, setView] = useState<ViewType>('feed');
@@ -202,7 +349,8 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
 
     useEffect(() => {
         const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-        const unsub = onSnapshot(q, snap => setPosts(snap.docs.map(d => ({ id: d.id, ...d.data() } as Post))));
+        // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+        const unsub = onSnapshot(q, snap => setPosts(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as Post)));
         return () => unsub();
     }, []);
     
@@ -238,7 +386,7 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <FormInput name="title" label="Title" value={formState.title} onChange={handleInputChange} required />
                     <FormTextarea name="content" label="Content (Markdown supported)" value={formState.content} onChange={handleInputChange} required rows={8} />
-                    <FormInput name="imageUrl" label="Image URL (Optional)" value={formState.imageUrl || ''} onChange={handleInputChange} type="url" />
+                    <ImageUploadInput name="imageUrl" label="Image URL (Optional)" value={formState.imageUrl || ''} onChange={handleInputChange} folder="posts" />
                     <div className="flex items-center space-x-4 pt-2">
                          <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
                         {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}
@@ -269,7 +417,8 @@ const CommentManager: React.FC = () => {
     const [comments, setComments] = useState<CommentType[]>([]);
     useEffect(() => {
         const q = query(collection(db, "comments"), orderBy("createdAt", "desc"));
-        const unsub = onSnapshot(q, snap => setComments(snap.docs.map(d => ({ id: d.id, ...d.data() } as CommentType))));
+        // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+        const unsub = onSnapshot(q, snap => setComments(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as CommentType)));
         return () => unsub();
     }, []);
 
@@ -303,7 +452,8 @@ const GalleryManager: React.FC = () => {
 
     useEffect(() => {
         const q = query(collection(db, "gallery"), orderBy("order", "asc"));
-        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as GalleryAlbum))));
+        // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as GalleryAlbum)));
         return () => unsub();
     }, []);
 
@@ -350,8 +500,8 @@ const GalleryManager: React.FC = () => {
                     <FormTextarea name="description_km" label="Short Description (Khmer)" value={formState.description_km} onChange={handleInputChange} rows={3} />
                     <FormTextarea name="content_en" label="Full Content (English)" value={formState.content_en} onChange={handleInputChange} rows={6} />
                     <FormTextarea name="content_km" label="Full Content (Khmer)" value={formState.content_km} onChange={handleInputChange} rows={6} />
-                    <FormInput name="thumbnailUrl" label="Thumbnail Image URL" value={formState.thumbnailUrl} onChange={handleInputChange} type="url" required />
-                    <FormTextarea name="imageUrls" label="Detail Image URLs" value={formState.imageUrls.join('\n')} onChange={handleInputChange} rows={6} helperText="Enter one image URL per line." />
+                    <ImageUploadInput name="thumbnailUrl" label="Thumbnail Image URL" value={formState.thumbnailUrl} onChange={handleInputChange} folder="gallery/thumbnails" required />
+                    <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={formState.imageUrls} onChange={handleInputChange} folder="gallery/details" helperText="Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
                          <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
                         {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}
@@ -389,7 +539,8 @@ const EventManager: React.FC = () => {
 
     useEffect(() => {
         const q = query(collection(db, "events"), orderBy("order", "asc"));
-        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as EventType))));
+        // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as EventType)));
         return () => unsub();
     }, []);
 
@@ -438,8 +589,8 @@ const EventManager: React.FC = () => {
                     <FormTextarea name="description_km" label="Short Description (Khmer)" value={formState.description_km} onChange={handleInputChange} rows={3} />
                     <FormTextarea name="content_en" label="Full Content (English)" value={formState.content_en} onChange={handleInputChange} rows={6} />
                     <FormTextarea name="content_km" label="Full Content (Khmer)" value={formState.content_km} onChange={handleInputChange} rows={6} />
-                    <FormInput name="imgSrc" label="Thumbnail Image URL" value={formState.imgSrc} onChange={handleInputChange} type="url" required />
-                    <FormTextarea name="imageUrls" label="Detail Image URLs" value={(formState.imageUrls || []).join('\n')} onChange={handleInputChange} rows={6} helperText="Optional. Enter one image URL per line." />
+                    <ImageUploadInput name="imgSrc" label="Thumbnail Image URL" value={formState.imgSrc} onChange={handleInputChange} folder="events/thumbnails" required />
+                    <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={formState.imageUrls || []} onChange={handleInputChange} folder="events/details" helperText="Optional. Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
                          <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
                         {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}
@@ -477,7 +628,8 @@ const TeachingsManager: React.FC = () => {
 
     useEffect(() => {
         const q = query(collection(db, "teachings"), orderBy("order", "asc"));
-        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as Teaching))));
+        // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as Teaching)));
         return () => unsub();
     }, []);
 
@@ -524,8 +676,8 @@ const TeachingsManager: React.FC = () => {
                     <FormTextarea name="excerpt_km" label="Excerpt (Khmer)" value={formState.excerpt_km} onChange={handleInputChange} rows={3} />
                     <FormTextarea name="content_en" label="Full Content (English)" value={formState.content_en} onChange={handleInputChange} rows={8} />
                     <FormTextarea name="content_km" label="Full Content (Khmer)" value={formState.content_km} onChange={handleInputChange} rows={8} />
-                    <FormInput name="thumbnailUrl" label="Thumbnail Image URL" value={formState.thumbnailUrl} onChange={handleInputChange} type="url" required />
-                    <FormTextarea name="imageUrls" label="Detail Image URLs" value={(formState.imageUrls || []).join('\n')} onChange={handleInputChange} rows={6} helperText="Optional. Enter one image URL per line." />
+                    <ImageUploadInput name="thumbnailUrl" label="Thumbnail Image URL" value={formState.thumbnailUrl} onChange={handleInputChange} folder="teachings/thumbnails" required />
+                    <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={formState.imageUrls || []} onChange={handleInputChange} folder="teachings/details" helperText="Optional. Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
                          <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
                         {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}

@@ -49,7 +49,8 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
         const unsubscribeFirestore = onSnapshot(q, (querySnapshot) => {
             const commentsData: CommentType[] = [];
             querySnapshot.forEach((doc) => {
-                commentsData.push({ id: doc.id, ...doc.data() } as CommentType);
+                // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+                commentsData.push(Object.assign({ id: doc.id }, doc.data()) as CommentType);
             });
             setComments(commentsData);
             setLoading(false);

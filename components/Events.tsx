@@ -34,7 +34,8 @@ const Events: React.FC<EventsProps> = ({ language }) => {
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const eventsData: Event[] = [];
         querySnapshot.forEach((doc) => {
-            eventsData.push({ id: doc.id, ...doc.data() } as Event);
+            // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+            eventsData.push(Object.assign({ id: doc.id }, doc.data()) as Event);
         });
         setEvents(eventsData);
         setLoading(false);

@@ -48,7 +48,8 @@ const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
                 const docSnap = await getDoc(docRef);
 
                 if (docSnap.exists()) {
-                    setEvent({ id: docSnap.id, ...docSnap.data() } as EventType);
+                    // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+                    setEvent(Object.assign({ id: docSnap.id }, docSnap.data()) as EventType);
                 } else {
                     setError("Event not found.");
                 }

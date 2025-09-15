@@ -36,7 +36,8 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
             const teachingsData: Teaching[] = [];
             querySnapshot.forEach((doc) => {
-                teachingsData.push({ id: doc.id, ...doc.data() } as Teaching);
+                // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
+                teachingsData.push(Object.assign({ id: doc.id }, doc.data()) as Teaching);
             });
             setTeachings(teachingsData);
             setLoading(false);
