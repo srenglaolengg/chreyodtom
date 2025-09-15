@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Language } from "../types";
 import { DharmaWheelIcon } from "./icons/DharmaWheelIcon";
@@ -69,6 +70,7 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
       { label: "Feed", path: "/feed" },
       { label: "Events", path: "/events" },
       { label: "Gallery", path: "/gallery" },
+      { label: "Teachings", path: "/teachings" },
       { label: "Comments", path: "/comments" },
     ],
     km: [
@@ -76,6 +78,7 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
       { label: "ព័ត៌មាន", path: "/feed" },
       { label: "ពិធីបុណ្យ", path: "/events" },
       { label: "រូបភាព", path: "/gallery" },
+      { label: "ព្រះធម៌", path: "/teachings" },
       { label: "មតិយោបល់", path: "/comments" },
     ],
   };

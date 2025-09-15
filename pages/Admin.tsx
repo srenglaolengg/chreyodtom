@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect, FormEvent } from 'react';
-import { FirebaseUser, Post, Comment as CommentType, GalleryImage, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
+import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
 import { auth, db, githubProvider } from '../firebase';
-import { useLocation, useNavigate } from 'react-router-dom';
+// FIX: Replaced useNavigate (v6) with useHistory (v5) for compatibility.
+import { useLocation, useHistory } from 'react-router-dom';
 import {
     signInWithPopup,
     signOut,
@@ -27,11 +28,15 @@ import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info,
 
 // FORM TYPES
 type PostFormState = Omit<Post, 'id' | 'timestamp' | 'author'> & { id?: string };
-type GalleryFormState = Omit<GalleryImage, 'id'> & { id?: string };
+type GalleryFormState = Omit<GalleryAlbum, 'id'> & { id?: string };
 type EventFormState = Omit<EventType, 'id'> & { id?: string };
 type TeachingFormState = Omit<Teaching, 'id'> & { id?: string };
 
 const initialPostFormState: PostFormState = { title: '', content: '', imageUrl: '' };
+const initialGalleryFormState: GalleryFormState = { order: 0, title_en: '', title_km: '', description_en: '', description_km: '', content_en: '', content_km: '', thumbnailUrl: '', imageUrls: [] };
+const initialEventFormState: EventFormState = { order: 0, imgSrc: '', date_en: '', title_en: '', description_en: '', content_en: '', date_km: '', title_km: '', description_km: '', content_km: '', imageUrls: [] };
+const initialTeachingFormState: TeachingFormState = { order: 0, title_en: '', content_en: '', title_km: '', content_km: '', excerpt_en: '', excerpt_km: '', thumbnailUrl: '', imageUrls: [] };
+
 
 interface AdminProps {
     user: FirebaseUser | null;
@@ -55,15 +60,17 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [view, setView] = useState<ViewType>('feed');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
-    const navigate = useNavigate();
+    // FIX: Changed useNavigate to useHistory for v5 compatibility.
+    const history = useHistory();
 
     useEffect(() => {
-        const postToEditFromState = location.state?.postToEdit as Post | undefined;
+        // FIX: Adjusted state access for v5 and useHistory.
+        const postToEditFromState = (location.state as any)?.postToEdit as Post | undefined;
         if (postToEditFromState) {
             setView('feed');
-            navigate(location.pathname, { replace: true, state: {} });
+            history.replace(location.pathname, {}); // Clear state
         }
-    }, [location.state, navigate]);
+    }, [location, history]);
     
     const handleLogin = async () => await signInWithPopup(auth, githubProvider);
     const handleLogout = async () => await signOut(auth);
@@ -112,7 +119,6 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
           {navItems.map(item => (
               <button
                   key={item.id}
-                  // FIX: Corrected typo from setIsMenuOpe to setIsMenuOpen.
                   onClick={() => { setView(item.id); setIsMenuOpen(false); }}
                   className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left w-full ${ view === item.id ? 'bg-amber-400 text-red-900 shadow-inner' : 'text-yellow-50 hover:bg-stone-700' }`}
               >
@@ -125,14 +131,14 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
 
     const renderView = () => {
         switch (view) {
-            case 'feed': return <FeedManager user={user} postToEdit={location.state?.postToEdit} />;
+            case 'feed': return <FeedManager user={user} postToEdit={(location.state as any)?.postToEdit} />;
             case 'comments': return <CommentManager />;
             case 'gallery': return <GalleryManager />;
             case 'events': return <EventManager />;
             case 'teachings': return <TeachingsManager />;
             case 'about': return <AboutManager />;
             case 'contact': return <ContactManager />;
-            default: return <ComingSoon title="Dashboard" />;
+            default: return <AdminSection title="Dashboard"><p>Select a section to manage.</p></AdminSection>;
         }
     }
 
@@ -174,16 +180,17 @@ const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ 
         {children}
     </div>
 );
-const FormInput: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; required?: boolean }> = ({ name, label, ...props }) => (
+const FormInput: React.FC<{ name: string; label: string; value: string | number; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; required?: boolean }> = ({ name, label, ...props }) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-stone-600 mb-1">{label}</label>
         <input id={name} name={name} {...props} className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500"/>
     </div>
 );
-const FormTextarea: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; rows?: number; required?: boolean }> = ({ name, label, ...props }) => (
+const FormTextarea: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; rows?: number; required?: boolean; helperText?: string }> = ({ name, label, helperText, ...props }) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-stone-600 mb-1">{label}</label>
         <textarea id={name} name={name} {...props} className="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm"></textarea>
+        {helperText && <p className="mt-1 text-xs text-stone-500">{helperText}</p>}
     </div>
 );
 
@@ -289,7 +296,267 @@ const CommentManager: React.FC = () => {
     );
 };
 
-// FIX: Changed `fields: any` to a specific Record type to fix destructuring error in the map function.
+const GalleryManager: React.FC = () => {
+    const [items, setItems] = useState<GalleryAlbum[]>([]);
+    const [formState, setFormState] = useState<GalleryFormState>(initialGalleryFormState);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const q = query(collection(db, "gallery"), orderBy("order", "asc"));
+        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as GalleryAlbum))));
+        return () => unsub();
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        if (name === 'imageUrls') {
+            setFormState(p => ({ ...p, imageUrls: value.split('\n').filter(url => url.trim() !== '') }));
+        } else {
+            setFormState(p => ({ ...p, [name]: type === 'number' ? Number(value) : value }));
+        }
+    };
+    const handleCancelEdit = () => { setIsEditing(false); setFormState(initialGalleryFormState); };
+    const handleEditClick = (item: GalleryAlbum) => {
+        setIsEditing(true);
+        setFormState({ ...item });
+        window.scrollTo(0, 0);
+    };
+    const handleDelete = async (id: string) => { if (window.confirm('Delete this album?')) await deleteDoc(doc(db, "gallery", id)); };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        const dataToSave = { ...formState };
+        delete dataToSave.id;
+
+        try {
+            if (isEditing && formState.id) {
+                await updateDoc(doc(db, "gallery", formState.id), dataToSave);
+            } else {
+                await addDoc(collection(db, "gallery"), dataToSave);
+            }
+            handleCancelEdit();
+        } catch (err) { console.error(err); } 
+        finally { setIsSubmitting(false); }
+    };
+    
+    return (
+        <div className="space-y-8">
+            <AdminSection title={isEditing ? 'Edit Album' : 'Create New Album'}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <FormInput name="order" label="Order" value={formState.order} onChange={handleInputChange} type="number" required />
+                    <FormInput name="title_en" label="Title (English)" value={formState.title_en} onChange={handleInputChange} required />
+                    <FormInput name="title_km" label="Title (Khmer)" value={formState.title_km} onChange={handleInputChange} required />
+                    <FormTextarea name="description_en" label="Short Description (English)" value={formState.description_en} onChange={handleInputChange} rows={3} />
+                    <FormTextarea name="description_km" label="Short Description (Khmer)" value={formState.description_km} onChange={handleInputChange} rows={3} />
+                    <FormTextarea name="content_en" label="Full Content (English)" value={formState.content_en} onChange={handleInputChange} rows={6} />
+                    <FormTextarea name="content_km" label="Full Content (Khmer)" value={formState.content_km} onChange={handleInputChange} rows={6} />
+                    <FormInput name="thumbnailUrl" label="Thumbnail Image URL" value={formState.thumbnailUrl} onChange={handleInputChange} type="url" required />
+                    <FormTextarea name="imageUrls" label="Detail Image URLs" value={formState.imageUrls.join('\n')} onChange={handleInputChange} rows={6} helperText="Enter one image URL per line." />
+                    <div className="flex items-center space-x-4 pt-2">
+                         <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
+                        {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}
+                    </div>
+                </form>
+            </AdminSection>
+            <AdminSection title="Manage Gallery Albums">
+                <div className="space-y-4">
+                    {items.map(item => (
+                        <div key={item.id} className="p-4 border rounded-md flex justify-between items-center gap-4">
+                             <div className="flex items-center gap-4">
+                                <img src={item.thumbnailUrl} alt={item.title_en} className="w-20 h-20 object-cover rounded-md" />
+                                <div>
+                                    <h3 className="font-bold">{item.title_en} / {item.title_km}</h3>
+                                    <p className="text-sm text-stone-500">Order: {item.order}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3 flex-shrink-0">
+                                <button onClick={() => handleEditClick(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => handleDelete(item.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </AdminSection>
+        </div>
+    );
+};
+
+const EventManager: React.FC = () => {
+    const [items, setItems] = useState<EventType[]>([]);
+    const [formState, setFormState] = useState<EventFormState>(initialEventFormState);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const q = query(collection(db, "events"), orderBy("order", "asc"));
+        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as EventType))));
+        return () => unsub();
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        if (name === 'imageUrls') {
+            setFormState(p => ({ ...p, imageUrls: value.split('\n').filter(url => url.trim() !== '') }));
+        } else {
+            setFormState(p => ({ ...p, [name]: type === 'number' ? Number(value) : value }));
+        }
+    };
+    const handleCancelEdit = () => { setIsEditing(false); setFormState(initialEventFormState); };
+    const handleEditClick = (item: EventType) => {
+        setIsEditing(true);
+        setFormState({ ...item, imageUrls: item.imageUrls || [] });
+        window.scrollTo(0, 0);
+    };
+    const handleDelete = async (id: string) => { if (window.confirm('Delete this event?')) await deleteDoc(doc(db, "events", id)); };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        const dataToSave = { ...formState };
+        delete dataToSave.id;
+
+        try {
+            if (isEditing && formState.id) {
+                await updateDoc(doc(db, "events", formState.id), dataToSave);
+            } else {
+                await addDoc(collection(db, "events"), dataToSave);
+            }
+            handleCancelEdit();
+        } catch (err) { console.error(err); } 
+        finally { setIsSubmitting(false); }
+    };
+    
+    return (
+        <div className="space-y-8">
+            <AdminSection title={isEditing ? 'Edit Event' : 'Create New Event'}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <FormInput name="order" label="Order" value={formState.order} onChange={handleInputChange} type="number" required />
+                    <FormInput name="title_en" label="Title (English)" value={formState.title_en} onChange={handleInputChange} required />
+                    <FormInput name="title_km" label="Title (Khmer)" value={formState.title_km} onChange={handleInputChange} required />
+                    <FormInput name="date_en" label="Date (English)" value={formState.date_en} onChange={handleInputChange} />
+                    <FormInput name="date_km" label="Date (Khmer)" value={formState.date_km} onChange={handleInputChange} />
+                    <FormTextarea name="description_en" label="Short Description (English)" value={formState.description_en} onChange={handleInputChange} rows={3} />
+                    <FormTextarea name="description_km" label="Short Description (Khmer)" value={formState.description_km} onChange={handleInputChange} rows={3} />
+                    <FormTextarea name="content_en" label="Full Content (English)" value={formState.content_en} onChange={handleInputChange} rows={6} />
+                    <FormTextarea name="content_km" label="Full Content (Khmer)" value={formState.content_km} onChange={handleInputChange} rows={6} />
+                    <FormInput name="imgSrc" label="Thumbnail Image URL" value={formState.imgSrc} onChange={handleInputChange} type="url" required />
+                    <FormTextarea name="imageUrls" label="Detail Image URLs" value={(formState.imageUrls || []).join('\n')} onChange={handleInputChange} rows={6} helperText="Optional. Enter one image URL per line." />
+                    <div className="flex items-center space-x-4 pt-2">
+                         <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
+                        {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}
+                    </div>
+                </form>
+            </AdminSection>
+             <AdminSection title="Manage Events">
+                <div className="space-y-4">
+                    {items.map(item => (
+                        <div key={item.id} className="p-4 border rounded-md flex justify-between items-center gap-4">
+                             <div className="flex items-center gap-4">
+                                <img src={item.imgSrc} alt={item.title_en} className="w-20 h-20 object-cover rounded-md" />
+                                <div>
+                                    <h3 className="font-bold">{item.title_en}</h3>
+                                    <p className="text-sm text-stone-500">{item.date_en}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3 flex-shrink-0">
+                                <button onClick={() => handleEditClick(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => handleDelete(item.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </AdminSection>
+        </div>
+    );
+};
+
+const TeachingsManager: React.FC = () => {
+    const [items, setItems] = useState<Teaching[]>([]);
+    const [formState, setFormState] = useState<TeachingFormState>(initialTeachingFormState);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    useEffect(() => {
+        const q = query(collection(db, "teachings"), orderBy("order", "asc"));
+        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() } as Teaching))));
+        return () => unsub();
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value, type } = e.target;
+        if (name === 'imageUrls') {
+            setFormState(p => ({ ...p, imageUrls: value.split('\n').filter(url => url.trim() !== '') }));
+        } else {
+            setFormState(p => ({ ...p, [name]: type === 'number' ? Number(value) : value }));
+        }
+    };
+    const handleCancelEdit = () => { setIsEditing(false); setFormState(initialTeachingFormState); };
+    const handleEditClick = (item: Teaching) => {
+        setIsEditing(true);
+        setFormState({ ...item, imageUrls: item.imageUrls || [] });
+        window.scrollTo(0, 0);
+    };
+    const handleDelete = async (id: string) => { if (window.confirm('Delete this teaching?')) await deleteDoc(doc(db, "teachings", id)); };
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        const dataToSave = { ...formState };
+        delete dataToSave.id;
+
+        try {
+            if (isEditing && formState.id) {
+                await updateDoc(doc(db, "teachings", formState.id), dataToSave);
+            } else {
+                await addDoc(collection(db, "teachings"), dataToSave);
+            }
+            handleCancelEdit();
+        } catch (err) { console.error(err); } 
+        finally { setIsSubmitting(false); }
+    };
+    
+    return (
+        <div className="space-y-8">
+            <AdminSection title={isEditing ? 'Edit Teaching' : 'Create New Teaching'}>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <FormInput name="order" label="Order" value={formState.order} onChange={handleInputChange} type="number" required />
+                    <FormInput name="title_en" label="Title (English)" value={formState.title_en} onChange={handleInputChange} required />
+                    <FormInput name="title_km" label="Title (Khmer)" value={formState.title_km} onChange={handleInputChange} required />
+                    <FormTextarea name="excerpt_en" label="Excerpt (English)" value={formState.excerpt_en} onChange={handleInputChange} rows={3} />
+                    <FormTextarea name="excerpt_km" label="Excerpt (Khmer)" value={formState.excerpt_km} onChange={handleInputChange} rows={3} />
+                    <FormTextarea name="content_en" label="Full Content (English)" value={formState.content_en} onChange={handleInputChange} rows={8} />
+                    <FormTextarea name="content_km" label="Full Content (Khmer)" value={formState.content_km} onChange={handleInputChange} rows={8} />
+                    <FormInput name="thumbnailUrl" label="Thumbnail Image URL" value={formState.thumbnailUrl} onChange={handleInputChange} type="url" required />
+                    <FormTextarea name="imageUrls" label="Detail Image URLs" value={(formState.imageUrls || []).join('\n')} onChange={handleInputChange} rows={6} helperText="Optional. Enter one image URL per line." />
+                    <div className="flex items-center space-x-4 pt-2">
+                         <button type="submit" disabled={isSubmitting} className="bg-amber-500 text-white px-6 py-2 rounded-full hover:bg-amber-600 font-semibold disabled:bg-amber-300">{isSubmitting ? 'Saving...' : (isEditing ? 'Update' : 'Create')}</button>
+                        {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-stone-200 text-stone-700 px-6 py-2 rounded-full hover:bg-stone-300 font-semibold">Cancel</button>}
+                    </div>
+                </form>
+            </AdminSection>
+             <AdminSection title="Manage Teachings">
+                <div className="space-y-4">
+                    {items.map(item => (
+                        <div key={item.id} className="p-4 border rounded-md flex justify-between items-center gap-4">
+                             <div className="flex items-center gap-4">
+                                <img src={item.thumbnailUrl} alt={item.title_en} className="w-20 h-20 object-cover rounded-md" />
+                                <div>
+                                    <h3 className="font-bold">{item.title_en}</h3>
+                                    <p className="text-sm text-stone-500">Order: {item.order}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-3 flex-shrink-0">
+                                <button onClick={() => handleEditClick(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => handleDelete(item.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </AdminSection>
+        </div>
+    );
+};
+
+
 const PageContentManager: React.FC<{pageId: 'about' | 'contact', fields: Record<string, { label: string; type: string; }>, initialState: any}> = ({ pageId, fields, initialState }) => {
     const [formState, setFormState] = useState(initialState);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -350,17 +617,5 @@ const ContactManager = () => <PageContentManager
         email: { label: 'Email Address', type: 'input' },
     }} 
 />;
-
-// All other managers will be placeholders for now.
-const ComingSoon: React.FC<{title: string}> = ({ title }) => (
-    <AdminSection title={title}>
-        <p className="text-stone-500 text-center">This feature is currently under development. Please check back later!</p>
-    </AdminSection>
-);
-
-const GalleryManager = () => <ComingSoon title="Gallery Management" />;
-const EventManager = () => <ComingSoon title="Events Management" />;
-const TeachingsManager = () => <ComingSoon title="Teachings Management" />;
-
 
 export default Admin;

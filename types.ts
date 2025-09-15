@@ -6,12 +6,17 @@ export enum Language {
   English = 'en',
 }
 
-export interface GalleryImage {
+export interface GalleryAlbum {
   id: string;
-  src: string;
-  alt: string;
-  caption?: string;
-  order?: number;
+  order: number;
+  title_en: string;
+  title_km: string;
+  description_en: string; // Excerpt
+  description_km: string;
+  content_en: string; // Full content
+  content_km: string;
+  thumbnailUrl: string;
+  imageUrls: string[];
 }
 
 export interface Teaching {
@@ -21,18 +26,25 @@ export interface Teaching {
   content_en: string;
   title_km: string;
   content_km: string;
+  excerpt_en: string;
+  excerpt_km: string;
+  thumbnailUrl: string;
+  imageUrls?: string[];
 }
 
 export interface Event {
   id: string;
   order: number;
-  imgSrc: string;
+  imgSrc: string; // This is the thumbnail
   date_en: string;
   title_en: string;
-  description_en: string;
+  description_en: string; // This is the excerpt
+  content_en: string; // Full content
   date_km: string;
   title_km: string;
-  description_km: string;
+  description_km: string; // This is the excerpt
+  content_km: string; // Full content
+  imageUrls?: string[];
 }
 
 export interface FirebaseUser {

@@ -5,6 +5,9 @@ import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { db } from '../firebase';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import CardSkeleton from './skeletons/CardSkeleton';
+import { Link } from 'react-router-dom';
+import { ArrowRightIcon } from './icons/ArrowRightIcon';
 
 interface TeachingsProps {
   language: Language;
@@ -23,30 +26,7 @@ const metaContent = {
   }
 };
 
-const TeachingItem: React.FC<{ title: string; content: string; isOpen: boolean; onClick: () => void, lang: Language }> = ({ title, content, isOpen, onClick, lang }) => {
-    return (
-        <div className="border-b border-amber-200">
-            <button
-                onClick={onClick}
-                className="w-full text-left py-4 px-6 flex justify-between items-center hover:bg-amber-100/50 transition-colors"
-            >
-                <h3 className={`text-lg font-semibold text-amber-800 ${lang === 'km' ? 'font-khmer' : ''}`}>{title}</h3>
-                <span className={`transform transition-transform duration-300 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                </span>
-            </button>
-            <div className={`overflow-hidden transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
-                <p className={`p-6 bg-white text-stone-600 ${lang === 'km' ? 'font-khmer' : ''}`}>{content}</p>
-            </div>
-        </div>
-    );
-};
-
-
 const Teachings: React.FC<TeachingsProps> = ({ language }) => {
-    const [openIndex, setOpenIndex] = useState<number | null>(0);
     const [teachings, setTeachings] = useState<Teaching[]>([]);
     const [loading, setLoading] = useState(true);
     const currentMeta = metaContent[language];
@@ -64,9 +44,18 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
         return () => unsubscribe();
     }, []);
 
-    const handleToggle = (index: number) => {
-        setOpenIndex(openIndex === index ? null : index);
-    };
+    const content = {
+        en: {
+            title: 'Buddhist Teachings',
+            viewMore: 'Read More'
+        },
+        km: {
+            title: 'ពុទ្ធឱវាទ',
+            viewMore: 'អានបន្ថែម'
+        }
+    }
+    const currentContent = content[language];
+
 
     return (
         <>
@@ -81,26 +70,33 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                         <div className="inline-flex items-center justify-center space-x-4">
                             <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
                             <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
-                                {language === 'km' ? 'ពុទ្ធឱវាទ' : 'Buddhist Teachings'}
+                                {currentContent.title}
                             </h2>
                         </div>
                     </div>
-                    <div className="max-w-3xl mx-auto bg-amber-50 rounded-lg shadow-lg overflow-hidden">
-                        {loading ? (
-                            <div className="p-6 text-center">Loading teachings...</div>
-                        ) : (
-                            teachings.map((item, index) => (
-                                <TeachingItem 
-                                    key={item.id} 
-                                    title={language === 'km' ? item.title_km : item.title_en} 
-                                    content={language === 'km' ? item.content_km : item.content_en}
-                                    isOpen={openIndex === index}
-                                    onClick={() => handleToggle(index)}
-                                    lang={language}
-                                />
-                            ))
-                        )}
-                    </div>
+                     {loading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            <CardSkeleton />
+                            <CardSkeleton />
+                            <CardSkeleton />
+                        </div>
+                    ) : (
+                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {teachings.map((item) => (
+                               <article key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300 flex flex-col">
+                                  <img src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} className="w-full aspect-video object-cover bg-amber-100" />
+                                  <div className="p-6 flex flex-col flex-grow">
+                                    <h3 className={`text-xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.title_km : item.title_en}</h3>
+                                    <p className={`text-stone-600 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
+                                    <Link to={`/teachings/${item.id}`} className={`inline-flex items-center space-x-2 mt-4 text-amber-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
+                                      <span>{currentContent.viewMore}</span>
+                                      <ArrowRightIcon className="w-5 h-5"/>
+                                    </Link>
+                                  </div>
+                                </article>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
         </>
