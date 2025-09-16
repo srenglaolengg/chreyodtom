@@ -1,5 +1,5 @@
 import React, { useState, useEffect, FormEvent, useMemo } from 'react';
-import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
+import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo, UserRole } from '../types';
 import { auth, githubProvider } from '../firebase';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 import PageMeta from '../components/PageMeta';
-import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud, LayoutDashboard, Sparkles, Languages, Loader2 } from 'lucide-react';
+import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud, LayoutDashboard, Sparkles, Languages, Loader2, Users } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { GoogleGenAI } from '@google/genai';
 import { supabase, BUCKET_NAME } from '../supabase';
@@ -39,7 +39,7 @@ interface AdminProps {
     authLoading: boolean;
 }
 
-type ViewType = 'dashboard' | 'feed' | 'comments' | 'gallery' | 'events' | 'teachings' | 'about' | 'contact';
+type ViewType = 'dashboard' | 'feed' | 'comments' | 'gallery' | 'events' | 'teachings' | 'about' | 'contact' | 'user-roles';
 
 const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -50,6 +50,7 @@ const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
     { id: 'teachings', label: 'Teachings', icon: BookOpen },
     { id: 'about', label: 'About Page', icon: Info },
     { id: 'contact', label: 'Contact Page', icon: Phone },
+    { id: 'user-roles', label: 'User Roles', icon: Users },
 ];
 
 
@@ -636,6 +637,87 @@ const DashboardView: React.FC = () => {
     );
 };
 
+const UserRoleManager: React.FC = () => {
+    const { data: roles, loading } = useCollection<UserRole>('user_roles');
+    const [formState, setFormState] = useState({ user_id: '', role: 'editor' });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setFormState(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formState.user_id || !formState.role || !supabase) return;
+        
+        setIsSubmitting(true);
+        const { error } = await supabase.from('user_roles').upsert({ user_id: formState.user_id, role: formState.role });
+        
+        if (error) {
+            console.error(error);
+            alert('Failed to save role. Make sure the User ID is correct and you have admin privileges.');
+        } else {
+            alert('Role saved successfully. The user may need to refresh their session to see the changes.');
+            setFormState({ user_id: '', role: 'editor' }); // Reset form
+            // NOTE: A manual page refresh is needed to see the updated list below
+            // due to the current implementation of the useCollection hook.
+        }
+        setIsSubmitting(false);
+    };
+
+    const handleDelete = async (userId: string) => {
+        if (!supabase || !window.confirm('Are you sure you want to remove this user\'s role? This cannot be undone.')) return;
+        
+        const { error } = await supabase.from('user_roles').delete().eq('user_id', userId);
+        if (error) {
+            console.error(error);
+            alert('Failed to delete role.');
+        } else {
+             alert('Role removed successfully.');
+        }
+    };
+
+    return (
+        <div className="space-y-8">
+            <AdminSection title="Assign User Role">
+                <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+                    <FormInput name="user_id" label="Firebase User ID (UID)" value={formState.user_id} onChange={handleInputChange} required />
+                    <div>
+                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                        <select id="role" name="role" value={formState.role} onChange={handleInputChange} className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500">
+                            <option value="editor">Editor</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                         <p className="mt-1 text-xs text-gray-500">Admins can manage all content and user roles. Editors can only manage content.</p>
+                    </div>
+                    <div className="pt-2">
+                        <button type="submit" disabled={isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">
+                            {isSubmitting ? 'Saving...' : 'Save Role'}
+                        </button>
+                    </div>
+                </form>
+            </AdminSection>
+            <AdminSection title="Current User Roles">
+                {loading ? <p>Loading roles...</p> : (
+                    <div className="divide-y divide-gray-200 border-t border-b">
+                        {roles.map(role => (
+                            <div key={role.user_id} className="p-3 flex justify-between items-center hover:bg-gray-50">
+                                <div>
+                                    <p className="font-semibold text-gray-800 capitalize">{role.role}</p>
+                                    <p className="font-mono text-xs text-gray-500">{role.user_id}</p>
+                                </div>
+                                <button onClick={() => handleDelete(role.user_id)} className="text-sm font-semibold text-red-600 hover:underline">Remove</button>
+                            </div>
+                        ))}
+                         {roles.length === 0 && <p className="p-4 text-center text-gray-500">No user roles have been assigned yet.</p>}
+                    </div>
+                )}
+            </AdminSection>
+        </div>
+    );
+};
+
+
 
 // --- MAIN ADMIN COMPONENT & CONFIGS ---
 
@@ -813,6 +895,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
             case 'comments': return <CommentManager />;
             case 'about': return <AboutManager {...managerProps} />;
             case 'contact': return <ContactManager {...managerProps} />;
+            case 'user-roles': return <UserRoleManager />;
 
             case 'feed':
                 return <ContentManager

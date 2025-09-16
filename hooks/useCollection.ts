@@ -9,7 +9,9 @@ interface CollectionOptions {
     limit?: number;
 }
 
-export const useCollection = <T extends { id: string }>(tableName: string, options?: CollectionOptions) => {
+// FIX: Relaxed generic constraint from `T extends { id: string }` to `T extends Record<string, any>`
+// This allows the hook to be used with collections that don't have an `id` field, like 'user_roles'.
+export const useCollection = <T extends Record<string, any>>(tableName: string, options?: CollectionOptions) => {
     const [data, setData] = useState<T[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);

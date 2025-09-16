@@ -83,3 +83,8 @@ export interface ContactInfo {
   phone: string;
   email: string;
 }
+
+export interface UserRole {
+  user_id: string;
+  role: 'admin' | 'editor' | string;
+}
