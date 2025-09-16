@@ -1,13 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Language, ContactInfo } from '../types';
 import { LocationPinIcon } from './icons/LocationPinIcon';
 import { PhoneIcon } from './icons/PhoneIcon';
 import { EmailIcon } from './icons/EmailIcon';
 import { LotusIcon } from './icons/LotusIcon';
 import PageMeta from './PageMeta';
-import { db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { useDocument } from '../hooks/useDocument';
 
 interface ContactProps {
   language: Language;
@@ -27,21 +26,7 @@ const metaContent = {
 };
 
 const Contact: React.FC<ContactProps> = ({ language }) => {
-    const [info, setInfo] = useState<ContactInfo | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const docRef = doc(db, "pages", "contact");
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                setInfo(docSnap.data() as ContactInfo);
-            } else {
-                console.log("No such document for contact page!");
-            }
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
+    const { data: info, loading } = useDocument<ContactInfo & { id: string }>('pages', 'contact');
 
     const content = {
         en: {

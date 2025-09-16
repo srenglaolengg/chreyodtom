@@ -1,69 +1,35 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Teaching } from '../types';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import PageMeta from '../components/PageMeta';
 import { ArrowLeft } from 'lucide-react';
 import PostSkeleton from '../components/skeletons/PostSkeleton';
 import { DharmaWheelIcon } from '../components/icons/DharmaWheelIcon';
-
-const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({ src, alt, onClose }) => {
-  return (
-    <div 
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="relative" onClick={(e) => e.stopPropagation()}>
-        <img src={src} alt={alt} className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" />
-        <button 
-          onClick={onClose}
-          className="absolute -top-4 -right-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold"
-          aria-label="Close lightbox"
-        >
-          &times;
-        </button>
-      </div>
-    </div>
-  );
-};
+import Lightbox from '../components/Lightbox';
+import { useDocument } from '../hooks/useDocument';
 
 const TeachingDetail: React.FC<{ language: Language }> = ({ language }) => {
     const { id } = useParams<{ id: string }>();
-    const [teaching, setTeaching] = useState<Teaching | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: teaching, loading, error } = useDocument<Teaching>('teachings', id!);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    useEffect(() => {
-        if (!id) {
-            setError('Teaching ID is missing.');
-            setLoading(false);
-            return;
-        }
-        const fetchTeaching = async () => {
-            try {
-                const docRef = doc(db, "teachings", id);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
-                    setTeaching(Object.assign({ id: docSnap.id }, docSnap.data()) as Teaching);
-                } else {
-                    setError("Teaching not found.");
-                }
-            } catch(e) {
-                console.error("Error fetching document:", e);
-                setError("Failed to fetch teaching data.");
-            }
-            setLoading(false);
-        };
-        fetchTeaching();
-    }, [id]);
-    
     const currentTitle = teaching ? (language === 'km' ? teaching.title_km : teaching.title_en) : '';
+    const currentExcerpt = teaching ? (language === 'km' ? teaching.excerpt_km : teaching.excerpt_en) : '';
     const currentContent = teaching ? (language === 'km' ? teaching.content_km : teaching.content_en) : '';
+
+    const meta = {
+        en: {
+            title: loading ? 'Loading Teaching...' : `${currentTitle} | Teachings | Wat Serei Mongkol`,
+            description: teaching ? `Learn about the Dharma teaching on "${currentTitle}". ${currentExcerpt}` : 'Explore Buddhist teachings from Wat Serei Mongkol.',
+            keywords: `Wat Serei Mongkol, ${currentTitle}, Buddhist Teachings, Dharma, Four Noble Truths, Eightfold Path, Khmer Buddhism`
+        },
+        km: {
+            title: loading ? 'កំពុងផ្ទុក...' : `${currentTitle} | ព្រះធម៌ | វត្តសិរីមង្គល`,
+            description: teaching ? `ស្វែងយល់អំពីព្រះធម៌ទេសនា «${currentTitle}»។ ${currentExcerpt}` : 'ស្វែងយល់ពីឱវាទព្រះពុទ្ធសាសនានៅវត្តសិរីមង្គល។',
+            keywords: `វត្តសិរីមង្គល, ${currentTitle}, ពុទ្ធឱវាទ, ព្រះធម៌, អរិយសច្ច៤, មគ្គ៨, ពុទ្ធសាសនាខ្មែរ`
+        }
+    }
+    const currentMeta = meta[language];
 
     const content = {
       en: { backLink: "Back to Teachings" },
@@ -74,8 +40,9 @@ const TeachingDetail: React.FC<{ language: Language }> = ({ language }) => {
     return (
         <>
             <PageMeta 
-                title={loading ? 'Loading...' : `${currentTitle} | Wat Serei Mongkol`}
-                description={teaching ? (language === 'km' ? teaching.excerpt_km : teaching.excerpt_en) : ''}
+                title={currentMeta.title}
+                description={currentMeta.description}
+                keywords={currentMeta.keywords}
             />
              <section className="py-20 bg-amber-50/30">
                 <div className="container mx-auto px-6">

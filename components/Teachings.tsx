@@ -1,13 +1,17 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Language, Teaching } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { db } from '../firebase';
-import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
 import CardSkeleton from './skeletons/CardSkeleton';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from './icons/ArrowRightIcon';
+import { useCollection } from '../hooks/useCollection';
+// @ts-ignore
+import { motion, Variants } from 'framer-motion';
+import { Card, CardContent, CardImage } from './ui/Card';
+
 
 interface TeachingsProps {
   language: Language;
@@ -26,24 +30,33 @@ const metaContent = {
   }
 };
 
-const Teachings: React.FC<TeachingsProps> = ({ language }) => {
-    const [teachings, setTeachings] = useState<Teaching[]>([]);
-    const [loading, setLoading] = useState(true);
-    const currentMeta = metaContent[language];
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
 
-    useEffect(() => {
-        const q = query(collection(db, "teachings"), orderBy("order", "asc"));
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-            const teachingsData: Teaching[] = [];
-            querySnapshot.forEach((doc) => {
-                // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
-                teachingsData.push(Object.assign({ id: doc.id }, doc.data()) as Teaching);
-            });
-            setTeachings(teachingsData);
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
+// FIX: Explicitly type `itemVariants` with `Variants` from framer-motion to fix type inference issue.
+const itemVariants: Variants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: 'spring',
+      stiffness: 100,
+    },
+  },
+};
+
+const Teachings: React.FC<TeachingsProps> = ({ language }) => {
+    const q = useMemo(() => query(collection(db, "teachings"), orderBy("order", "asc")), []);
+    const { data: teachings, loading } = useCollection<Teaching>(q);
+    const currentMeta = metaContent[language];
 
     const content = {
         en: {
@@ -65,39 +78,44 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            <section id="teachings" className="py-20 bg-amber-50/30">
+            <section id="teachings" className="py-20 bg-background dark:bg-card">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <div className="inline-flex items-center justify-center space-x-4">
-                            <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
-                            <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <DharmaWheelIcon className="w-8 h-8 text-primary" />
+                            <h2 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
                                 {currentContent.title}
                             </h2>
+                            <DharmaWheelIcon className="w-8 h-8 text-primary" />
                         </div>
                     </div>
-                     {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            <CardSkeleton />
-                            <CardSkeleton />
-                            <CardSkeleton />
-                        </div>
-                    ) : (
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {teachings.map((item) => (
-                               <article key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden group transform hover:-translate-y-2 transition-transform duration-300 flex flex-col">
-                                  <img src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} className="w-full aspect-video object-cover bg-amber-100" />
-                                  <div className="p-6 flex flex-col flex-grow">
-                                    <h3 className={`text-xl font-bold text-stone-800 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.title_km : item.title_en}</h3>
-                                    <p className={`text-stone-600 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
-                                    <Link to={`/teachings/${item.id}`} className={`inline-flex items-center space-x-2 mt-4 text-amber-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
-                                      <span>{currentContent.viewMore}</span>
-                                      <ArrowRightIcon className="w-5 h-5"/>
-                                    </Link>
-                                  </div>
-                                </article>
-                            ))}
-                        </div>
-                    )}
+                     
+                    <motion.div 
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate={loading ? "hidden" : "visible"}
+                    >
+                        {loading ? (
+                          Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
+                        ) : (
+                          teachings.map((item) => (
+                            <motion.div key={item.id} variants={itemVariants}>
+                              <Card className="flex flex-col h-full">
+                                <CardImage src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} />
+                                <CardContent className="flex flex-col flex-grow">
+                                  <h3 className={`text-xl font-bold text-card-foreground mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.title_km : item.title_en}</h3>
+                                  <p className={`text-foreground/80 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
+                                  <Link to={`/teachings/${item.id}`} className={`inline-flex items-center space-x-2 mt-4 text-primary font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
+                                    <span>{currentContent.viewMore}</span>
+                                    <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>
+                                  </Link>
+                                </CardContent>
+                              </Card>
+                            </motion.div>
+                          ))
+                        )}
+                    </motion.div>
                 </div>
             </section>
         </>

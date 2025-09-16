@@ -1,11 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Language, AboutContent } from '../types';
 import { LotusIcon } from './icons/LotusIcon';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
-import { db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { useDocument } from '../hooks/useDocument';
 
 interface AboutProps {
   language: Language;
@@ -25,21 +24,7 @@ const metaContent = {
 };
 
 const About: React.FC<AboutProps> = ({ language }) => {
-    const [content, setContent] = useState<AboutContent | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const docRef = doc(db, "pages", "about");
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                setContent(docSnap.data() as AboutContent);
-            } else {
-                console.log("No such document for about page!");
-            }
-            setLoading(false);
-        });
-        return () => unsubscribe();
-    }, []);
+    const { data: content, loading } = useDocument<AboutContent & { id: string }>('pages', 'about');
     
     const currentContent = {
       title: language === 'km' ? "អំពីវត្តសិរីមង្គល" : "About Wat Serei Mongkol",

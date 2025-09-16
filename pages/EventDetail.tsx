@@ -1,71 +1,35 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Event as EventType } from '../types';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import PageMeta from '../components/PageMeta';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import PostSkeleton from '../components/skeletons/PostSkeleton';
-
-const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({ src, alt, onClose }) => {
-  return (
-    <div 
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="relative" onClick={(e) => e.stopPropagation()}>
-        <img src={src} alt={alt} className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" />
-        <button 
-          onClick={onClose}
-          className="absolute -top-4 -right-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold"
-          aria-label="Close lightbox"
-        >
-          &times;
-        </button>
-      </div>
-    </div>
-  );
-};
-
+import Lightbox from '../components/Lightbox';
+import { useDocument } from '../hooks/useDocument';
 
 const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
     const { id } = useParams<{ id: string }>();
-    const [event, setEvent] = useState<EventType | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: event, loading, error } = useDocument<EventType>('events', id!);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!id) {
-            setError('Event ID is missing.');
-            setLoading(false);
-            return;
-        }
-        const fetchEvent = async () => {
-            try {
-                const docRef = doc(db, "events", id);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
-                    setEvent(Object.assign({ id: docSnap.id }, docSnap.data()) as EventType);
-                } else {
-                    setError("Event not found.");
-                }
-            } catch(e) {
-                console.error("Error fetching document:", e);
-                setError("Failed to fetch event data.");
-            }
-            setLoading(false);
-        };
-        fetchEvent();
-    }, [id]);
     
     const currentEventTitle = event ? (language === 'km' ? event.title_km : event.title_en) : '';
+    const currentEventDescription = event ? (language === 'km' ? event.description_km : event.description_en) : '';
     const currentEventContent = event ? (language === 'km' ? event.content_km : event.content_en) : '';
     const currentEventDate = event ? (language === 'km' ? event.date_km : event.date_en) : '';
 
+    const meta = {
+        en: {
+            title: loading ? 'Loading Event...' : `${currentEventTitle} | Events | Wat Serei Mongkol`,
+            description: event ? `Details about the ${currentEventTitle} festival. ${currentEventDescription}` : 'Upcoming events and festivals at Wat Serei Mongkol.',
+            keywords: `Wat Serei Mongkol, ${currentEventTitle}, Buddhist Festivals, Pagoda Events, Cambodian Holidays, ${currentEventDate}`
+        },
+        km: {
+            title: loading ? 'កំពុងផ្ទុក...' : `${currentEventTitle} | ពិធីបុណ្យ | វត្តសិរីមង្គល`,
+            description: event ? `ព័ត៌មានលម្អិតអំពីពិធីបុណ្យ ${currentEventTitle}។ ${currentEventDescription}` : 'ពិធីបុណ្យនាពេលខាងមុខនៅវត្តសិរីមង្គល។',
+            keywords: `វត្តសិរីមង្គល, ${currentEventTitle}, ពិធីបុណ្យសាសនា, កម្មវិធីបុណ្យ, បុណ្យជាតិខ្មែរ, ${currentEventDate}`
+        }
+    }
+    const currentMeta = meta[language];
 
     const content = {
       en: { backLink: "Back to Events" },
@@ -76,8 +40,9 @@ const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
     return (
         <>
             <PageMeta 
-                title={loading ? 'Loading...' : `${currentEventTitle} | Wat Serei Mongkol`}
-                description={event ? (language === 'km' ? event.description_km : event.description_en) : ''}
+                title={currentMeta.title}
+                description={currentMeta.description}
+                keywords={currentMeta.keywords}
             />
              <section className="py-20 bg-stone-50">
                 <div className="container mx-auto px-6">

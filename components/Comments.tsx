@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, db, githubProvider } from '../firebase';
 import { 
@@ -10,13 +10,13 @@ import {
     collection, 
     query, 
     orderBy, 
-    onSnapshot, 
     addDoc, 
     serverTimestamp 
 } from 'firebase/firestore';
 import { GitHubIcon } from './icons/GitHubIcon';
 import CommentSkeleton from './skeletons/CommentSkeleton';
 import PageMeta from './PageMeta';
+import { useCollection } from '../hooks/useCollection';
 
 interface CommentsProps {
   language: Language;
@@ -37,31 +37,10 @@ const metaContent = {
 };
 
 const Comments: React.FC<CommentsProps> = ({ language, user }) => {
-    const [comments, setComments] = useState<CommentType[]>([]);
     const [newComment, setNewComment] = useState('');
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const commentsCollection = collection(db, "comments");
-        const q = query(commentsCollection, orderBy("createdAt", "desc"));
-        
-        const unsubscribeFirestore = onSnapshot(q, (querySnapshot) => {
-            const commentsData: CommentType[] = [];
-            querySnapshot.forEach((doc) => {
-                // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
-                commentsData.push(Object.assign({ id: doc.id }, doc.data()) as CommentType);
-            });
-            setComments(commentsData);
-            setLoading(false);
-        }, (err) => {
-            console.error("Error fetching comments: ", err);
-            setError(language === 'km' ? 'មិនអាចផ្ទុកមតិយោបល់បានទេ' : 'Could not load comments.');
-            setLoading(false);
-        });
-
-        return () => unsubscribeFirestore();
-    }, [language]);
+    
+    const q = useMemo(() => query(collection(db, "comments"), orderBy("createdAt", "desc")), []);
+    const { data: comments, loading, error } = useCollection<CommentType>(q);
 
     const handleLogin = async () => {
         try {

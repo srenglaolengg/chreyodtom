@@ -1,69 +1,34 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, GalleryAlbum } from '../types';
-import { db } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
 import PageMeta from '../components/PageMeta';
 import { ArrowLeft } from 'lucide-react';
 import PostSkeleton from '../components/skeletons/PostSkeleton';
-
-const Lightbox: React.FC<{ src: string; alt: string; onClose: () => void }> = ({ src, alt, onClose }) => {
-  return (
-    <div 
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="relative" onClick={(e) => e.stopPropagation()}>
-        <img src={src} alt={alt} className="max-w-full max-h-[90vh] rounded-lg shadow-2xl" />
-        <button 
-          onClick={onClose}
-          className="absolute -top-4 -right-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold"
-          aria-label="Close lightbox"
-        >
-          &times;
-        </button>
-      </div>
-    </div>
-  );
-};
-
+import Lightbox from '../components/Lightbox';
+import { useDocument } from '../hooks/useDocument';
 
 const GalleryDetail: React.FC<{ language: Language }> = ({ language }) => {
     const { id } = useParams<{ id: string }>();
-    const [album, setAlbum] = useState<GalleryAlbum | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: album, loading, error } = useDocument<GalleryAlbum>('gallery', id!);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!id) {
-            setError('Album ID is missing.');
-            setLoading(false);
-            return;
-        }
-        const fetchAlbum = async () => {
-            try {
-                const docRef = doc(db, "gallery", id);
-                const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
-                    setAlbum(Object.assign({ id: docSnap.id }, docSnap.data()) as GalleryAlbum);
-                } else {
-                    setError("Album not found.");
-                }
-            } catch(e) {
-                console.error("Error fetching document:", e);
-                setError("Failed to fetch album data.");
-            }
-            setLoading(false);
-        };
-        fetchAlbum();
-    }, [id]);
     
     const currentAlbumTitle = album ? (language === 'km' ? album.title_km : album.title_en) : '';
+    const currentAlbumDescription = album ? (language === 'km' ? album.description_km : album.description_en) : '';
     const currentAlbumContent = album ? (language === 'km' ? album.content_km : album.content_en) : '';
+
+    const meta = {
+        en: {
+            title: loading ? 'Loading Album...' : `${currentAlbumTitle} | Gallery | Wat Serei Mongkol`,
+            description: album ? `Explore photos from the "${currentAlbumTitle}" album. ${currentAlbumDescription}` : 'View photo albums from Wat Serei Mongkol.',
+            keywords: `Wat Serei Mongkol, ${currentAlbumTitle}, Pagoda Photos, Buddhist Temple Images, Khmer Architecture`
+        },
+        km: {
+            title: loading ? 'កំពុងផ្ទុក...' : `${currentAlbumTitle} | រូបភាព | វត្តសិរីមង្គល`,
+            description: album ? `ទស្សនារូបភាពពីអាល់ប៊ុម «${currentAlbumTitle}»។ ${currentAlbumDescription}` : 'ទស្សនាអាល់ប៊ុមរូបភាពពីវត្តសិរីមង្គល។',
+            keywords: `វត្តសិរីមង្គល, ${currentAlbumTitle}, រូបភាពវត្ត, រូបថតវត្តអារាម, ស្ថាបត្យកម្មខ្មែរ`
+        }
+    }
+    const currentMeta = meta[language];
 
     const content = {
       en: { backLink: "Back to Gallery" },
@@ -74,8 +39,9 @@ const GalleryDetail: React.FC<{ language: Language }> = ({ language }) => {
     return (
         <>
             <PageMeta 
-                title={loading ? 'Loading...' : `${currentAlbumTitle} | Wat Serei Mongkol`}
-                description={album ? (language === 'km' ? album.description_km : album.description_en) : ''}
+                title={currentMeta.title}
+                description={currentMeta.description}
+                keywords={currentMeta.keywords}
             />
              <section className="py-20 bg-amber-50/30">
                 <div className="container mx-auto px-6">

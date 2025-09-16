@@ -1,28 +1,27 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
 import { db } from '../firebase';
 import {
     collection,
     query,
     orderBy,
-    onSnapshot,
     deleteDoc,
     doc,
     Timestamp,
 } from 'firebase/firestore';
-import { ADMIN_U_IDS } from '../constants';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import PostSkeleton from './skeletons/PostSkeleton';
 import PageMeta from './PageMeta';
 import { Link } from 'react-router-dom';
+import { useCollection } from '../hooks/useCollection';
 
 interface FeedProps {
   language: Language;
-  user: FirebaseUser | null;      // pass from App/Header
-  isAdmin: boolean;               // pass from App/Header
+  user: FirebaseUser | null;
+  isAdmin: boolean;
 }
 
 const metaContent = {
@@ -39,30 +38,8 @@ const metaContent = {
 };
 
 const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
-    const [posts, setPosts] = useState<Post[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        const postsCollection = collection(db, "posts");
-        const q = query(postsCollection, orderBy("timestamp", "desc"));
-
-        const unsubscribePosts = onSnapshot(q, (querySnapshot) => {
-            const postsData: Post[] = [];
-            querySnapshot.forEach((doc) => {
-                // FIX: Replaced spread syntax with Object.assign to resolve potential TypeScript type inference issues with Firestore's doc.data().
-                postsData.push(Object.assign({ id: doc.id }, doc.data()) as Post);
-            });
-            setPosts(postsData);
-            setLoading(false);
-        }, (err) => {
-            console.error("Error fetching posts: ", err);
-            setError(language === 'km' ? 'មិនអាចផ្ទុកព័ត៌មានបានទេ' : 'Could not load the feed.');
-            setLoading(false);
-        });
-
-        return () => unsubscribePosts();
-    }, [language]);
+    const q = useMemo(() => query(collection(db, "posts"), orderBy("timestamp", "desc")), []);
+    const { data: posts, loading, error } = useCollection<Post>(q);
 
     const formatTimestamp = (timestamp: Timestamp) => {
         if (!timestamp) return '';
