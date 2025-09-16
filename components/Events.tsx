@@ -1,9 +1,8 @@
 import React, { useMemo } from 'react';
 import { Language, Event } from '../types';
 import PageMeta from './PageMeta';
-import { db } from '../firebase';
-// FIX: Imported QueryConstraint to correctly type the query constraints array.
-import { collection, query, orderBy, limit, QueryConstraint } from 'firebase/firestore';
+// import { db } from '../firebase'; // Removed Firestore
+// import { collection, query, orderBy, limit, QueryConstraint } from 'firebase/firestore'; // Removed Firestore
 import { Link } from 'react-router-dom';
 import CardSkeleton from './skeletons/CardSkeleton';
 import { ArrowRightIcon } from './icons/ArrowRightIcon';
@@ -53,17 +52,14 @@ const itemVariants: Variants = {
 };
 
 const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
-  // UPGRADE: Conditionally limit the number of events fetched for the homepage
-  const q = useMemo(() => {
-    // FIX: Explicitly typed `constraints` as `QueryConstraint[]` to allow multiple constraint types.
-    const constraints: QueryConstraint[] = [orderBy("order", "asc")];
-    if (isHomePage) {
-      constraints.push(limit(3));
-    }
-    return query(collection(db, "events"), ...constraints);
-  }, [isHomePage]);
+  // UPGRADE: Conditionally limit the number of events fetched for the homepage.
+  // This now uses the refactored useCollection hook for Supabase.
+  const collectionOptions = useMemo(() => ({
+    orderBy: { column: 'order', ascending: true },
+    ...(isHomePage && { limit: 3 })
+  }), [isHomePage]);
 
-  const { data: events, loading } = useCollection<Event>(q);
+  const { data: events, loading } = useCollection<Event>('events', collectionOptions);
 
   const content = {
     en: {

@@ -1,17 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
-import { auth, db, githubProvider } from '../firebase';
+import { auth, githubProvider } from '../firebase';
 import { 
     signInWithPopup, 
     signOut,
 } from 'firebase/auth';
-import { 
-    collection, 
-    query, 
-    orderBy, 
-    addDoc, 
-    serverTimestamp 
-} from 'firebase/firestore';
+import { supabase } from '../supabase'; // Use Supabase client
 import { GitHubIcon } from './icons/GitHubIcon';
 import CommentSkeleton from './skeletons/CommentSkeleton';
 import PageMeta from './PageMeta';
@@ -38,26 +32,29 @@ const metaContent = {
 const Comments: React.FC<CommentsProps> = ({ language, user }) => {
     const [newComment, setNewComment] = useState('');
     
-    const q = useMemo(() => query(collection(db, "comments"), orderBy("createdAt", "desc")), []);
-    const { data: comments, loading, error } = useCollection<CommentType>(q);
+    const collectionOptions = useMemo(() => ({ orderBy: { column: 'createdAt', ascending: false } }), []);
+    const { data: comments, loading, error } = useCollection<CommentType>('comments', collectionOptions);
 
     const handleLogin = async () => await signInWithPopup(auth, githubProvider).catch(error => console.error("Authentication error: ", error));
     const handleLogout = async () => await signOut(auth).catch(error => console.error("Sign out error: ", error));
 
     const handleSubmitComment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newComment.trim() === '' || !user) return;
+        if (newComment.trim() === '' || !user || !supabase) return;
 
         try {
-            await addDoc(collection(db, "comments"), {
+            const newCommentData = {
                 text: newComment,
-                createdAt: serverTimestamp(),
+                createdAt: new Date().toISOString(),
                 user: {
                     uid: user.uid,
                     displayName: user.displayName,
                     photoURL: user.photoURL,
                 }
-            });
+            };
+            const { error } = await supabase.from("comments").insert(newCommentData);
+            if (error) throw error;
+            
             setNewComment('');
         } catch (error) {
             console.error("Error adding comment: ", error);
@@ -147,8 +144,8 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                                         <div className="flex items-baseline space-x-2">
                                             <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                             <p className="text-xs text-gray-500">
-                                                <time dateTime={comment.createdAt ? comment.createdAt.toDate().toISOString() : ''}>
-                                                    {comment.createdAt ? comment.createdAt.toDate().toLocaleString() : '...'}
+                                                <time dateTime={comment.createdAt}>
+                                                    {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : '...'}
                                                 </time>
                                             </p>
                                         </div>

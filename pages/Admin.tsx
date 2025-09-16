@@ -1,31 +1,17 @@
 import React, { useState, useEffect, FormEvent, useMemo } from 'react';
 import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
-import { auth, db, githubProvider, storage } from '../firebase';
+import { auth, githubProvider } from '../firebase';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     signInWithPopup,
     signOut,
 } from 'firebase/auth';
-import {
-    collection,
-    query,
-    orderBy,
-    addDoc,
-    updateDoc,
-    setDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-    getDoc,
-    limit,
-    Timestamp,
-} from 'firebase/firestore';
-import { ref, getDownloadURL, uploadBytesResumable } from 'firebase/storage';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 import PageMeta from '../components/PageMeta';
 import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud, LayoutDashboard, Sparkles, Languages, Loader2 } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { GoogleGenAI } from '@google/genai';
+import { supabase, BUCKET_NAME } from '../supabase';
 
 // --- CONFIGURATION TYPES ---
 interface FieldConfig {
@@ -87,36 +73,50 @@ const TranslateButton: React.FC<{ onClick: () => void, isLoading: boolean }> = (
 const ImageUploadInput: React.FC<{ name: string; label: React.ReactNode; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; folder: string; helperText?: string; required?: boolean; }> = ({ name, label, value, onChange, folder, helperText, required }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
-    const [progress, setProgress] = useState(0);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // FIX: Check if Supabase client is initialized before proceeding.
+        if (!supabase) {
+            setUploadError("Supabase is not configured. Please update your credentials in supabase.ts.");
+            return;
+        }
+
         setIsUploading(true);
         setUploadError(null);
-        setProgress(0);
+        
+        // Define the path for the file in Supabase Storage.
+        const filePath = `${folder}/${Date.now()}_${file.name}`;
 
-        const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        try {
+            // Upload the file to the specified Supabase bucket and path.
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file);
 
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const prog = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                setProgress(Math.round(prog));
-            }, 
-            (error) => {
-                console.error("Upload error:", error);
-                setUploadError("File upload failed.");
-                setIsUploading(false);
-            }, 
-            () => {
-                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-                    onChange({ target: { name, value: downloadURL } } as React.ChangeEvent<HTMLInputElement>);
-                    setIsUploading(false);
-                });
+            if (uploadError) {
+                throw uploadError;
             }
-        );
+
+            // If the upload is successful, get the public URL for the file.
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(filePath);
+            
+            if (!publicUrlData.publicUrl) {
+                throw new Error("Could not get public URL for the uploaded file.");
+            }
+            
+            // Trigger the onChange event to update the form state with the new URL.
+            onChange({ target: { name, value: publicUrlData.publicUrl } } as React.ChangeEvent<HTMLInputElement>);
+        } catch (error: any) {
+            console.error("Supabase Upload Error:", error);
+            setUploadError(`Upload failed: ${error.message}`);
+        } finally {
+            setIsUploading(false);
+        }
     };
 
     return (
@@ -124,17 +124,12 @@ const ImageUploadInput: React.FC<{ name: string; label: React.ReactNode; value: 
             {typeof label === 'string' ? <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label> : <div className="mb-1">{label}</div>}
             <div className="flex items-center space-x-2">
                 <input id={name} name={name} type="url" value={value} onChange={onChange} placeholder="Enter image URL or upload" className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500" required={required} />
-                <label htmlFor={`${name}-file`} className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 whitespace-nowrap transition-colors inline-flex items-center space-x-2">
-                    <UploadCloud className="w-4 h-4"/>
-                    <span>{isUploading ? `Uploading ${progress}%` : 'Upload'}</span>
+                <label htmlFor={`${name}-file`} className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 whitespace-nowrap transition-colors inline-flex items-center space-x-2 disabled:opacity-50" aria-disabled={isUploading}>
+                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin"/> : <UploadCloud className="w-4 h-4"/>}
+                    <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
                 </label>
                 <input id={`${name}-file`} type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} />
             </div>
-            {isUploading && (
-                <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                    <div className="bg-amber-600 h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-            )}
             {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
             {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
         </div>
@@ -144,55 +139,54 @@ const ImageUploadInput: React.FC<{ name: string; label: React.ReactNode; value: 
 const MultiImageUploadInput: React.FC<{ name: string; label: React.ReactNode; value: string[]; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; folder: string; helperText?: string; }> = ({ name, label, value, onChange, folder, helperText }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
-    const [progress, setProgress] = useState(0);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
+        // FIX: Check if Supabase client is initialized before proceeding.
+        if (!supabase) {
+            setUploadError("Supabase is not configured. Please update your credentials in supabase.ts.");
+            return;
+        }
+
         setIsUploading(true);
         setUploadError(null);
-        setProgress(0);
 
-        const progressTracker: { [key: string]: { transferred: number, total: number } } = {};
+        // Create an array of promises, one for each file upload.
+        const uploadPromises = Array.from(files).map(async (file) => {
+            const filePath = `${folder}/${Date.now()}_${file.name}`;
+            
+            // Upload the file to Supabase Storage.
+            const { error: uploadError } = await supabase.storage
+                .from(BUCKET_NAME)
+                .upload(filePath, file);
 
-        const uploadPromises = Array.from(files).map((file, index) => {
-            const fileKey = `${file.name}-${index}`;
-            progressTracker[fileKey] = { transferred: 0, total: file.size };
+            if (uploadError) {
+                throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+            }
 
-            return new Promise<string>((resolve, reject) => {
-                const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, file);
+            // Get the public URL for the uploaded file.
+            const { data: publicUrlData } = supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(filePath);
 
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        progressTracker[fileKey].transferred = snapshot.bytesTransferred;
-                        const totalTransferred = Object.values(progressTracker).reduce((acc, curr) => acc + curr.transferred, 0);
-                        const totalSize = Object.values(progressTracker).reduce((acc, curr) => acc + curr.total, 0);
-                        if (totalSize > 0) {
-                            const overallProgress = Math.round((totalTransferred / totalSize) * 100);
-                            setProgress(overallProgress);
-                        }
-                    },
-                    (error) => {
-                        console.error(`Upload error for ${file.name}:`, error);
-                        reject(error);
-                    },
-                    () => {
-                        getDownloadURL(uploadTask.snapshot.ref).then(resolve);
-                    }
-                );
-            });
+            if (!publicUrlData.publicUrl) {
+                throw new Error(`Could not get public URL for ${file.name}.`);
+            }
+            return publicUrlData.publicUrl;
         });
 
         try {
+            // Wait for all upload promises to resolve.
             const downloadURLs = await Promise.all(uploadPromises);
+            // Combine new URLs with existing ones and update the form state.
             onChange({ target: { name, value: [...value, ...downloadURLs].join('\n') } } as React.ChangeEvent<HTMLTextAreaElement>);
-        } catch (error) {
-            setUploadError("One or more file uploads failed. Check console for details.");
+        } catch (error: any) {
+            console.error("Supabase Multi-upload Error:", error);
+            setUploadError(`Upload failed: ${error.message}`);
         } finally {
             setIsUploading(false);
-            setProgress(0);
         }
     };
 
@@ -200,16 +194,11 @@ const MultiImageUploadInput: React.FC<{ name: string; label: React.ReactNode; va
         <div>
             {typeof label === 'string' ? <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label> : <div className="mb-1">{label}</div>}
             <textarea id={name} name={name} value={value.join('\n')} onChange={onChange} rows={6} placeholder="Enter one image URL per line, or upload files." className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm" />
-             <label htmlFor={`${name}-file`} className="mt-2 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 inline-flex items-center space-x-2 transition-colors">
-                <UploadCloud className="w-4 h-4"/>
-                <span>{isUploading ? `Uploading ${progress}%` : 'Upload Files'}</span>
+             <label htmlFor={`${name}-file`} className="mt-2 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 inline-flex items-center space-x-2 transition-colors disabled:opacity-50" aria-disabled={isUploading}>
+                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <UploadCloud className="w-4 h-4"/>}
+                <span>{isUploading ? 'Uploading...' : 'Upload Files'}</span>
             </label>
             <input id={`${name}-file`} type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} multiple />
-            {isUploading && (
-                <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
-                    <div className="bg-amber-600 h-1.5 rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
-            )}
             {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
             {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
         </div>
@@ -251,8 +240,8 @@ const useCmsManager = <T extends {id: string}, F extends Omit<T, 'id'> & {id?: s
     initialState: F, 
     itemToEdit?: T
 ) => {
-    const q = useMemo(() => query(collection(db, collectionName), orderBy(orderByField, "asc")), [collectionName, orderByField]);
-    const { data: items } = useCollection<T>(q);
+    const collectionOptions = useMemo(() => ({ orderBy: { column: orderByField, ascending: true } }), [collectionName, orderByField]);
+    const { data: items, loading: itemsLoading } = useCollection<T>(collectionName, collectionOptions);
 
     const [formState, setFormState] = useState<F>(initialState);
     const [isEditing, setIsEditing] = useState(false);
@@ -283,13 +272,18 @@ const useCmsManager = <T extends {id: string}, F extends Omit<T, 'id'> & {id?: s
     };
 
     const handleDelete = async (id: string) => {
+        if (!supabase) return;
         if (window.confirm(`Delete this item from ${collectionName}?`)) {
-            await deleteDoc(doc(db, collectionName, id));
+            const { error } = await supabase.from(collectionName).delete().eq('id', id);
+            if (error) console.error(error);
+            // Data will refetch via useCollection hook if it's made real-time or manually triggered.
+            // For now, the user has to refresh to see the change. A manual refetch function could be added to the hook.
         }
     };
 
     const handleSubmit = async (e: React.FormEvent, onBeforeSubmit?: (data: Omit<F, 'id'>, isEditing: boolean) => any) => {
         e.preventDefault();
+        if (!supabase) return;
         setIsSubmitting(true);
         const { id, ...data } = formState;
 
@@ -297,16 +291,18 @@ const useCmsManager = <T extends {id: string}, F extends Omit<T, 'id'> & {id?: s
 
         try {
             if (isEditing && id) {
-                await updateDoc(doc(db, collectionName, id), dataToSave);
+                const { error } = await supabase.from(collectionName).update(dataToSave).eq('id', id);
+                if (error) throw error;
             } else {
-                await addDoc(collection(db, collectionName), dataToSave);
+                const { error } = await supabase.from(collectionName).insert(dataToSave);
+                if (error) throw error;
             }
             handleCancelEdit();
         } catch (err) { console.error(err); } 
         finally { setIsSubmitting(false); }
     };
 
-    return { items, formState, isEditing, isSubmitting, handleInputChange, handleSubmit, handleEditClick, handleDelete, handleCancelEdit };
+    return { items, itemsLoading, formState, isEditing, isSubmitting, handleInputChange, handleSubmit, handleEditClick, handleDelete, handleCancelEdit };
 };
 
 
@@ -320,14 +316,13 @@ const ContentManager: React.FC<ManagerProps & {
     renderItem: (item: any, onEdit: (item: any) => void, onDelete: (id: string) => void) => React.ReactNode;
     itemToEdit?: any;
     onBeforeSubmit?: (data: any, isEditing: boolean) => any;
-// FIX: Added `renderItem` to props destructuring to make it available in the component's scope.
 }> = ({ collectionName, orderByField, initialState, itemTitle, fields, imageFields = [], itemToEdit, onBeforeSubmit, handleTranslate, openAiModal, renderItem }) => {
     
     const manager = useCmsManager(collectionName, orderByField, initialState, itemToEdit);
     const [translationLoading, setTranslationLoading] = useState<Record<string, boolean>>({});
 
     const doTranslate = async (sourceField: string, targetField: string, targetLang: string) => {
-        const sourceText = manager.formState[sourceField];
+        const sourceText = (manager.formState as any)[sourceField];
         if (!sourceText) return;
         setTranslationLoading(prev => ({ ...prev, [targetField]: true }));
         const translatedText = await handleTranslate(sourceText, targetLang);
@@ -342,7 +337,7 @@ const ContentManager: React.FC<ManagerProps & {
             <AdminSection title={manager.isEditing ? `Edit ${itemTitle}` : `Create New ${itemTitle}`}>
                 <form onSubmit={(e) => manager.handleSubmit(e, onBeforeSubmit)} className="space-y-4">
                     {initialState.hasOwnProperty('order') && (
-                        <FormInput name="order" label="Order" value={manager.formState.order ?? 0} onChange={manager.handleInputChange} type="number" required />
+                        <FormInput name="order" label="Order" value={(manager.formState as any).order ?? 0} onChange={manager.handleInputChange} type="number" required />
                     )}
 
                     {fields.map(field => {
@@ -360,7 +355,7 @@ const ContentManager: React.FC<ManagerProps & {
                                                 {field.isAiGeneratable && <GenerateWithAIButton onClick={() => openAiModal(value => manager.handleInputChange({ target: { name: name_en, value } } as any))} />}
                                             </div>
                                         }
-                                        value={manager.formState[name_en] || ''}
+                                        value={(manager.formState as any)[name_en] || ''}
                                         onChange={manager.handleInputChange}
                                         rows={field.rows}
                                         required
@@ -373,7 +368,7 @@ const ContentManager: React.FC<ManagerProps & {
                                                 <TranslateButton isLoading={translationLoading[name_km]} onClick={() => doTranslate(name_en, name_km, 'Khmer')} />
                                             </div>
                                         }
-                                        value={manager.formState[name_km] || ''}
+                                        value={(manager.formState as any)[name_km] || ''}
                                         onChange={manager.handleInputChange}
                                         rows={field.rows}
                                         required
@@ -394,7 +389,7 @@ const ContentManager: React.FC<ManagerProps & {
                                          {field.isAiGeneratable && <GenerateWithAIButton onClick={() => openAiModal(value => manager.handleInputChange({ target: { name, value } } as any))} />}
                                     </div>
                                 }
-                                value={manager.formState[name] || ''}
+                                value={(manager.formState as any)[name] || ''}
                                 onChange={manager.handleInputChange}
                                 rows={field.rows}
                                 required
@@ -403,9 +398,9 @@ const ContentManager: React.FC<ManagerProps & {
                     })}
                     
                     {imageFields.map(field => field.type === 'single' ?
-                        <ImageUploadInput key={field.name} name={field.name} label={field.label} value={manager.formState[field.name] || ''} onChange={manager.handleInputChange} folder={field.folder} required={field.required} />
+                        <ImageUploadInput key={field.name} name={field.name} label={field.label} value={(manager.formState as any)[field.name] || ''} onChange={manager.handleInputChange} folder={field.folder} required={field.required} />
                         :
-                        <MultiImageUploadInput key={field.name} name={field.name} label={field.label} value={manager.formState[field.name] || []} onChange={manager.handleInputChange} folder={field.folder} helperText={field.helperText} />
+                        <MultiImageUploadInput key={field.name} name={field.name} label={field.label} value={(manager.formState as any)[field.name] || []} onChange={manager.handleInputChange} folder={field.folder} helperText={field.helperText} />
                     )}
                     
                     <div className="flex items-center space-x-4 pt-2">
@@ -416,8 +411,7 @@ const ContentManager: React.FC<ManagerProps & {
             </AdminSection>
             <AdminSection title={`Manage ${itemTitle}s`}>
                  <div className="space-y-3">
-                    {/* FIX: Changed `manager.renderItem` to `renderItem`. The render function is a prop and not part of the `manager` hook's return value. */}
-                    {manager.items.map((item: any) => renderItem(item, manager.handleEditClick, manager.handleDelete))}
+                    {manager.itemsLoading ? <p>Loading items...</p> : manager.items.map((item: any) => renderItem(item, manager.handleEditClick, manager.handleDelete))}
                 </div>
             </AdminSection>
         </div>
@@ -425,10 +419,15 @@ const ContentManager: React.FC<ManagerProps & {
 };
 
 const CommentManager: React.FC = () => {
-    const q = useMemo(() => query(collection(db, "comments"), orderBy("createdAt", "desc")), []);
-    const { data: comments } = useCollection<CommentType>(q);
+    const { data: comments } = useCollection<CommentType>('comments', useMemo(() => ({ orderBy: { column: 'createdAt', ascending: false } }), []));
 
-    const handleDelete = async (id: string) => { if (window.confirm('Delete this comment?')) await deleteDoc(doc(db, "comments", id)); };
+    const handleDelete = async (id: string) => { 
+        if (!supabase) return;
+        if (window.confirm('Delete this comment?')) {
+            const { error } = await supabase.from('comments').delete().eq('id', id);
+            if (error) console.error(error);
+        }
+    };
 
     return (
         <AdminSection title="Comment Moderation">
@@ -441,7 +440,7 @@ const CommentManager: React.FC = () => {
                                     <img src={comment.user.photoURL || ''} alt="" className="w-6 h-6 rounded-full"/>
                                     <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
+                                <p className="text-xs text-gray-500 mb-2">{new Date(comment.createdAt).toLocaleString()}</p>
                                 <p className="text-gray-800 whitespace-pre-wrap">{comment.text}</p>
                             </div>
                             <button onClick={() => handleDelete(comment.id)} className="text-sm font-semibold text-red-600 hover:underline ml-4">Delete</button>
@@ -465,11 +464,21 @@ const PageContentManager: React.FC<{
     const [translationLoading, setTranslationLoading] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        const docRef = doc(db, 'pages', pageId);
-        getDoc(docRef).then(docSnap => {
-            if (docSnap.exists()) setFormState(docSnap.data());
+        if (!supabase) {
             setIsLoading(false);
-        });
+            return;
+        }
+        const fetchPage = async () => {
+            const { data, error } = await supabase.from('pages').select('*').eq('id', pageId).single();
+            if (data) {
+                setFormState(data);
+            }
+            if (error && error.code !== 'PGRST116') { // Ignore "no rows found" error
+                console.error(error);
+            }
+            setIsLoading(false);
+        };
+        fetchPage();
     }, [pageId]);
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setFormState(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -488,9 +497,11 @@ const PageContentManager: React.FC<{
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
+        if (!supabase) return;
         setIsSubmitting(true);
         try {
-            await setDoc(doc(db, 'pages', pageId), formState);
+            const { error } = await supabase.from('pages').upsert({ id: pageId, ...formState });
+            if (error) throw error;
             alert('Content updated successfully!');
         } catch (error) { console.error(error); alert('Failed to update content.'); } 
         finally { setIsSubmitting(false); }
@@ -565,18 +576,19 @@ const ContactManager: React.FC<ManagerProps> = (props) => <PageContentManager
 
 
 const DashboardView: React.FC = () => {
-    const { data: posts } = useCollection<Post>(query(collection(db, "posts")));
-    const { data: comments } = useCollection<CommentType>(query(collection(db, "comments")));
-    const { data: albums } = useCollection<GalleryAlbum>(query(collection(db, "gallery")));
-    const { data: events } = useCollection<EventType>(query(collection(db, "events")));
-    const { data: teachings } = useCollection<Teaching>(query(collection(db, "teachings")));
+    const { data: posts } = useCollection<Post>('posts');
+    const { data: comments } = useCollection<CommentType>('comments');
+    const { data: albums } = useCollection<GalleryAlbum>('gallery');
+    const { data: events } = useCollection<EventType>('events');
+    const { data: teachings } = useCollection<Teaching>('teachings');
 
-    const recentCommentsQuery = useMemo(() => query(collection(db, "comments"), orderBy("createdAt", "desc"), limit(5)), []);
-    const { data: recentComments } = useCollection<CommentType>(recentCommentsQuery);
+    const { data: recentComments } = useCollection<CommentType>('comments', useMemo(() => ({ orderBy: { column: 'createdAt', ascending: false }, limit: 5 }), []));
 
     const handleDeleteComment = async (id: string) => {
+        if (!supabase) return;
         if (window.confirm('Are you sure you want to delete this comment?')) {
-            await deleteDoc(doc(db, "comments", id));
+            const { error } = await supabase.from('comments').delete().eq('id', id);
+            if (error) console.error(error);
         }
     };
 
@@ -611,7 +623,7 @@ const DashboardView: React.FC = () => {
                                         <img src={comment.user.photoURL || ''} alt="" className="w-6 h-6 rounded-full"/>
                                         <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
+                                    <p className="text-xs text-gray-500 mb-2">{new Date(comment.createdAt).toLocaleString()}</p>
                                     <p className="text-gray-800 whitespace-pre-wrap">{comment.text}</p>
                                 </div>
                                 <button onClick={() => handleDeleteComment(comment.id)} className="text-sm font-semibold text-red-600 hover:underline ml-4">Delete</button>
@@ -649,7 +661,7 @@ const renderFeedItem = (item: Post, onEdit: (item: any) => void, onDelete: (id: 
     <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4 hover:bg-gray-50 transition-colors">
         <div>
             <h3 className="font-bold text-gray-900">{item.title}</h3>
-            <p className="text-sm text-gray-500">By {item.author} on {item.timestamp?.toDate().toLocaleDateString()}</p>
+            <p className="text-sm text-gray-500">By {item.author} on {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}</p>
         </div>
         <div className="flex items-center space-x-3 flex-shrink-0">
             <button onClick={() => onEdit(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
@@ -812,7 +824,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
                     itemToEdit={postToEditFromState}
                     onBeforeSubmit={(data, isEditing) => {
                         if (!isEditing) {
-                            return { ...data, author: user.displayName || 'Admin', timestamp: serverTimestamp() };
+                            return { ...data, author: user.displayName || 'Admin', timestamp: new Date().toISOString() };
                         }
                         return data;
                     }}

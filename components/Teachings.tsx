@@ -2,9 +2,8 @@ import React, { useMemo } from 'react';
 import { Language, Teaching } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
-import { db } from '../firebase';
-// FIX: Imported QueryConstraint to correctly type the query constraints array.
-import { collection, query, orderBy, limit, QueryConstraint } from 'firebase/firestore';
+// import { db } from '../firebase'; // Removed Firestore
+// import { collection, query, orderBy, limit, QueryConstraint } from 'firebase/firestore'; // Removed Firestore
 import CardSkeleton from './skeletons/CardSkeleton';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from './icons/ArrowRightIcon';
@@ -55,17 +54,14 @@ const itemVariants: Variants = {
 };
 
 const Teachings: React.FC<TeachingsProps> = ({ language, isHomePage = false }) => {
-    // UPGRADE: Conditionally limit the number of teachings fetched for the homepage
-    const q = useMemo(() => {
-        // FIX: Explicitly typed `constraints` as `QueryConstraint[]` to allow multiple constraint types.
-        const constraints: QueryConstraint[] = [orderBy("order", "asc")];
-        if (isHomePage) {
-            constraints.push(limit(3));
-        }
-        return query(collection(db, "teachings"), ...constraints);
-    }, [isHomePage]);
+    // UPGRADE: Conditionally limit the number of teachings fetched for the homepage.
+    // This now uses the refactored useCollection hook for Supabase.
+    const collectionOptions = useMemo(() => ({
+        orderBy: { column: 'order', ascending: true },
+        ...(isHomePage && { limit: 3 })
+    }), [isHomePage]);
 
-    const { data: teachings, loading } = useCollection<Teaching>(q);
+    const { data: teachings, loading } = useCollection<Teaching>('teachings', collectionOptions);
     const currentMeta = metaContent[language];
 
     const content = {

@@ -1,14 +1,6 @@
 import React, { useMemo } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
-import { db } from '../firebase';
-import {
-    collection,
-    query,
-    orderBy,
-    deleteDoc,
-    doc,
-    Timestamp,
-} from 'firebase/firestore';
+import { supabase } from '../supabase'; // Use Supabase client
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -38,21 +30,24 @@ const metaContent = {
 };
 
 const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
-    const q = useMemo(() => query(collection(db, "posts"), orderBy("timestamp", "desc")), []);
-    const { data: posts, loading, error } = useCollection<Post>(q);
+    const collectionOptions = useMemo(() => ({ orderBy: { column: 'timestamp', ascending: false } }), []);
+    const { data: posts, loading, error } = useCollection<Post>('posts', collectionOptions);
 
-    const formatTimestamp = (timestamp: Timestamp) => {
+    const formatTimestamp = (timestamp: string) => {
         if (!timestamp) return '';
-        return timestamp.toDate().toLocaleString(language === 'km' ? 'km-KH' : 'en-US', {
+        return new Date(timestamp).toLocaleString(language === 'km' ? 'km-KH' : 'en-US', {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
         });
     };
 
     const handleDelete = async (id: string) => {
-        if (!isAdmin) return;
+        if (!isAdmin || !supabase) return;
         if (window.confirm(language === 'km' ? 'តើអ្នកពិតជាចង់លុបប្រកាសនេះមែនទេ?' : 'Are you sure you want to delete this post?')) {
-            const postDoc = doc(db, "posts", id);
-            await deleteDoc(postDoc);
+            const { error } = await supabase.from('posts').delete().eq('id', id);
+            if (error) {
+                console.error("Error deleting post:", error);
+                alert("Failed to delete post.");
+            }
         }
     };
 
@@ -107,7 +102,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                             {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
                                         </span>
                                         <span className="hidden sm:inline">&bull;</span>
-                                        <time dateTime={post.timestamp ? post.timestamp.toDate().toISOString() : ''}>
+                                        <time dateTime={post.timestamp}>
                                             {formatTimestamp(post.timestamp)}
                                         </time>
                                     </div>

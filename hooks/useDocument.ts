@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { db } from '../firebase';
-import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
+import { supabase } from '../supabase';
 
 export const useDocument = <T extends { id: string }>(collectionName: string, docId: string) => {
     const [data, setData] = useState<T | null>(null);
@@ -13,21 +12,40 @@ export const useDocument = <T extends { id: string }>(collectionName: string, do
             setError("Document ID is missing.");
             return;
         }
-        const docRef = doc(db, collectionName, docId);
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-                setData({ id: docSnap.id, ...docSnap.data() } as T);
+        if (!supabase) {
+            setLoading(false);
+            setError("Supabase client not initialized.");
+            return;
+        }
+
+        const fetchDocument = async () => {
+            setLoading(true);
+            const { data: docData, error: docError } = await supabase
+                .from(collectionName)
+                .select('*')
+                .eq('id', docId)
+                .single();
+
+            if (docError) {
+                console.error(docError);
+                // Don't set error for "not found", as it's a valid state
+                if (docError.code !== 'PGRST116') {
+                    setError('Could not fetch the document.');
+                } else {
+                    setError('Document not found.');
+                }
+                setData(null);
             } else {
-                setError("Document not found.");
+                setData(docData as T);
+                setError(null);
             }
             setLoading(false);
-        }, (err) => {
-            console.error(err);
-            setError('Could not fetch the document.');
-            setLoading(false);
-        });
+        };
 
-        return () => unsubscribe();
+        fetchDocument();
+
+        // This hook performs a one-time fetch. For real-time updates,
+        // you would implement Supabase subscriptions here.
     }, [collectionName, docId]);
 
     return { data, loading, error };
