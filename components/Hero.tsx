@@ -51,7 +51,7 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
       >
         {/* Background Image with Ken Burns Effect */}
         <div 
-            className="absolute inset-0 bg-cover bg-center animate-kenburns-top"
+            className="absolute inset-0 bg-cover bg-center animate-kenburns"
             style={{ backgroundImage: "url('https://i.postimg.cc/02xqb4Yy/photo-2025-09-08-23-20-58.jpg')" }}
         ></div>
         
