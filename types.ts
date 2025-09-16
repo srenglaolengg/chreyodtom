@@ -69,11 +69,6 @@ export interface Post {
   imageUrl?: string;
 }
 
-export interface Schedule {
-  time: string;
-  activity: string;
-}
-
 export interface AboutContent {
   paragraph1_en: string;
   paragraph2_en: string;

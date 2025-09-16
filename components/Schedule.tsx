@@ -1,13 +1,16 @@
 import React from 'react';
 import { Language } from '../types';
-import { SCHEDULE_DATA } from '../constants';
+// FIX: SCHEDULE_DATA is no longer exported from constants.ts due to data migration.
+// This component is currently unused, so we comment out the import to prevent build errors.
+// import { SCHEDULE_DATA } from '../constants';
 
 interface ScheduleProps {
     language: Language;
 }
 
 const Schedule: React.FC<ScheduleProps> = ({ language }) => {
-    const schedule = SCHEDULE_DATA[language];
+    // FIX: Replaced usage of SCHEDULE_DATA with an empty array as the data is no longer available.
+    const schedule: { time: string; activity: string }[] = [];
     const headers = {
         en: { time: "Time", activity: "Activity" },
         km: { time: "ពេលវេលា", activity: "សកម្មភាព" }
