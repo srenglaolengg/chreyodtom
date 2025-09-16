@@ -56,8 +56,8 @@ const App: React.FC = () => {
   return (
     <Router>
       <ScrollToTop />
-      {/* Changed background color to use the CSS variable for better theme integration. */}
-      <div className="bg-background text-foreground min-h-screen flex flex-col">
+      {/* Changed background color to use static Tailwind classes for a consistent light theme. */}
+      <div className="bg-white text-gray-800 min-h-screen flex flex-col">
         {/* Header always visible */}
         <Header
           language={language}

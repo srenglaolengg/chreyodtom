@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, GalleryAlbum } from '../types';
 import PageMeta from '../components/PageMeta';
 import { ArrowLeft } from 'lucide-react';
 import PostSkeleton from '../components/skeletons/PostSkeleton';
-import Lightbox from '../components/Lightbox';
 import { useDocument } from '../hooks/useDocument';
 
 const GalleryDetail: React.FC<{ language: Language }> = ({ language }) => {
     const { id } = useParams<{ id: string }>();
     const { data: album, loading, error } = useDocument<GalleryAlbum>('gallery', id!);
-    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     
     const currentAlbumTitle = album ? (language === 'km' ? album.title_km : album.title_en) : '';
     const currentAlbumDescription = album ? (language === 'km' ? album.description_km : album.description_en) : '';
@@ -43,41 +41,42 @@ const GalleryDetail: React.FC<{ language: Language }> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-             <section className="py-20 bg-secondary/30">
+            {/* UI UPGRADE: Standardized vertical padding and background. */}
+             <section className="py-20 md:py-28 bg-gray-100">
                 <div className="container mx-auto px-6">
                     {loading ? (
                         <PostSkeleton />
                     ) : error || !album ? (
                         <div className="text-center">
-                            <h2 className="text-2xl font-bold text-destructive mb-4">{error || 'Could not load album.'}</h2>
-                             <Link to="/gallery" className={`inline-flex items-center space-x-2 text-primary font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <h2 className="text-2xl font-bold text-red-500 mb-4">{error || 'Could not load album.'}</h2>
+                             <Link to="/gallery" className={`inline-flex items-center space-x-2 text-amber-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
                                 <ArrowLeft className="w-5 h-5"/>
                                 <span>{currentContent.backLink}</span>
                             </Link>
                         </div>
                     ) : (
                         <article className="max-w-4xl mx-auto">
-                             <Link to="/gallery" className={`inline-flex items-center space-x-2 text-primary font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
+                             <Link to="/gallery" className={`inline-flex items-center space-x-2 text-amber-600 font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
                                 <ArrowLeft className="w-5 h-5"/>
                                 <span>{currentContent.backLink}</span>
                             </Link>
 
-                            <div className="bg-card p-6 sm:p-8 md:p-10 rounded-lg shadow-lg border border-border">
-                                <h1 className={`text-3xl md:text-4xl font-bold text-primary mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <div className="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg border border-gray-200">
+                                <h1 className={`text-3xl md:text-4xl font-bold text-amber-600 mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {currentAlbumTitle}
                                 </h1>
-                                <p className={`text-foreground/80 leading-relaxed whitespace-pre-line ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <p className={`text-gray-700 leading-relaxed whitespace-pre-line ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {currentAlbumContent}
                                 </p>
                                 
-                                <div className="border-t border-border my-8"></div>
+                                <div className="border-t border-gray-200 my-8"></div>
                                 
-                                <h2 className={`text-2xl font-bold text-foreground mb-6 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <h2 className={`text-2xl font-bold text-gray-900 mb-6 ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {language === 'km' ? 'រូបភាពបន្ថែម' : 'Images'}
                                 </h2>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {album.imageUrls.map((url, index) => (
-                                        <div key={index} className="group relative overflow-hidden rounded-lg shadow-md cursor-pointer" onClick={() => setSelectedImage(url)}>
+                                        <div key={index} className="group relative overflow-hidden rounded-lg shadow-md">
                                             <img src={url} alt={`${currentAlbumTitle} - Image ${index + 1}`} className="w-full h-full object-cover aspect-square transform group-hover:scale-110 transition-transform duration-500" />
                                             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/40 transition-colors"></div>
                                         </div>
@@ -88,7 +87,6 @@ const GalleryDetail: React.FC<{ language: Language }> = ({ language }) => {
                     )}
                 </div>
             </section>
-            {selectedImage && <Lightbox src={selectedImage} alt="Enlarged view" onClose={() => setSelectedImage(null)} />}
         </>
     );
 };

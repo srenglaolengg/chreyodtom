@@ -3,7 +3,8 @@ import { Language, Teaching } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { db } from '../firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
+// FIX: Imported QueryConstraint to correctly type the query constraints array.
+import { collection, query, orderBy, limit, QueryConstraint } from 'firebase/firestore';
 import CardSkeleton from './skeletons/CardSkeleton';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon } from './icons/ArrowRightIcon';
@@ -15,6 +16,7 @@ import { Card, CardContent, CardImage } from './ui/Card';
 
 interface TeachingsProps {
   language: Language;
+  isHomePage?: boolean; // BUGFIX/UPGRADE: Added prop to control content for homepage view
 }
 
 const metaContent = {
@@ -52,19 +54,30 @@ const itemVariants: Variants = {
   },
 };
 
-const Teachings: React.FC<TeachingsProps> = ({ language }) => {
-    const q = useMemo(() => query(collection(db, "teachings"), orderBy("order", "asc")), []);
+const Teachings: React.FC<TeachingsProps> = ({ language, isHomePage = false }) => {
+    // UPGRADE: Conditionally limit the number of teachings fetched for the homepage
+    const q = useMemo(() => {
+        // FIX: Explicitly typed `constraints` as `QueryConstraint[]` to allow multiple constraint types.
+        const constraints: QueryConstraint[] = [orderBy("order", "asc")];
+        if (isHomePage) {
+            constraints.push(limit(3));
+        }
+        return query(collection(db, "teachings"), ...constraints);
+    }, [isHomePage]);
+
     const { data: teachings, loading } = useCollection<Teaching>(q);
     const currentMeta = metaContent[language];
 
     const content = {
         en: {
             title: 'Buddhist Teachings',
-            viewMore: 'Read More'
+            viewMore: 'Read More',
+            viewAll: 'View All Teachings'
         },
         km: {
             title: 'ពុទ្ធឱវាទ',
-            viewMore: 'អានបន្ថែម'
+            viewMore: 'អានបន្ថែម',
+            viewAll: 'មើលព្រះធម៌ទាំងអស់'
         }
     }
     const currentContent = content[language];
@@ -72,27 +85,30 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
 
     return (
         <>
-            <PageMeta 
-                title={currentMeta.title}
-                description={currentMeta.description}
-                keywords={currentMeta.keywords}
-            />
-            {/* Styling Change: Increased vertical padding (py-24) for better spacing. */}
-            <section id="teachings" className="py-24 bg-background">
+            {/* Only render PageMeta on the dedicated teachings page */}
+            {!isHomePage && (
+                <PageMeta 
+                    title={currentMeta.title}
+                    description={currentMeta.description}
+                    keywords={currentMeta.keywords}
+                />
+            )}
+            {/* UI UPGRADE: Standardized vertical padding for consistent spacing. */}
+            <section id="teachings" className="py-20 md:py-28 bg-white">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
                         <div className="inline-flex items-center justify-center space-x-4">
-                            <DharmaWheelIcon className="w-10 h-10 text-primary" />
-                            <h2 className={`text-4xl md:text-5xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <DharmaWheelIcon className="w-10 h-10 text-amber-600" />
+                            <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
                                 {currentContent.title}
                             </h2>
-                            <DharmaWheelIcon className="w-10 h-10 text-primary" />
+                            <DharmaWheelIcon className="w-10 h-10 text-amber-600" />
                         </div>
                     </div>
                      
                     <motion.div 
-                      /* Styling Change: Increased grid gap for more space between cards. */
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+                      // UI UPGRADE: Increased grid gap for better visual separation.
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                       variants={containerVariants}
                       initial="hidden"
                       animate={loading ? "hidden" : "visible"}
@@ -102,13 +118,13 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                         ) : (
                           teachings.map((item) => (
                             <motion.div key={item.id} variants={itemVariants} className="flex">
-                              {/* The Card component now has enhanced styling from components/ui/Card.tsx */}
+                              {/* The Card component uses enhanced styling from components/ui/Card.tsx */}
                               <Card className="flex flex-col h-full w-full group">
                                 <CardImage src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} />
                                 <CardContent className="flex flex-col flex-grow">
-                                  <h3 className={`text-xl font-bold text-card-foreground mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.title_km : item.title_en}</h3>
-                                  <p className={`text-muted-foreground line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
-                                  <Link to={`/teachings/${item.id}`} className={`inline-flex items-center space-x-2 mt-4 text-primary font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
+                                  <h3 className={`text-xl font-bold text-gray-900 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.title_km : item.title_en}</h3>
+                                  <p className={`text-gray-500 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
+                                  <Link to={`/teachings/${item.id}`} className={`inline-flex items-center space-x-2 mt-4 text-amber-600 font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
                                     <span>{currentContent.viewMore}</span>
                                     <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>
                                   </Link>
@@ -118,6 +134,16 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                           ))
                         )}
                     </motion.div>
+
+                    {/* UPGRADE: Conditionally render a "View All" button for the homepage section */}
+                    {isHomePage && (
+                        <div className="text-center mt-16">
+                            <Link to="/teachings" className={`inline-flex items-center space-x-2 bg-amber-600 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-amber-700 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <span>{currentContent.viewAll}</span>
+                                <ArrowRightIcon className="w-5 h-5" />
+                            </Link>
+                        </div>
+                    )}
                 </div>
             </section>
         </>

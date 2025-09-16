@@ -21,18 +21,18 @@ const Donation: React.FC<DonationProps> = ({ language }) => {
     }
     const currentContent = content[language];
   return (
-    <section id="donation" className="py-20 bg-gradient-to-b from-amber-100/30 to-amber-200/30 dark:from-amber-900/20 dark:to-amber-900/30">
+    <section id="donation" className="py-20 bg-amber-50">
       <div className="container mx-auto px-6 text-center">
         <div className="flex justify-center mb-6">
-            <LotusIcon className="w-16 h-16 text-primary" />
+            <LotusIcon className="w-16 h-16 text-amber-600" />
         </div>
-        <h2 className={`text-3xl md:text-4xl font-bold text-primary mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
+        <h2 className={`text-3xl md:text-4xl font-bold text-amber-600 mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
           {currentContent.title}
         </h2>
-        <p className={`max-w-2xl mx-auto text-muted-foreground mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
+        <p className={`max-w-2xl mx-auto text-gray-600 mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
           {currentContent.description}
         </p>
-        <button className={`bg-gradient-to-r from-primary to-amber-500 dark:to-amber-600 text-primary-foreground font-bold text-lg px-10 py-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}>
+        <button className={`bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold text-lg px-10 py-4 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}>
           {currentContent.button}
         </button>
       </div>

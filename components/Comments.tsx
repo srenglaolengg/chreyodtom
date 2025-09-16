@@ -92,34 +92,34 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            {/* Styling Change: Increased vertical padding and adjusted background. */}
-            <section id="comments" className="py-24 bg-secondary/50">
+            {/* UI UPGRADE: Standardized vertical padding and background. */}
+            <section id="comments" className="py-20 md:py-28 bg-gray-50">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
-                      <h2 className={`text-4xl md:text-5xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
+                      <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
                           {currentContent.title}
                       </h2>
                     </div>
-                    {/* Styling Change: Polished the main container card. */}
-                    <div className="max-w-3xl mx-auto bg-card p-4 sm:p-6 md:p-8 rounded-lg shadow-lg border border-border">
+                    {/* UI UPGRADE: Polished the main container card with static light theme styles. */}
+                    <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg border border-gray-200">
                         {user ? (
                              <form onSubmit={handleSubmitComment} className="mb-8">
                                 <div className="flex items-start space-x-4">
-                                  <img src={user.photoURL || ''} alt={user.displayName || 'User'} className="w-11 h-11 rounded-full flex-shrink-0 border-2 border-primary/50" />
+                                  <img src={user.photoURL || ''} alt={user.displayName || 'User'} className="w-11 h-11 rounded-full flex-shrink-0 border-2 border-amber-600/50" />
                                   <div className="flex-1">
                                       <textarea
                                           value={newComment}
                                           onChange={(e) => setNewComment(e.target.value)}
                                           placeholder={currentContent.placeholder}
-                                          className={`w-full p-4 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring focus:border-ring transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                                          className={`w-full p-4 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
                                           rows={4}
                                           aria-label="New comment"
                                       />
                                       <div className="flex justify-end items-center mt-4 gap-4">
-                                         <button onClick={handleLogout} className="bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors text-sm font-semibold">
+                                         <button type="button" onClick={handleLogout} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors text-sm font-semibold">
                                             {currentContent.logout}
                                         </button>
-                                        <button type="submit" className={`bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 transition-colors shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${language === 'km' ? 'font-khmer' : ''}`} disabled={!newComment.trim()}>
+                                        <button type="submit" className={`bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 transition-colors shadow font-semibold disabled:opacity-50 disabled:cursor-not-allowed ${language === 'km' ? 'font-khmer' : ''}`} disabled={!newComment.trim()}>
                                             {currentContent.submit}
                                         </button>
                                       </div>
@@ -127,8 +127,8 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                                 </div>
                             </form>
                         ) : (
-                            <div className="text-center mb-8 p-6 bg-secondary/50 rounded-lg">
-                                <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-foreground text-background px-6 py-3 rounded-full hover:bg-foreground/80 transition-colors shadow-lg font-semibold">
+                            <div className="text-center mb-8 p-6 bg-gray-100 rounded-lg">
+                                <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-900 transition-colors shadow-lg font-semibold">
                                     <GitHubIcon className="w-6 h-6" />
                                     <span>{currentContent.login}</span>
                                 </button>
@@ -137,22 +137,22 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
 
                         <div className="space-y-6">
                             {loading && Array.from({ length: 3 }).map((_, i) => <CommentSkeleton key={i} />)}
-                            {error && <p className="text-center text-destructive">{error}</p>}
-                            {!loading && comments.length === 0 && <p className="text-center text-muted-foreground py-8">{currentContent.noComments}</p>}
+                            {error && <p className="text-center text-red-500">{error}</p>}
+                            {!loading && comments.length === 0 && <p className="text-center text-gray-500 py-8">{currentContent.noComments}</p>}
                             {!loading && comments.map(comment => (
-                                /* Styling Change: Refined individual comment appearance. */
+                                /* UI UPGRADE: Refined individual comment appearance for better readability. */
                                 <article key={comment.id} className="flex items-start space-x-4 p-4" aria-label={`Comment by ${comment.user.displayName}`}>
-                                    <img src={comment.user.photoURL || ''} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1 border-2 border-border" />
-                                    <div className="flex-1 min-w-0 bg-secondary/50 p-4 rounded-lg">
+                                    <img src={comment.user.photoURL || ''} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1 border-2 border-gray-200" />
+                                    <div className="flex-1 min-w-0 bg-gray-50 p-4 rounded-lg">
                                         <div className="flex items-baseline space-x-2">
-                                            <p className="font-bold text-foreground">{comment.user.displayName}</p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="font-bold text-gray-900">{comment.user.displayName}</p>
+                                            <p className="text-xs text-gray-500">
                                                 <time dateTime={comment.createdAt ? comment.createdAt.toDate().toISOString() : ''}>
                                                     {comment.createdAt ? comment.createdAt.toDate().toLocaleString() : '...'}
                                                 </time>
                                             </p>
                                         </div>
-                                        <p className={`text-foreground/90 whitespace-pre-line break-words mt-1 ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
+                                        <p className={`text-gray-800 whitespace-pre-line break-words mt-1 ${language === 'km' ? 'font-khmer' : ''}`}>{comment.text}</p>
                                     </div>
                                 </article>
                             ))}

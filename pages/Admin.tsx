@@ -56,6 +56,7 @@ const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
 
 
 // --- FILE UPLOAD HELPERS ---
+// UI UPGRADE: Enhanced styling and user feedback for file upload components.
 const ImageUploadInput: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; folder: string; helperText?: string; required?: boolean; }> = ({ name, label, value, onChange, folder, helperText, required }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
@@ -80,17 +81,17 @@ const ImageUploadInput: React.FC<{ name: string; label: string; value: string; o
 
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-foreground/80 mb-1">{label}</label>
+            <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
             <div className="flex items-center space-x-2">
-                <input id={name} name={name} type="url" value={value} onChange={onChange} placeholder="Enter image URL or upload" className="w-full p-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring" required={required} />
-                <label htmlFor={`${name}-file`} className="cursor-pointer bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded-md border border-border whitespace-nowrap transition-colors inline-flex items-center space-x-2">
+                <input id={name} name={name} type="url" value={value} onChange={onChange} placeholder="Enter image URL or upload" className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500" required={required} />
+                <label htmlFor={`${name}-file`} className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 whitespace-nowrap transition-colors inline-flex items-center space-x-2">
                     <UploadCloud className="w-4 h-4"/>
                     <span>{isUploading ? 'Uploading...' : 'Upload'}</span>
                 </label>
                 <input id={`${name}-file`} type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} />
             </div>
-            {uploadError && <p className="mt-1 text-xs text-destructive">{uploadError}</p>}
-            {helperText && <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>}
+            {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
+            {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
         </div>
     );
 };
@@ -98,12 +99,14 @@ const ImageUploadInput: React.FC<{ name: string; label: string; value: string; o
 const MultiImageUploadInput: React.FC<{ name: string; label: string; value: string[]; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; folder: string; helperText?: string; }> = ({ name, label, value, onChange, folder, helperText }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
+    const [uploadCount, setUploadCount] = useState(0);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
         setIsUploading(true);
+        setUploadCount(files.length);
         setUploadError(null);
 
         try {
@@ -115,47 +118,48 @@ const MultiImageUploadInput: React.FC<{ name: string; label: string; value: stri
             const downloadURLs = await Promise.all(uploadPromises);
             onChange({ target: { name, value: [...value, ...downloadURLs].join('\n') } } as React.ChangeEvent<HTMLTextAreaElement>);
         } catch (error) { console.error("Upload error:", error); setUploadError("File upload failed."); } 
-        finally { setIsUploading(false); }
+        finally { setIsUploading(false); setUploadCount(0); }
     };
 
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-foreground/80 mb-1">{label}</label>
-            <textarea id={name} name={name} value={value.join('\n')} onChange={onChange} rows={6} placeholder="Enter one image URL per line, or upload files." className="w-full p-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring font-mono text-sm" />
-             <label htmlFor={`${name}-file`} className="mt-2 cursor-pointer bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold px-4 py-2 rounded-md border border-border inline-flex items-center space-x-2 transition-colors">
+            <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+            <textarea id={name} name={name} value={value.join('\n')} onChange={onChange} rows={6} placeholder="Enter one image URL per line, or upload files." className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm" />
+             <label htmlFor={`${name}-file`} className="mt-2 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 inline-flex items-center space-x-2 transition-colors">
                 <UploadCloud className="w-4 h-4"/>
-                <span>{isUploading ? `Uploading ${isUploading}...` : 'Upload Files'}</span>
+                <span>{isUploading ? `Uploading ${uploadCount}...` : 'Upload Files'}</span>
             </label>
             <input id={`${name}-file`} type="file" accept="image/*" onChange={handleFileChange} className="hidden" disabled={isUploading} multiple />
-            {uploadError && <p className="mt-1 text-xs text-destructive">{uploadError}</p>}
-            {helperText && <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>}
+            {uploadError && <p className="mt-1 text-xs text-red-500">{uploadError}</p>}
+            {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
         </div>
     );
 };
 
 // --- GENERIC HELPER COMPONENTS ---
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-card p-6 md:p-8 rounded-lg shadow-sm border border-border">
-        <h2 className="text-2xl font-bold text-primary mb-6">{title}</h2>
+    <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-200">
+        <h2 className="text-2xl font-bold text-amber-600 mb-6">{title}</h2>
         {children}
     </div>
 );
 const FormInput: React.FC<{ name: string; label: string; value: string | number; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; required?: boolean }> = ({ name, label, ...props }) => (
     <div>
-        <label htmlFor={name} className="block text-sm font-medium text-foreground/80 mb-1">{label}</label>
-        <input id={name} name={name} {...props} className="w-full p-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring"/>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+        <input id={name} name={name} {...props} className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500"/>
     </div>
 );
 const FormTextarea: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; rows?: number; required?: boolean; helperText?: string }> = ({ name, label, helperText, ...props }) => (
     <div>
-        <label htmlFor={name} className="block text-sm font-medium text-foreground/80 mb-1">{label}</label>
-        <textarea id={name} name={name} {...props} className="w-full p-2 border border-input bg-background rounded-md focus:ring-2 focus:ring-ring"></textarea>
-        {helperText && <p className="mt-1 text-xs text-muted-foreground">{helperText}</p>}
+        <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+        <textarea id={name} name={name} {...props} className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500"></textarea>
+        {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
     </div>
 );
 
 
 // --- MANAGER COMPONENTS ---
+// UI UPGRADE: Applied consistent styling to forms and management lists.
 const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, postToEdit }) => {
     const q = useMemo(() => query(collection(db, "posts"), orderBy("timestamp", "desc")), []);
     const { data: posts } = useCollection<Post>(q);
@@ -199,18 +203,18 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
                     <FormTextarea name="content" label="Content (Markdown supported)" value={formState.content} onChange={handleInputChange} required rows={8} />
                     <ImageUploadInput name="imageUrl" label="Image URL (Optional)" value={formState.imageUrl || ''} onChange={handleInputChange} folder="posts" />
                     <div className="flex items-center space-x-4 pt-2">
-                         <button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/80 font-semibold disabled:opacity-50 transition-colors">{isSubmitting ? 'Saving...' : (isEditing ? 'Update Post' : 'Create Post')}</button>
-                        {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-secondary text-secondary-foreground px-6 py-2 rounded-md hover:bg-secondary/80 font-semibold transition-colors">Cancel</button>}
+                         <button type="submit" disabled={isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">{isSubmitting ? 'Saving...' : (isEditing ? 'Update Post' : 'Create Post')}</button>
+                        {isEditing && <button type="button" onClick={handleCancelEdit} className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 font-semibold transition-colors">Cancel</button>}
                     </div>
                 </form>
             </AdminSection>
             <AdminSection title="Manage Posts">
                 <div className="space-y-4">
                     {posts.map(post => (
-                        <div key={post.id} className="p-4 border border-border rounded-md flex justify-between items-center gap-4">
+                        <div key={post.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
                             <div>
-                                <h3 className="font-bold text-card-foreground">{post.title}</h3>
-                                <p className="text-sm text-muted-foreground">By {post.author} on {post.timestamp?.toDate().toLocaleDateString()}</p>
+                                <h3 className="font-bold text-gray-900">{post.title}</h3>
+                                <p className="text-sm text-gray-500">By {post.author} on {post.timestamp?.toDate().toLocaleDateString()}</p>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
                                 <button onClick={() => handleEditClick(post)} className="text-sm font-semibold text-blue-500 hover:underline">Edit</button>
@@ -234,20 +238,20 @@ const CommentManager: React.FC = () => {
         <AdminSection title="Comment Moderation">
             <div className="space-y-4">
                 {comments && comments.length > 0 ? comments.map(comment => (
-                    <div key={comment.id} className="p-4 border border-border rounded-md bg-background/50">
+                    <div key={comment.id} className="p-4 border border-gray-200 rounded-md bg-white">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                     <img src={comment.user.photoURL || ''} alt="" className="w-6 h-6 rounded-full"/>
-                                    <p className="font-bold text-card-foreground">{comment.user.displayName}</p>
+                                    <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                 </div>
-                                <p className="text-xs text-muted-foreground mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
-                                <p className="text-card-foreground whitespace-pre-wrap">{comment.text}</p>
+                                <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
+                                <p className="text-gray-900 whitespace-pre-wrap">{comment.text}</p>
                             </div>
                             <button onClick={() => handleDelete(comment.id)} className="text-sm font-semibold text-red-500 hover:underline ml-4">Delete</button>
                         </div>
                     </div>
-                )) : <p className="text-muted-foreground">No comments found.</p>}
+                )) : <p className="text-gray-500">No comments found.</p>}
             </div>
         </AdminSection>
     );
@@ -320,20 +324,20 @@ const GalleryManager: React.FC = () => {
                     <ImageUploadInput name="thumbnailUrl" label="Thumbnail Image URL" value={manager.formState.thumbnailUrl} onChange={manager.handleInputChange} folder="gallery/thumbnails" required />
                     <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={manager.formState.imageUrls} onChange={manager.handleInputChange} folder="gallery/details" helperText="Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
-                        <button type="submit" disabled={manager.isSubmitting} className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/80 font-semibold disabled:opacity-50 transition-colors">{manager.isSubmitting ? 'Saving...' : (manager.isEditing ? 'Update Album' : 'Create Album')}</button>
-                        {manager.isEditing && <button type="button" onClick={manager.handleCancelEdit} className="bg-secondary text-secondary-foreground px-6 py-2 rounded-md hover:bg-secondary/80 font-semibold transition-colors">Cancel</button>}
+                        <button type="submit" disabled={manager.isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">{manager.isSubmitting ? 'Saving...' : (manager.isEditing ? 'Update Album' : 'Create Album')}</button>
+                        {manager.isEditing && <button type="button" onClick={manager.handleCancelEdit} className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 font-semibold transition-colors">Cancel</button>}
                     </div>
                 </form>
             </AdminSection>
             <AdminSection title="Manage Gallery Albums">
                  <div className="space-y-4">
                     {manager.items.map(item => (
-                        <div key={item.id} className="p-4 border border-border rounded-md flex justify-between items-center gap-4">
+                        <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
                              <div className="flex items-center gap-4 min-w-0">
                                 <img src={item.thumbnailUrl} alt={item.title_en} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                 <div className="min-w-0">
-                                    <h3 className="font-bold text-card-foreground truncate">{item.title_en} / {item.title_km}</h3>
-                                    <p className="text-sm text-muted-foreground">Order: {item.order}</p>
+                                    <h3 className="font-bold text-gray-900 truncate">{item.title_en} / {item.title_km}</h3>
+                                    <p className="text-sm text-gray-500">Order: {item.order}</p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
@@ -366,20 +370,20 @@ const EventManager: React.FC = () => {
                     <ImageUploadInput name="imgSrc" label="Thumbnail Image URL" value={manager.formState.imgSrc} onChange={manager.handleInputChange} folder="events/thumbnails" required />
                     <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={manager.formState.imageUrls || []} onChange={manager.handleInputChange} folder="events/details" helperText="Optional. Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
-                         <button type="submit" disabled={manager.isSubmitting} className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/80 font-semibold disabled:opacity-50 transition-colors">{manager.isSubmitting ? 'Saving...' : (manager.isEditing ? 'Update Event' : 'Create Event')}</button>
-                        {manager.isEditing && <button type="button" onClick={manager.handleCancelEdit} className="bg-secondary text-secondary-foreground px-6 py-2 rounded-md hover:bg-secondary/80 font-semibold transition-colors">Cancel</button>}
+                         <button type="submit" disabled={manager.isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">{manager.isSubmitting ? 'Saving...' : (manager.isEditing ? 'Update Event' : 'Create Event')}</button>
+                        {manager.isEditing && <button type="button" onClick={manager.handleCancelEdit} className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 font-semibold transition-colors">Cancel</button>}
                     </div>
                 </form>
             </AdminSection>
              <AdminSection title="Manage Events">
                 <div className="space-y-4">
                     {manager.items.map(item => (
-                        <div key={item.id} className="p-4 border border-border rounded-md flex justify-between items-center gap-4">
+                        <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
                              <div className="flex items-center gap-4 min-w-0">
                                 <img src={item.imgSrc} alt={item.title_en} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                 <div className="min-w-0">
-                                    <h3 className="font-bold text-card-foreground truncate">{item.title_en}</h3>
-                                    <p className="text-sm text-muted-foreground truncate">{item.date_en}</p>
+                                    <h3 className="font-bold text-gray-900 truncate">{item.title_en}</h3>
+                                    <p className="text-sm text-gray-500 truncate">{item.date_en}</p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
@@ -410,20 +414,20 @@ const TeachingsManager: React.FC = () => {
                     <ImageUploadInput name="thumbnailUrl" label="Thumbnail Image URL" value={manager.formState.thumbnailUrl} onChange={manager.handleInputChange} folder="teachings/thumbnails" required />
                     <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={manager.formState.imageUrls || []} onChange={manager.handleInputChange} folder="teachings/details" helperText="Optional. Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
-                         <button type="submit" disabled={manager.isSubmitting} className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/80 font-semibold disabled:opacity-50 transition-colors">{manager.isSubmitting ? 'Saving...' : (manager.isEditing ? 'Update Teaching' : 'Create Teaching')}</button>
-                        {manager.isEditing && <button type="button" onClick={manager.handleCancelEdit} className="bg-secondary text-secondary-foreground px-6 py-2 rounded-md hover:bg-secondary/80 font-semibold transition-colors">Cancel</button>}
+                         <button type="submit" disabled={manager.isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">{manager.isSubmitting ? 'Saving...' : (manager.isEditing ? 'Update Teaching' : 'Create Teaching')}</button>
+                        {manager.isEditing && <button type="button" onClick={manager.handleCancelEdit} className="bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 font-semibold transition-colors">Cancel</button>}
                     </div>
                 </form>
             </AdminSection>
              <AdminSection title="Manage Teachings">
                 <div className="space-y-4">
                     {manager.items.map(item => (
-                        <div key={item.id} className="p-4 border border-border rounded-md flex justify-between items-center gap-4">
+                        <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
                              <div className="flex items-center gap-4 min-w-0">
                                 <img src={item.thumbnailUrl} alt={item.title_en} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                 <div className="min-w-0">
-                                    <h3 className="font-bold text-card-foreground truncate">{item.title_en}</h3>
-                                    <p className="text-sm text-muted-foreground">Order: {item.order}</p>
+                                    <h3 className="font-bold text-gray-900 truncate">{item.title_en}</h3>
+                                    <p className="text-sm text-gray-500">Order: {item.order}</p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
@@ -476,7 +480,7 @@ const PageContentManager: React.FC<{pageId: 'about' | 'contact', fields: Record<
                     <FormInput key={name} name={name} label={label} value={formState[name] || ''} onChange={handleInputChange} />
                 )}
                 <div className="pt-2">
-                    <button type="submit" disabled={isSubmitting} className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/80 font-semibold disabled:opacity-50 transition-colors">
+                    <button type="submit" disabled={isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">
                         {isSubmitting ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
@@ -533,7 +537,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
         return (
             <>
                 <PageMeta title="Authenticating..." description="" robots={metaRobots} />
-                <div className="min-h-screen flex items-center justify-center bg-background"><p>Authenticating...</p></div>
+                <div className="min-h-screen flex items-center justify-center bg-white"><p>Authenticating...</p></div>
             </>
         );
     }
@@ -542,11 +546,12 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
         return (
             <>
                 <PageMeta title="Admin Login" description={metaDescription} robots={metaRobots} />
-                <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
-                    <h1 className="text-4xl text-primary mb-4">Admin Access</h1>
-                    <p className="text-muted-foreground mb-8 max-w-sm">Please log in with an authorized GitHub account to access the content management dashboard.</p>
-                    <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-gray-800 text-white px-6 py-3 rounded-md hover:bg-gray-900 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 transition-all duration-300 shadow-lg transform hover:scale-105">
-                        <GitHubIcon className="w-6 h-6" /><span className="font-semibold">Login with GitHub</span>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 text-center">
+                    <h1 className="text-4xl text-amber-600 mb-4">Admin Access</h1>
+                    <p className="text-gray-500 mb-8 max-w-sm">Please log in with an authorized GitHub account to access the content management dashboard.</p>
+                    <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-900 transition-colors shadow-lg font-semibold transform hover:scale-105">
+                        <GitHubIcon className="w-6 h-6" />
+                        <span>Login with GitHub</span>
                     </button>
                 </div>
             </>
@@ -557,10 +562,10 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
          return (
             <>
                 <PageMeta title="Access Denied" description={metaDescription} robots={metaRobots} />
-                <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center">
-                    <h1 className="text-3xl text-destructive mb-4">Access Denied</h1>
-                    <p className="text-muted-foreground mb-8">You are not authorized to view this page.</p>
-                    <button onClick={handleLogout} className="inline-flex items-center space-x-3 bg-secondary text-secondary-foreground px-6 py-2 rounded-md hover:bg-secondary/80 transition-colors">
+                <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 text-center">
+                    <h1 className="text-3xl text-red-500 mb-4">Access Denied</h1>
+                    <p className="text-gray-500 mb-8">You are not authorized to view this page.</p>
+                    <button onClick={handleLogout} className="inline-flex items-center space-x-3 bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors">
                         <LogOut className="w-5 h-5" /><span>Logout</span>
                     </button>
                 </div>
@@ -574,7 +579,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
               <button
                   key={item.id}
                   onClick={() => { setView(item.id); setIsMenuOpen(false); }}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left w-full ${ view === item.id ? 'bg-primary/90 text-primary-foreground shadow-inner' : 'text-slate-300 hover:bg-slate-700' }`}
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left w-full ${ view === item.id ? 'bg-amber-100 text-amber-800' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }`}
               >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   <span className="font-semibold">{item.label}</span>
@@ -599,25 +604,26 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     return (
         <>
             <PageMeta title="Admin Dashboard | Wat Serei Mongkol" description={metaDescription} robots={metaRobots} />
-            <div className="min-h-screen bg-secondary/30 lg:flex dark:bg-background">
+            <div className="min-h-screen bg-gray-100 lg:flex">
+                {/* UI UPGRADE: Improved mobile sidebar overlay */}
                 <div className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}></div>
-                <aside className={`fixed lg:relative lg:translate-x-0 inset-y-0 left-0 z-50 w-64 bg-slate-800 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                    <div className="flex items-center justify-between p-4 h-20 border-b border-slate-700">
-                        <h1 className="text-xl font-bold text-primary">Admin Panel</h1>
-                         <button onClick={() => setIsMenuOpen(false)} className="lg:hidden text-slate-300 hover:text-white"> <X className="w-6 h-6" /> </button>
+                <aside className={`fixed lg:relative lg:translate-x-0 inset-y-0 left-0 z-50 w-64 bg-white text-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out border-r border-gray-200 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                    <div className="flex items-center justify-between p-4 h-20 border-b border-gray-200">
+                        <h1 className="text-xl font-bold text-amber-600">Admin Panel</h1>
+                         <button onClick={() => setIsMenuOpen(false)} className="lg:hidden text-gray-500 hover:text-gray-800"> <X className="w-6 h-6" /> </button>
                     </div>
                     <SidebarNav />
                 </aside>
                 
                 <div className="flex-1 flex flex-col min-w-0">
-                    <header className="bg-card/80 backdrop-blur-sm shadow-sm sticky top-0 z-30 border-b border-border">
+                    <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-30 border-b border-gray-200">
                         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
-                            <button onClick={() => setIsMenuOpen(true)} className="lg:hidden text-foreground"> <Menu className="w-6 h-6" /> </button>
-                            <div className="text-lg font-semibold text-foreground capitalize hidden sm:block">{navItems.find(i => i.id === view)?.label} Management</div>
+                            <button onClick={() => setIsMenuOpen(true)} className="lg:hidden text-gray-800"> <Menu className="w-6 h-6" /> </button>
+                            <div className="text-lg font-semibold text-gray-800 capitalize hidden sm:block">{navItems.find(i => i.id === view)?.label} Management</div>
                             <div className="flex items-center space-x-4">
-                                <span className="font-semibold text-foreground hidden sm:block">{user.displayName}</span>
-                                <img src={user.photoURL || ''} alt={user.displayName || ''} className="w-10 h-10 rounded-full border-2 border-primary" />
-                                <button onClick={handleLogout} title="Logout" className="text-muted-foreground hover:text-destructive transition-colors"> <LogOut className="w-6 h-6"/> </button>
+                                <span className="font-semibold text-gray-800 hidden sm:block">{user.displayName}</span>
+                                <img src={user.photoURL || ''} alt={user.displayName || ''} className="w-10 h-10 rounded-full border-2 border-amber-600" />
+                                <button onClick={handleLogout} title="Logout" className="text-gray-500 hover:text-red-500 transition-colors"> <LogOut className="w-6 h-6"/> </button>
                             </div>
                         </div>
                     </header>

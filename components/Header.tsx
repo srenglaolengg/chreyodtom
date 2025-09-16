@@ -6,27 +6,12 @@ import { auth, githubProvider } from '../firebase';
 import { signInWithPopup, signOut } from 'firebase/auth';
 import { GitHubIcon } from './icons/GitHubIcon';
 import { LogIn, LogOut } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
-import { Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   language: Language;
   toggleLanguage: () => void;
   user: FirebaseUser | null;
   isAdmin: boolean;
-}
-
-const ThemeToggleButton = () => {
-  const { theme, toggleTheme } = useTheme();
-  return (
-    <button
-      onClick={toggleTheme}
-      className="bg-secondary/50 text-secondary-foreground p-2 rounded-full hover:bg-secondary transition-colors"
-      aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-    >
-      {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-    </button>
-  );
 }
 
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin }) => {
@@ -82,16 +67,14 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
   return (
     <>
-      {/* Styling Change: Upgraded header to a semi-transparent, blurred background ("glassmorphism") for a modern look. */}
-      {/* Increased height with h-20 for a more substantial feel. */}
-      <header className="bg-background/80 backdrop-blur-md fixed w-full top-0 z-50 border-b border-border/80">
+      <header className="bg-white/80 backdrop-blur-md fixed w-full top-0 z-50 border-b border-gray-200/80">
         <nav className="container mx-auto px-6 h-20 flex justify-between items-center">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <DharmaWheelIcon className="h-9 w-9 text-primary" />
+            <DharmaWheelIcon className="h-9 w-9 text-amber-600" />
             <Link
               to="/"
-              className={`font-bold text-xl text-foreground ${language === 'km' ? 'font-khmer' : ''}`}
+              className={`font-bold text-xl text-gray-800 ${language === 'km' ? 'font-khmer' : ''}`}
             >
               {language === 'km' ? 'វត្តសិរីមង្គល' : 'Wat Serei Mongkol'}
             </Link>
@@ -103,32 +86,30 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
               <Link
                 key={link.path}
                 to={link.path}
-                className={`text-muted-foreground hover:text-primary transition-colors font-medium ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`text-gray-500 hover:text-amber-600 transition-colors font-medium ${language === 'km' ? 'font-khmer' : ''}`}
               >
                 {link.label}
               </Link>
             ))}
             
-            <div className="w-px h-6 bg-border mx-2"></div>
-
-            <ThemeToggleButton />
+            <div className="w-px h-6 bg-gray-200 mx-2"></div>
 
             <button
               onClick={toggleLanguage}
-              className="bg-secondary/50 text-secondary-foreground px-4 py-2 rounded-full hover:bg-secondary transition-colors text-sm font-semibold"
+              className="bg-gray-100 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-200 transition-colors text-sm font-semibold"
             >
               {language === 'km' ? 'EN' : 'ខ្មែរ'}
             </button>
 
             {user ? (
               <div className="flex items-center space-x-3">
-                {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-9 h-9 rounded-full border-2 border-primary/50" />}
-                <button onClick={handleLogout} className="bg-secondary/50 text-secondary-foreground p-2 rounded-full hover:bg-secondary transition-colors" aria-label="Logout">
+                {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-9 h-9 rounded-full border-2 border-amber-600/50" />}
+                <button onClick={handleLogout} className="bg-gray-100 text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors" aria-label="Logout">
                   <LogOut className="w-5 h-5" />
                 </button>
               </div>
             ) : (
-              <button onClick={handleLogin} className="inline-flex items-center space-x-2 bg-foreground text-background px-4 py-2 rounded-full hover:bg-foreground/80 transition-colors font-semibold">
+              <button onClick={handleLogin} className="inline-flex items-center space-x-2 bg-gray-800 text-white px-4 py-2 rounded-full hover:bg-gray-900 transition-colors font-semibold">
                 <GitHubIcon className="w-5 h-5" />
                 <span>Login</span>
               </button>
@@ -137,10 +118,9 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center space-x-2">
-            <ThemeToggleButton />
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="text-foreground focus:outline-none p-2"
+              className="text-gray-800 focus:outline-none p-2"
               aria-label="Open menu"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,12 +134,12 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
       {/* Mobile Menu Overlay */}
       <div
         id="mobile-menu"
-        className={`fixed inset-0 z-[60] bg-background/90 backdrop-blur-md transition-opacity duration-300 ease-in-out md:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-[60] bg-white/90 backdrop-blur-md transition-opacity duration-300 ease-in-out md:hidden ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         role="dialog"
         aria-modal="true"
       >
         <div className="absolute top-0 right-0 p-6">
-          <button onClick={() => setIsMenuOpen(false)} className="text-foreground" aria-label="Close menu">
+          <button onClick={() => setIsMenuOpen(false)} className="text-gray-800" aria-label="Close menu">
             <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -171,7 +151,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
               key={link.path}
               to={link.path}
               onClick={handleLinkClick}
-              className={`text-3xl text-foreground/80 hover:text-primary transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+              className={`text-3xl text-gray-700 hover:text-amber-600 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
             >
               {link.label}
             </Link>
@@ -180,21 +160,21 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
           <div className="pt-8 flex flex-col items-center gap-6">
             <button
               onClick={toggleLanguage}
-              className="bg-secondary text-secondary-foreground px-5 py-2 rounded-full hover:bg-secondary/80 transition-colors text-lg font-semibold"
+              className="bg-gray-100 text-gray-800 px-5 py-2 rounded-full hover:bg-gray-200 transition-colors text-lg font-semibold"
             >
               {language === 'km' ? 'English' : 'ភាសាខ្មែរ'}
             </button>
 
             {user ? (
               <div className="flex items-center space-x-4">
-                {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-12 h-12 rounded-full border-2 border-primary/50" />}
-                <span className="font-semibold text-foreground text-lg">{user.displayName}</span>
-                <button onClick={handleLogout} className="bg-secondary/50 text-secondary-foreground p-2 rounded-full hover:bg-secondary transition-colors" aria-label="Logout">
+                {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-12 h-12 rounded-full border-2 border-amber-600/50" />}
+                <span className="font-semibold text-gray-800 text-lg">{user.displayName}</span>
+                <button onClick={handleLogout} className="bg-gray-100 text-gray-800 p-2 rounded-full hover:bg-gray-200 transition-colors" aria-label="Logout">
                   <LogOut className="w-6 h-6" />
                 </button>
               </div>
             ) : (
-              <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-foreground text-background px-6 py-3 rounded-full hover:bg-foreground/80 transition-colors font-semibold">
+              <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-900 transition-colors font-semibold">
                 <GitHubIcon className="w-6 h-6" />
                 <span className="text-lg">Login with GitHub</span>
               </button>

@@ -70,11 +70,11 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            {/* Styling Change: Increased vertical padding and adjusted background color. */}
-            <section id="feed" className="py-24 bg-secondary/50">
+            {/* UI UPGRADE: Standardized vertical padding and background color. */}
+            <section id="feed" className="py-20 md:py-28 bg-gray-50">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
-                        <h2 className={`text-4xl md:text-5xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
+                        <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
                             {currentContent.title}
                         </h2>
                     </div>
@@ -86,23 +86,23 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                 <PostSkeleton />
                             </>
                         )}
-                        {error && <p className="text-center text-destructive">{error}</p>}
+                        {error && <p className="text-center text-red-500">{error}</p>}
                         {!loading && posts.length === 0 && (
-                            <p className={`text-center text-muted-foreground ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <p className={`text-center text-gray-500 ${language === 'km' ? 'font-khmer' : ''}`}>
                                 {currentContent.noPosts}
                             </p>
                         )}
                         {!loading && posts.map(post => (
-                             /* Styling Change: Updated article styling to match new card design. */
-                            <article key={post.id} className="bg-card rounded-lg shadow-lg overflow-hidden transition-shadow hover:shadow-xl border border-border relative group">
+                             /* UI UPGRADE: Updated article styling to match new card design theme. */
+                            <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden transition-shadow hover:shadow-xl border border-gray-200 relative group">
                                 {post.imageUrl && (
                                     <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover" />
                                 )}
                                 <div className="p-6 sm:p-8 md:p-10">
-                                    <h3 className={`text-3xl font-bold text-card-foreground mb-3 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                    <h3 className={`text-3xl font-bold text-gray-900 mb-3 ${language === 'km' ? 'font-khmer' : ''}`}>
                                         {post.title}
                                     </h3>
-                                    <div className="text-sm text-muted-foreground mb-6 flex flex-col sm:flex-row sm:items-center sm:gap-x-2">
+                                    <div className="text-sm text-gray-500 mb-6 flex flex-col sm:flex-row sm:items-center sm:gap-x-2">
                                         <span className={`${language === 'km' ? 'font-khmer' : ''}`}>
                                             {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
                                         </span>
@@ -111,19 +111,19 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                             {formatTimestamp(post.timestamp)}
                                         </time>
                                     </div>
-                                    <div className={`prose dark:prose-invert max-w-none text-foreground/90 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
+                                    <div className={`prose max-w-none text-gray-800 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm, remarkBreaks]}
                                             children={post.content}
                                             components={{
-                                                a: ({node, ...props}) => <a className="text-primary hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                pre: ({node, ...props}) => <pre className="bg-muted/50 text-foreground p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
+                                                a: ({node, ...props}) => <a className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                pre: ({node, ...props}) => <pre className="bg-gray-100 text-gray-900 p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
                                                 // @ts-ignore
                                                 code: ({node, inline, className, children, ...props}) => {
                                                     return !inline ? (
                                                       <code className={className} {...props}>{children}</code>
                                                     ) : (
-                                                      <code className="bg-muted/50 text-foreground text-sm rounded px-1.5 py-1" {...props}>{children}</code>
+                                                      <code className="bg-gray-100 text-gray-900 text-sm rounded px-1.5 py-1" {...props}>{children}</code>
                                                     );
                                                 },
                                             }}
@@ -132,7 +132,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                 </div>
 
                                 {isAdmin && (
-                                    /* Styling Change: Improved visibility and style of admin action buttons. */
+                                    /* UI UPGRADE: Improved visibility and style of admin action buttons, making them appear on hover. */
                                     <div className="absolute top-4 right-4 flex space-x-2 bg-black/50 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
                                         <Link to="/admin" state={{ postToEdit: post }} className="p-2 text-white hover:text-yellow-300 transition-colors" aria-label="Edit Post">
                                           <Edit className="w-5 h-5" />

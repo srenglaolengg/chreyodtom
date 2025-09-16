@@ -10,7 +10,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
     /* Styling Change: Upgraded card design with a subtle border, softer shadows, and a more pronounced hover effect. */
     <motion.article
-      className={`bg-card rounded-lg shadow-md hover:shadow-xl border border-border transition-all duration-300 overflow-hidden ${className}`}
+      className={`bg-white rounded-lg shadow-md hover:shadow-xl border border-gray-200 transition-all duration-300 overflow-hidden ${className}`}
       whileHover={{ y: -8, transition: { type: 'spring', stiffness: 300 } }}
     >
       {children}

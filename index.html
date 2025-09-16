@@ -12,77 +12,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <style>
-    :root {
-      /* Refined color palette for a warmer, more elegant light theme */
-      --background: 40 33% 97%; /* Softer, warmer off-white */
-      --foreground: 20 14% 15%; /* Softer black for text */
-      --card: 0 0% 100%;
-      --card-foreground: 20 14% 15%;
-      --popover: 0 0% 100%;
-      --popover-foreground: 20 14% 15%;
-      --primary: 35 78% 55%; /* Richer amber */
-      --primary-foreground: 20 14% 99%;
-      --secondary: 40 33% 94%; /* Slightly darker for subtle contrast */
-      --secondary-foreground: 20 14% 15%;
-      --muted: 40 33% 92%;
-      --muted-foreground: 20 10% 45%;
-      --accent: 40 33% 94%;
-      --accent-foreground: 20 14% 15%;
-      --destructive: 0 84% 60%;
-      --destructive-foreground: 0 0% 98%;
-      --border: 40 20% 88%;
-      --input: 40 20% 88%;
-      --ring: 35 78% 55%;
-      --radius: 0.75rem; /* Slightly larger radius for a softer look */
-    }
- 
-    .dark {
-      /* Refined color palette for a deeper, more comfortable dark theme */
-      --background: 224 71% 4%; /* Deep, dark blue */
-      --foreground: 210 40% 98%;
-      --card: 224 71% 9%; /* Slightly lighter than background */
-      --card-foreground: 210 40% 98%;
-      --popover: 224 71% 4%;
-      --popover-foreground: 210 40% 98%;
-      --primary: 45 93% 52%; /* Brighter gold for better contrast */
-      --primary-foreground: 224 71% 4%;
-      --secondary: 224 71% 12%;
-      --secondary-foreground: 210 40% 98%;
-      --muted: 224 71% 12%;
-      --muted-foreground: 215 20% 65%;
-      --accent: 224 71% 12%;
-      --accent-foreground: 210 40% 98%;
-      --destructive: 0 63% 31%;
-      --destructive-foreground: 210 40% 98%;
-      --border: 224 71% 15%;
-      --input: 224 71% 15%;
-      --ring: 45 93% 52%;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
     body {
       font-family: 'Noto Serif', serif;
-      background-color: hsl(var(--background));
-      color: hsl(var(--foreground));
-      transition-property: color, background-color;
-      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      transition-duration: 300ms;
-      line-height: 1.7; /* Increased line height for readability */
     }
-
-    /* Added a subtle dot pattern for the dark theme background for texture */
-    .dark body {
-        background-image: radial-gradient(circle at 1px 1px, hsl(var(--border)) 0.5px, transparent 0);
-        background-size: 1.5rem 1.5rem;
-    }
-
     .font-khmer {
       font-family: 'Kantumruy Pro', sans-serif;
     }
-
     @keyframes kenburns-top {
       0% {
         transform: scale(1) translateY(0);
@@ -96,56 +31,22 @@
     .animate-kenburns {
       animation: kenburns-top 8s ease-out both infinite alternate;
     }
-  </style>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            border: 'hsl(var(--border))',
-            input: 'hsl(var(--input))',
-            ring: 'hsl(var(--ring))',
-            background: 'hsl(var(--background))',
-            foreground: 'hsl(var(--foreground))',
-            primary: {
-              DEFAULT: 'hsl(var(--primary))',
-              foreground: 'hsl(var(--primary-foreground))',
-            },
-            secondary: {
-              DEFAULT: 'hsl(var(--secondary))',
-              foreground: 'hsl(var(--secondary-foreground))',
-            },
-            destructive: {
-              DEFAULT: 'hsl(var(--destructive))',
-              foreground: 'hsl(var(--destructive-foreground))',
-            },
-            muted: {
-              DEFAULT: 'hsl(var(--muted))',
-              foreground: 'hsl(var(--muted-foreground))',
-            },
-            accent: {
-              DEFAULT: 'hsl(var(--accent))',
-              foreground: 'hsl(var(--accent-foreground))',
-            },
-            popover: {
-              DEFAULT: 'hsl(var(--popover))',
-              foreground: 'hsl(var(--popover-foreground))',
-            },
-            card: {
-              DEFAULT: 'hsl(var(--card))',
-              foreground: 'hsl(var(--card-foreground))',
-            },
-          },
-          borderRadius: {
-            lg: `var(--radius)`,
-            md: `calc(var(--radius) - 2px)`,
-            sm: 'calc(var(--radius) - 4px)',
-          },
-        },
-      },
+
+    @keyframes fade-in-up {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-  </script>
+    .animate-fade-in-up {
+        animation: fade-in-up 1s ease-out forwards;
+    }
+  </style>
+
 <script type="importmap">
 {
   "imports": {

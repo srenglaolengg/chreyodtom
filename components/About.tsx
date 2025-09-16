@@ -39,25 +39,25 @@ const About: React.FC<AboutProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      {/* Styling Change: Increased vertical padding (py-24) for more breathing room. */}
-      <section id="about" className="py-24 bg-secondary/50">
+      {/* UI UPGRADE: Standardized vertical padding for consistent spacing across all sections and screen sizes. */}
+      <section id="about" className="py-20 md:py-28 bg-gray-50">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center justify-center space-x-4">
-                <LotusIcon className="w-10 h-10 text-primary/80" />
-                <h2 className={`text-4xl md:text-5xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
+                <LotusIcon className="w-10 h-10 text-amber-600/80" />
+                <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
                   {currentContent.title}
                 </h2>
-                <DharmaWheelIcon className="w-10 h-10 text-primary/80" />
+                <DharmaWheelIcon className="w-10 h-10 text-amber-600/80" />
             </div>
           </div>
-          <div className={`max-w-4xl mx-auto text-lg text-foreground/90 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
+          <div className={`max-w-4xl mx-auto text-lg text-gray-800 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
             {loading ? (
                 <div className="space-y-4 animate-pulse">
-                  <div className="h-4 bg-muted rounded w-full mx-auto"></div>
-                  <div className="h-4 bg-muted rounded w-5/6 mx-auto"></div>
-                  <div className="h-4 bg-muted rounded w-full mx-auto"></div>
-                  <div className="h-4 bg-muted rounded w-4/6 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mx-auto"></div>
+                  <div className="h-4 bg-gray-200 rounded w-4/6 mx-auto"></div>
                 </div>
             ) : content ? (
               <>
