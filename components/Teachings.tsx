@@ -40,7 +40,6 @@ const containerVariants = {
   },
 };
 
-// FIX: Explicitly type `itemVariants` with `Variants` from framer-motion to fix type inference issue.
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
@@ -78,7 +77,7 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            <section id="teachings" className="py-20 bg-background dark:bg-card">
+            <section id="teachings" className="py-20 bg-background">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-12">
                         <div className="inline-flex items-center justify-center space-x-4">
@@ -100,12 +99,12 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                           Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
                         ) : (
                           teachings.map((item) => (
-                            <motion.div key={item.id} variants={itemVariants}>
-                              <Card className="flex flex-col h-full">
+                            <motion.div key={item.id} variants={itemVariants} className="flex">
+                              <Card className="flex flex-col h-full w-full group">
                                 <CardImage src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} />
                                 <CardContent className="flex flex-col flex-grow">
                                   <h3 className={`text-xl font-bold text-card-foreground mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.title_km : item.title_en}</h3>
-                                  <p className={`text-foreground/80 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
+                                  <p className={`text-muted-foreground line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>
                                   <Link to={`/teachings/${item.id}`} className={`inline-flex items-center space-x-2 mt-4 text-primary font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
                                     <span>{currentContent.viewMore}</span>
                                     <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>

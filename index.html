@@ -12,12 +12,64 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --background: 210 40% 98%;
+      --foreground: 222 47% 11%;
+      --card: 0 0% 100%;
+      --card-foreground: 222 47% 11%;
+      --popover: 0 0% 100%;
+      --popover-foreground: 222 47% 11%;
+      --primary: 35 78% 55%;
+      --primary-foreground: 355 92% 95%;
+      --secondary: 210 40% 96%;
+      --secondary-foreground: 222 47% 11%;
+      --muted: 210 40% 96%;
+      --muted-foreground: 215 20% 65%;
+      --accent: 210 40% 96%;
+      --accent-foreground: 222 47% 11%;
+      --destructive: 0 84% 60%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 214 32% 91%;
+      --input: 214 32% 91%;
+      --ring: 215 20% 65%;
+      --radius: 0.5rem;
+    }
+ 
+    .dark {
+      --background: 222 47% 11%;
+      --foreground: 210 40% 98%;
+      --card: 222 47% 11%;
+      --card-foreground: 210 40% 98%;
+      --popover: 222 47% 11%;
+      --popover-foreground: 210 40% 98%;
+      --primary: 45 93% 47%;
+      --primary-foreground: 222 47% 11%;
+      --secondary: 217 33% 17%;
+      --secondary-foreground: 210 40% 98%;
+      --muted: 217 33% 17%;
+      --muted-foreground: 215 20% 65%;
+      --accent: 217 33% 17%;
+      --accent-foreground: 210 40% 98%;
+      --destructive: 0 63% 31%;
+      --destructive-foreground: 210 40% 98%;
+      --border: 217 33% 17%;
+      --input: 217 33% 17%;
+      --ring: 215 20% 65%;
+    }
+
     body {
       font-family: 'Noto Serif', serif;
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+      transition-property: color, background-color;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 300ms;
     }
+
     .font-khmer {
       font-family: 'Kantumruy Pro', sans-serif;
     }
+
     @keyframes kenburns-top {
       0% {
         transform: scale(1) translateY(0);
@@ -31,21 +83,56 @@
     .animate-kenburns {
       animation: kenburns-top 8s ease-out both infinite alternate;
     }
-
-    @keyframes fade-in-up {
-      0% {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    .animate-fade-in-up {
-        animation: fade-in-up 1s ease-out forwards;
-    }
   </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            border: 'hsl(var(--border))',
+            input: 'hsl(var(--input))',
+            ring: 'hsl(var(--ring))',
+            background: 'hsl(var(--background))',
+            foreground: 'hsl(var(--foreground))',
+            primary: {
+              DEFAULT: 'hsl(var(--primary))',
+              foreground: 'hsl(var(--primary-foreground))',
+            },
+            secondary: {
+              DEFAULT: 'hsl(var(--secondary))',
+              foreground: 'hsl(var(--secondary-foreground))',
+            },
+            destructive: {
+              DEFAULT: 'hsl(var(--destructive))',
+              foreground: 'hsl(var(--destructive-foreground))',
+            },
+            muted: {
+              DEFAULT: 'hsl(var(--muted))',
+              foreground: 'hsl(var(--muted-foreground))',
+            },
+            accent: {
+              DEFAULT: 'hsl(var(--accent))',
+              foreground: 'hsl(var(--accent-foreground))',
+            },
+            popover: {
+              DEFAULT: 'hsl(var(--popover))',
+              foreground: 'hsl(var(--popover-foreground))',
+            },
+            card: {
+              DEFAULT: 'hsl(var(--card))',
+              foreground: 'hsl(var(--card-foreground))',
+            },
+          },
+          borderRadius: {
+            lg: `var(--radius)`,
+            md: `calc(var(--radius) - 2px)`,
+            sm: 'calc(var(--radius) - 4px)',
+          },
+        },
+      },
+    }
+  </script>
 <script type="importmap">
 {
   "imports": {
@@ -63,7 +150,7 @@
 }
 </script>
 </head>
-<body class="bg-stone-50">
+<body>
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

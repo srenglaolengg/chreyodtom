@@ -26,7 +26,7 @@ import ScrollToTop from './components/ScrollToTop';
 const pageVariants = {
   initial: {
     opacity: 0,
-    y: 20,
+    y: 10,
   },
   in: {
     opacity: 1,
@@ -34,15 +34,14 @@ const pageVariants = {
   },
   out: {
     opacity: 0,
-    y: -20,
+    y: -10,
   },
 };
 
-// FIX: Explicitly type `pageTransition` with `Transition` from framer-motion to fix type inference issue.
 const pageTransition: Transition = {
   type: 'tween',
   ease: 'anticipate',
-  duration: 0.4,
+  duration: 0.5,
 };
 
 const AppContent: React.FC = () => {
@@ -77,11 +76,10 @@ const AppContent: React.FC = () => {
     );
   };
   
-  // Admin route has its own layout, so we can hide header/footer
   const isAdminRoute = location.pathname.startsWith('/admin');
 
   return (
-    <div className="bg-background text-foreground min-h-screen flex flex-col font-english">
+    <div className="bg-background text-foreground min-h-screen flex flex-col">
       {!isAdminRoute && (
         <Header
           language={language}

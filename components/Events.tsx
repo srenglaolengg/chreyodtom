@@ -38,7 +38,6 @@ const containerVariants = {
   },
 };
 
-// FIX: Explicitly type `itemVariants` with `Variants` from framer-motion to fix type inference issue.
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
@@ -78,13 +77,13 @@ const Events: React.FC<EventsProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <section id="events" className="py-20 bg-background dark:bg-card">
+      <section id="events" className="py-20 bg-secondary/30">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.title}
             </h2>
-            <p className={`mt-2 text-foreground/70 ${language === 'km' ? 'font-khmer' : ''}`}>
+            <p className={`mt-2 text-muted-foreground ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.subtitle}
             </p>
           </div>
@@ -99,13 +98,13 @@ const Events: React.FC<EventsProps> = ({ language }) => {
               Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
             ) : (
               events.map((event) => (
-                <motion.div key={event.id} variants={itemVariants}>
-                  <Card className="flex flex-col h-full">
+                <motion.div key={event.id} variants={itemVariants} className="flex">
+                  <Card className="flex flex-col h-full w-full group">
                     <CardImage src={event.imgSrc} alt={language === 'km' ? event.title_km : event.title_en} />
                     <CardContent className="flex flex-col flex-grow">
                       <p className={`text-sm font-semibold text-primary/80 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.date_km : event.date_en}</p>
                       <h3 className={`text-xl font-bold text-card-foreground mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.title_km : event.title_en}</h3>
-                      <p className={`text-foreground/80 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.description_km : event.description_en}</p>
+                      <p className={`text-muted-foreground line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.description_km : event.description_en}</p>
                       <Link to={`/events/${event.id}`} className={`inline-flex items-center space-x-2 mt-4 text-primary font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
                         <span>{currentContent.viewMore}</span>
                         <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>

@@ -44,51 +44,51 @@ const TeachingDetail: React.FC<{ language: Language }> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-             <section className="py-20 bg-amber-50/30">
+             <section className="py-20 bg-secondary/30">
                 <div className="container mx-auto px-6">
                     {loading ? (
                         <PostSkeleton />
                     ) : error || !teaching ? (
                         <div className="text-center">
-                            <h2 className="text-2xl font-bold text-red-600 mb-4">{error || 'Could not load teaching.'}</h2>
-                             <Link to="/teachings" className={`inline-flex items-center space-x-2 text-amber-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <h2 className="text-2xl font-bold text-destructive mb-4">{error || 'Could not load teaching.'}</h2>
+                             <Link to="/teachings" className={`inline-flex items-center space-x-2 text-primary font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
                                 <ArrowLeft className="w-5 h-5"/>
                                 <span>{currentLangContent.backLink}</span>
                             </Link>
                         </div>
                     ) : (
                         <article className="max-w-4xl mx-auto">
-                             <Link to="/teachings" className={`inline-flex items-center space-x-2 text-amber-600 font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
+                             <Link to="/teachings" className={`inline-flex items-center space-x-2 text-primary font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
                                 <ArrowLeft className="w-5 h-5"/>
                                 <span>{currentLangContent.backLink}</span>
                             </Link>
 
-                            <div className="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg">
+                            <div className="bg-card p-6 sm:p-8 md:p-10 rounded-lg shadow-lg border border-border">
                                 <div className="text-center mb-8">
                                     <div className="inline-flex items-center justify-center space-x-4">
-                                        <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
-                                        <h1 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                        <DharmaWheelIcon className="w-8 h-8 text-primary" />
+                                        <h1 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
                                             {currentTitle}
                                         </h1>
-                                        <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
+                                        <DharmaWheelIcon className="w-8 h-8 text-primary" />
                                     </div>
                                 </div>
 
-                                <p className={`text-lg text-stone-700 leading-relaxed whitespace-pre-line ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <p className={`text-lg text-foreground/80 leading-relaxed whitespace-pre-line ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {currentContent}
                                 </p>
                                 
                                 {teaching.imageUrls && teaching.imageUrls.length > 0 && (
                                     <>
-                                        <div className="border-t border-amber-200 my-8"></div>
-                                        <h2 className={`text-2xl font-bold text-stone-700 mb-6 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                        <div className="border-t border-border my-8"></div>
+                                        <h2 className={`text-2xl font-bold text-foreground mb-6 ${language === 'km' ? 'font-khmer' : ''}`}>
                                             {language === 'km' ? 'រូបភាពបន្ថែម' : 'Related Images'}
                                         </h2>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             {teaching.imageUrls.map((url, index) => (
                                                 <div key={index} className="group relative overflow-hidden rounded-lg shadow-md cursor-pointer" onClick={() => setSelectedImage(url)}>
-                                                    <img src={url} alt={`${currentTitle} - Image ${index + 1}`} className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500" />
-                                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors"></div>
+                                                    <img src={url} alt={`${currentTitle} - Image ${index + 1}`} className="w-full h-full object-cover aspect-square transform group-hover:scale-110 transition-transform duration-500" />
+                                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/40 transition-colors"></div>
                                                 </div>
                                             ))}
                                         </div>

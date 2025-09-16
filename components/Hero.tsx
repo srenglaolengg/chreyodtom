@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Language } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { Link } from 'react-router-dom';
+// @ts-ignore
+import { motion } from 'framer-motion';
 
 interface HeroProps {
   language: Language;
@@ -49,43 +50,44 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
       <section 
         className="relative h-[90vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden"
       >
-        {/* Background Image with Ken Burns Effect */}
         <div 
             className="absolute inset-0 bg-cover bg-center animate-kenburns"
             style={{ backgroundImage: "url('https://i.postimg.cc/02xqb4Yy/photo-2025-09-08-23-20-58.jpg')" }}
         ></div>
         
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent"></div>
         
-        {/* Content */}
-        <div className="relative z-10 p-8 max-w-4xl mx-auto animate-fade-in-up">
+        <motion.div 
+          className="relative z-10 p-8 max-w-4xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           <div className="flex justify-center mb-6">
-              <DharmaWheelIcon className="w-24 h-24 text-yellow-300/90 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]" />
+              <DharmaWheelIcon className="w-24 h-24 text-yellow-300/90 drop-shadow-[0_0_20px_rgba(253,244,153,0.6)]" />
           </div>
-          <h1 className="font-khmer text-5xl md:text-7xl font-bold tracking-wide" style={{textShadow: '2px 3px 8px rgba(0,0,0,0.8)'}}>
+          <h1 className="font-khmer text-5xl md:text-7xl font-bold tracking-wide" style={{textShadow: '2px 4px 10px rgba(0,0,0,0.8)'}}>
             វត្តសិរីមង្គលហៅជ្រៃឧត្តម
           </h1>
-          <p className="mt-4 text-lg md:text-2xl font-light text-yellow-50 max-w-2xl mx-auto" style={{textShadow: '1px 2px 4px rgba(0,0,0,0.7)'}}>
+          <p className="mt-4 text-lg md:text-2xl font-light text-yellow-50 max-w-2xl mx-auto" style={{textShadow: '1px 2px 5px rgba(0,0,0,0.7)'}}>
               {currentContent.subtitle}
           </p>
           
-          {/* Call to Action Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 to="/feed"
-                className={`w-full sm:w-auto bg-amber-500 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-amber-600 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`inline-flex items-center justify-center w-full sm:w-auto bg-primary text-primary-foreground font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-primary/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
               >
                   {currentContent.ctaExplore}
               </Link>
               <Link
                 to="/about"
-                className={`w-full sm:w-auto bg-transparent border-2 border-white text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-white/10 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`inline-flex items-center justify-center w-full sm:w-auto bg-transparent border-2 border-white text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
               >
                   {currentContent.ctaLearn}
               </Link>
           </div>
-        </div>
+        </motion.div>
       </section>
     </>
   );

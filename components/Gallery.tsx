@@ -38,7 +38,6 @@ const containerVariants = {
   },
 };
 
-// FIX: Explicitly type `itemVariants` with `Variants` from framer-motion to fix type inference issue.
 const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
@@ -78,13 +77,13 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <section id="gallery" className="py-20 bg-background dark:bg-card">
+      <section id="gallery" className="py-20 bg-background">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <h2 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.title}
             </h2>
-            <p className={`mt-2 text-foreground/70 ${language === 'km' ? 'font-khmer' : ''}`}>
+            <p className={`mt-2 text-muted-foreground ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.subtitle}
             </p>
           </div>
@@ -99,12 +98,12 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
               Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
             ) : (
               albums.map((album) => (
-                <motion.div key={album.id} variants={itemVariants}>
-                  <Card className="flex flex-col h-full">
+                <motion.div key={album.id} variants={itemVariants} className="flex">
+                  <Card className="flex flex-col h-full w-full group">
                     <CardImage src={album.thumbnailUrl} alt={language === 'km' ? album.title_km : album.title_en} />
                     <CardContent className="flex flex-col flex-grow">
                       <h3 className={`text-xl font-bold text-card-foreground mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? album.title_km : album.title_en}</h3>
-                      <p className={`text-foreground/80 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? album.description_km : album.description_en}</p>
+                      <p className={`text-muted-foreground line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? album.description_km : album.description_en}</p>
                       <Link to={`/gallery/${album.id}`} className={`inline-flex items-center space-x-2 mt-4 text-primary font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
                         <span>{currentContent.viewMore}</span>
                         <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>

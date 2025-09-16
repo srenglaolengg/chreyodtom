@@ -9,7 +9,7 @@ interface CardProps {
 export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
     <motion.article
-      className={`bg-card rounded-lg shadow-md hover:shadow-xl border border-border transition-all duration-300 overflow-hidden ${className}`}
+      className={`bg-card rounded-lg shadow-sm hover:shadow-lg border border-border transition-all duration-300 overflow-hidden ${className}`}
       whileHover={{ y: -5 }}
     >
       {children}

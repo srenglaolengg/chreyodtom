@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Language, AboutContent } from '../types';
 import { LotusIcon } from './icons/LotusIcon';
@@ -40,27 +39,32 @@ const About: React.FC<AboutProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <section id="about" className="py-20 bg-amber-50/30">
+      <section id="about" className="py-20 bg-secondary/30">
         <div className="container mx-auto px-6">
           <div className="text-center mb-12">
             <div className="inline-flex items-center justify-center space-x-4">
-                <LotusIcon className="w-8 h-8 text-amber-500" />
-                <h2 className={`text-3xl md:text-4xl font-bold text-amber-800 ${language === 'km' ? 'font-khmer' : ''}`}>
+                <LotusIcon className="w-8 h-8 text-primary/80" />
+                <h2 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
                   {currentContent.title}
                 </h2>
-                <DharmaWheelIcon className="w-8 h-8 text-amber-500" />
+                <DharmaWheelIcon className="w-8 h-8 text-primary/80" />
             </div>
           </div>
-          <div className={`max-w-3xl mx-auto text-lg text-stone-600 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
+          <div className={`max-w-3xl mx-auto text-lg text-foreground/80 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
             {loading ? (
-                <p>Loading content...</p>
+                <div className="space-y-4 animate-pulse">
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-5/6 mx-auto"></div>
+                  <div className="h-4 bg-muted rounded w-full"></div>
+                  <div className="h-4 bg-muted rounded w-4/6 mx-auto"></div>
+                </div>
             ) : content ? (
               <>
                 <p>{currentContent.paragraph1}</p>
                 <p>{currentContent.paragraph2}</p>
               </>
             ) : (
-              <p>Content could not be loaded.</p>
+              <p>Content could not be loaded at this time.</p>
             )}
           </div>
         </div>
