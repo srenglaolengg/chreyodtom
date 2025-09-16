@@ -6,7 +6,6 @@ import About from '../components/About';
 import Gallery from '../components/Gallery';
 import Events from '../components/Events';
 import Teachings from '../components/Teachings';
-import Donation from '../components/Donation';
 import Contact from '../components/Contact';
 
 interface HomeProps {
@@ -28,9 +27,6 @@ const Home: React.FC<HomeProps> = ({ language }) => {
             <Gallery language={language} isHomePage />
             <Events language={language} isHomePage />
             <Teachings language={language} isHomePage />
-
-            {/* A dedicated section to encourage support for the pagoda */}
-            <Donation language={language} />
 
             {/* The Contact section is retained at the bottom for easy access */}
             <Contact language={language} />
