@@ -13,8 +13,8 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 //    Replace the placeholder values below with your actual Supabase URL and anon key.
 //    For a production application, it is highly recommended to use environment variables
 //    (e.g., process.env.SUPABASE_URL) instead of hardcoding them.
-const supabaseUrl = 'YOUR_SUPABASE_PROJECT_URL'; // e.g., 'https://your-project-id.supabase.co'
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY'; // This is the public 'anon' key
+const supabaseUrl = 'https://ldnpbrxtraodoexrhlsx.supabase.co'; // e.g., 'https://your-project-id.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkbnBicnh0cmFvZG9leHJobHN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwMTkzMjQsImV4cCI6MjA3MzU5NTMyNH0.iy4j4wfiqRT6Wu9sJrRY1scWEDZNS6Xne5dyf7BVe4Y'; // This is the public 'anon' key
 
 // --- BUCKET CONFIGURATION ---
 // This constant defines the name of the Supabase Storage bucket where images will be uploaded.
@@ -37,21 +37,17 @@ export const BUCKET_NAME = 'images'; // The name of your public Supabase Storage
 
 
 // --- CLIENT INITIALIZATION ---
-// Conditionally create the Supabase client to prevent app crashes if credentials are placeholders.
+// Initialize the Supabase client.
 let supabase: SupabaseClient | null = null;
 
-if (supabaseUrl === 'YOUR_SUPABASE_PROJECT_URL' || supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY') {
-  // If credentials are still placeholders, warn the developer in the console.
-  // The app will continue to run, but upload features will be disabled.
-  console.warn(`Supabase credentials are not configured. Please update them in supabase.ts to enable image uploads.`);
-} else {
-  // If credentials are provided, attempt to create the client.
-  try {
-    supabase = createClient(supabaseUrl, supabaseAnonKey);
-  } catch (error) {
-    // Catch any other potential errors during client creation.
-    console.error("Error initializing Supabase client:", error);
-  }
+// FIX: Removed the conditional check for placeholder credentials. Since the credentials
+// are now hardcoded, the check was always false and caused a TypeScript error.
+// The client is now initialized directly.
+try {
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
+} catch (error) {
+  // Catch any other potential errors during client creation.
+  console.error("Error initializing Supabase client:", error);
 }
 
 // Export the client (which may be null if not configured).
