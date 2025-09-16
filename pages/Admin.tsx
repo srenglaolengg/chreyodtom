@@ -17,11 +17,12 @@ import {
     doc,
     serverTimestamp,
     getDoc,
+    limit,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 import PageMeta from '../components/PageMeta';
-import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud } from 'lucide-react';
+import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud, LayoutDashboard } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 
 // FORM TYPES
@@ -42,9 +43,10 @@ interface AdminProps {
     authLoading: boolean;
 }
 
-type ViewType = 'feed' | 'comments' | 'gallery' | 'events' | 'teachings' | 'about' | 'contact';
+type ViewType = 'dashboard' | 'feed' | 'comments' | 'gallery' | 'events' | 'teachings' | 'about' | 'contact';
 
 const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'feed', label: 'Feed', icon: Newspaper },
     { id: 'comments', label: 'Comments', icon: MessageSquare },
     { id: 'gallery', label: 'Gallery', icon: ImageIcon },
@@ -56,7 +58,6 @@ const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
 
 
 // --- FILE UPLOAD HELPERS ---
-// UI UPGRADE: Enhanced styling and user feedback for file upload components.
 const ImageUploadInput: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; folder: string; helperText?: string; required?: boolean; }> = ({ name, label, value, onChange, folder, helperText, required }) => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
@@ -81,7 +82,7 @@ const ImageUploadInput: React.FC<{ name: string; label: string; value: string; o
 
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
             <div className="flex items-center space-x-2">
                 <input id={name} name={name} type="url" value={value} onChange={onChange} placeholder="Enter image URL or upload" className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500" required={required} />
                 <label htmlFor={`${name}-file`} className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 whitespace-nowrap transition-colors inline-flex items-center space-x-2">
@@ -123,7 +124,7 @@ const MultiImageUploadInput: React.FC<{ name: string; label: string; value: stri
 
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+            <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
             <textarea id={name} name={name} value={value.join('\n')} onChange={onChange} rows={6} placeholder="Enter one image URL per line, or upload files." className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500 font-mono text-sm" />
              <label htmlFor={`${name}-file`} className="mt-2 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold px-4 py-2 rounded-md border border-gray-300 inline-flex items-center space-x-2 transition-colors">
                 <UploadCloud className="w-4 h-4"/>
@@ -138,20 +139,20 @@ const MultiImageUploadInput: React.FC<{ name: string; label: string; value: stri
 
 // --- GENERIC HELPER COMPONENTS ---
 const AdminSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-white p-6 md:p-8 rounded-lg shadow-sm border border-gray-200">
-        <h2 className="text-2xl font-bold text-amber-600 mb-6">{title}</h2>
+    <div className="bg-white p-6 md:p-8 rounded-lg shadow-md border border-gray-200">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">{title}</h2>
         {children}
     </div>
 );
 const FormInput: React.FC<{ name: string; label: string; value: string | number; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; required?: boolean }> = ({ name, label, ...props }) => (
     <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         <input id={name} name={name} {...props} className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500"/>
     </div>
 );
 const FormTextarea: React.FC<{ name: string; label: string; value: string; onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void; rows?: number; required?: boolean; helperText?: string }> = ({ name, label, helperText, ...props }) => (
     <div>
-        <label htmlFor={name} className="block text-sm font-medium text-gray-600 mb-1">{label}</label>
+        <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
         <textarea id={name} name={name} {...props} className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500"></textarea>
         {helperText && <p className="mt-1 text-xs text-gray-500">{helperText}</p>}
     </div>
@@ -159,7 +160,6 @@ const FormTextarea: React.FC<{ name: string; label: string; value: string; onCha
 
 
 // --- MANAGER COMPONENTS ---
-// UI UPGRADE: Applied consistent styling to forms and management lists.
 const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, postToEdit }) => {
     const q = useMemo(() => query(collection(db, "posts"), orderBy("timestamp", "desc")), []);
     const { data: posts } = useCollection<Post>(q);
@@ -209,16 +209,16 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
                 </form>
             </AdminSection>
             <AdminSection title="Manage Posts">
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {posts.map(post => (
-                        <div key={post.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
+                        <div key={post.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4 hover:bg-gray-50 transition-colors">
                             <div>
                                 <h3 className="font-bold text-gray-900">{post.title}</h3>
                                 <p className="text-sm text-gray-500">By {post.author} on {post.timestamp?.toDate().toLocaleDateString()}</p>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
-                                <button onClick={() => handleEditClick(post)} className="text-sm font-semibold text-blue-500 hover:underline">Edit</button>
-                                <button onClick={() => handleDelete(post.id)} className="text-sm font-semibold text-red-500 hover:underline">Delete</button>
+                                <button onClick={() => handleEditClick(post)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => handleDelete(post.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
                             </div>
                         </div>
                     ))}
@@ -238,7 +238,7 @@ const CommentManager: React.FC = () => {
         <AdminSection title="Comment Moderation">
             <div className="space-y-4">
                 {comments && comments.length > 0 ? comments.map(comment => (
-                    <div key={comment.id} className="p-4 border border-gray-200 rounded-md bg-white">
+                    <div key={comment.id} className="p-4 border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors">
                         <div className="flex justify-between items-start">
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
@@ -246,9 +246,9 @@ const CommentManager: React.FC = () => {
                                     <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                 </div>
                                 <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
-                                <p className="text-gray-900 whitespace-pre-wrap">{comment.text}</p>
+                                <p className="text-gray-800 whitespace-pre-wrap">{comment.text}</p>
                             </div>
-                            <button onClick={() => handleDelete(comment.id)} className="text-sm font-semibold text-red-500 hover:underline ml-4">Delete</button>
+                            <button onClick={() => handleDelete(comment.id)} className="text-sm font-semibold text-red-600 hover:underline ml-4">Delete</button>
                         </div>
                     </div>
                 )) : <p className="text-gray-500">No comments found.</p>}
@@ -315,12 +315,18 @@ const GalleryManager: React.FC = () => {
             <AdminSection title={manager.isEditing ? 'Edit Album' : 'Create New Album'}>
                 <form onSubmit={manager.handleSubmit} className="space-y-4">
                     <FormInput name="order" label="Order" value={manager.formState.order} onChange={manager.handleInputChange} type="number" required />
-                    <FormInput name="title_en" label="Title (English)" value={manager.formState.title_en} onChange={manager.handleInputChange} required />
-                    <FormInput name="title_km" label="Title (Khmer)" value={manager.formState.title_km} onChange={manager.handleInputChange} required />
-                    <FormTextarea name="description_en" label="Short Description (English)" value={manager.formState.description_en} onChange={manager.handleInputChange} rows={3} />
-                    <FormTextarea name="description_km" label="Short Description (Khmer)" value={manager.formState.description_km} onChange={manager.handleInputChange} rows={3} />
-                    <FormTextarea name="content_en" label="Full Content (English)" value={manager.formState.content_en} onChange={manager.handleInputChange} rows={6} />
-                    <FormTextarea name="content_km" label="Full Content (Khmer)" value={manager.formState.content_km} onChange={manager.handleInputChange} rows={6} />
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <FormInput name="title_en" label="Title (English)" value={manager.formState.title_en} onChange={manager.handleInputChange} required />
+                      <FormInput name="title_km" label="Title (Khmer)" value={manager.formState.title_km} onChange={manager.handleInputChange} required />
+                    </div>
+                     <div className="grid md:grid-cols-2 gap-4">
+                        <FormTextarea name="description_en" label="Short Description (English)" value={manager.formState.description_en} onChange={manager.handleInputChange} rows={3} />
+                        <FormTextarea name="description_km" label="Short Description (Khmer)" value={manager.formState.description_km} onChange={manager.handleInputChange} rows={3} />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormTextarea name="content_en" label="Full Content (English)" value={manager.formState.content_en} onChange={manager.handleInputChange} rows={6} />
+                        <FormTextarea name="content_km" label="Full Content (Khmer)" value={manager.formState.content_km} onChange={manager.handleInputChange} rows={6} />
+                    </div>
                     <ImageUploadInput name="thumbnailUrl" label="Thumbnail Image URL" value={manager.formState.thumbnailUrl} onChange={manager.handleInputChange} folder="gallery/thumbnails" required />
                     <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={manager.formState.imageUrls} onChange={manager.handleInputChange} folder="gallery/details" helperText="Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
@@ -330,9 +336,9 @@ const GalleryManager: React.FC = () => {
                 </form>
             </AdminSection>
             <AdminSection title="Manage Gallery Albums">
-                 <div className="space-y-4">
+                 <div className="space-y-3">
                     {manager.items.map(item => (
-                        <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
+                        <div key={item.id} className="p-3 border border-gray-200 rounded-md flex justify-between items-center gap-4 hover:bg-gray-50 transition-colors">
                              <div className="flex items-center gap-4 min-w-0">
                                 <img src={item.thumbnailUrl} alt={item.title_en} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                 <div className="min-w-0">
@@ -341,8 +347,8 @@ const GalleryManager: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
-                                <button onClick={() => manager.handleEditClick(item)} className="text-sm font-semibold text-blue-500 hover:underline">Edit</button>
-                                <button onClick={() => manager.handleDelete(item.id)} className="text-sm font-semibold text-red-500 hover:underline">Delete</button>
+                                <button onClick={() => manager.handleEditClick(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => manager.handleDelete(item.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
                             </div>
                         </div>
                     ))}
@@ -359,14 +365,22 @@ const EventManager: React.FC = () => {
             <AdminSection title={manager.isEditing ? 'Edit Event' : 'Create New Event'}>
                 <form onSubmit={manager.handleSubmit} className="space-y-4">
                     <FormInput name="order" label="Order" value={manager.formState.order} onChange={manager.handleInputChange} type="number" required />
-                    <FormInput name="title_en" label="Title (English)" value={manager.formState.title_en} onChange={manager.handleInputChange} required />
-                    <FormInput name="title_km" label="Title (Khmer)" value={manager.formState.title_km} onChange={manager.handleInputChange} required />
-                    <FormInput name="date_en" label="Date (English)" value={manager.formState.date_en} onChange={manager.handleInputChange} />
-                    <FormInput name="date_km" label="Date (Khmer)" value={manager.formState.date_km} onChange={manager.handleInputChange} />
-                    <FormTextarea name="description_en" label="Short Description (English)" value={manager.formState.description_en} onChange={manager.handleInputChange} rows={3} />
-                    <FormTextarea name="description_km" label="Short Description (Khmer)" value={manager.formState.description_km} onChange={manager.handleInputChange} rows={3} />
-                    <FormTextarea name="content_en" label="Full Content (English)" value={manager.formState.content_en} onChange={manager.handleInputChange} rows={6} />
-                    <FormTextarea name="content_km" label="Full Content (Khmer)" value={manager.formState.content_km} onChange={manager.handleInputChange} rows={6} />
+                     <div className="grid md:grid-cols-2 gap-4">
+                        <FormInput name="title_en" label="Title (English)" value={manager.formState.title_en} onChange={manager.handleInputChange} required />
+                        <FormInput name="title_km" label="Title (Khmer)" value={manager.formState.title_km} onChange={manager.handleInputChange} required />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormInput name="date_en" label="Date (English)" value={manager.formState.date_en} onChange={manager.handleInputChange} />
+                        <FormInput name="date_km" label="Date (Khmer)" value={manager.formState.date_km} onChange={manager.handleInputChange} />
+                    </div>
+                     <div className="grid md:grid-cols-2 gap-4">
+                        <FormTextarea name="description_en" label="Short Description (English)" value={manager.formState.description_en} onChange={manager.handleInputChange} rows={3} />
+                        <FormTextarea name="description_km" label="Short Description (Khmer)" value={manager.formState.description_km} onChange={manager.handleInputChange} rows={3} />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormTextarea name="content_en" label="Full Content (English)" value={manager.formState.content_en} onChange={manager.handleInputChange} rows={6} />
+                        <FormTextarea name="content_km" label="Full Content (Khmer)" value={manager.formState.content_km} onChange={manager.handleInputChange} rows={6} />
+                    </div>
                     <ImageUploadInput name="imgSrc" label="Thumbnail Image URL" value={manager.formState.imgSrc} onChange={manager.handleInputChange} folder="events/thumbnails" required />
                     <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={manager.formState.imageUrls || []} onChange={manager.handleInputChange} folder="events/details" helperText="Optional. Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
@@ -376,9 +390,9 @@ const EventManager: React.FC = () => {
                 </form>
             </AdminSection>
              <AdminSection title="Manage Events">
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {manager.items.map(item => (
-                        <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
+                        <div key={item.id} className="p-3 border border-gray-200 rounded-md flex justify-between items-center gap-4 hover:bg-gray-50 transition-colors">
                              <div className="flex items-center gap-4 min-w-0">
                                 <img src={item.imgSrc} alt={item.title_en} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                 <div className="min-w-0">
@@ -387,8 +401,8 @@ const EventManager: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
-                                <button onClick={() => manager.handleEditClick(item)} className="text-sm font-semibold text-blue-500 hover:underline">Edit</button>
-                                <button onClick={() => manager.handleDelete(item.id)} className="text-sm font-semibold text-red-500 hover:underline">Delete</button>
+                                <button onClick={() => manager.handleEditClick(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => manager.handleDelete(item.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
                             </div>
                         </div>
                     ))}
@@ -405,12 +419,18 @@ const TeachingsManager: React.FC = () => {
             <AdminSection title={manager.isEditing ? 'Edit Teaching' : 'Create New Teaching'}>
                 <form onSubmit={manager.handleSubmit} className="space-y-4">
                     <FormInput name="order" label="Order" value={manager.formState.order} onChange={manager.handleInputChange} type="number" required />
-                    <FormInput name="title_en" label="Title (English)" value={manager.formState.title_en} onChange={manager.handleInputChange} required />
-                    <FormInput name="title_km" label="Title (Khmer)" value={manager.formState.title_km} onChange={manager.handleInputChange} required />
-                    <FormTextarea name="excerpt_en" label="Excerpt (English)" value={manager.formState.excerpt_en} onChange={manager.handleInputChange} rows={3} />
-                    <FormTextarea name="excerpt_km" label="Excerpt (Khmer)" value={manager.formState.excerpt_km} onChange={manager.handleInputChange} rows={3} />
-                    <FormTextarea name="content_en" label="Full Content (English)" value={manager.formState.content_en} onChange={manager.handleInputChange} rows={8} />
-                    <FormTextarea name="content_km" label="Full Content (Khmer)" value={manager.formState.content_km} onChange={manager.handleInputChange} rows={8} />
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormInput name="title_en" label="Title (English)" value={manager.formState.title_en} onChange={manager.handleInputChange} required />
+                        <FormInput name="title_km" label="Title (Khmer)" value={manager.formState.title_km} onChange={manager.handleInputChange} required />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormTextarea name="excerpt_en" label="Excerpt (English)" value={manager.formState.excerpt_en} onChange={manager.handleInputChange} rows={3} />
+                        <FormTextarea name="excerpt_km" label="Excerpt (Khmer)" value={manager.formState.excerpt_km} onChange={manager.handleInputChange} rows={3} />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <FormTextarea name="content_en" label="Full Content (English)" value={manager.formState.content_en} onChange={manager.handleInputChange} rows={8} />
+                        <FormTextarea name="content_km" label="Full Content (Khmer)" value={manager.formState.content_km} onChange={manager.handleInputChange} rows={8} />
+                    </div>
                     <ImageUploadInput name="thumbnailUrl" label="Thumbnail Image URL" value={manager.formState.thumbnailUrl} onChange={manager.handleInputChange} folder="teachings/thumbnails" required />
                     <MultiImageUploadInput name="imageUrls" label="Detail Image URLs" value={manager.formState.imageUrls || []} onChange={manager.handleInputChange} folder="teachings/details" helperText="Optional. Enter one image URL per line, or upload files." />
                     <div className="flex items-center space-x-4 pt-2">
@@ -420,9 +440,9 @@ const TeachingsManager: React.FC = () => {
                 </form>
             </AdminSection>
              <AdminSection title="Manage Teachings">
-                <div className="space-y-4">
+                <div className="space-y-3">
                     {manager.items.map(item => (
-                        <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4">
+                        <div key={item.id} className="p-3 border border-gray-200 rounded-md flex justify-between items-center gap-4 hover:bg-gray-50 transition-colors">
                              <div className="flex items-center gap-4 min-w-0">
                                 <img src={item.thumbnailUrl} alt={item.title_en} className="w-16 h-16 object-cover rounded-md flex-shrink-0" />
                                 <div className="min-w-0">
@@ -431,8 +451,8 @@ const TeachingsManager: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3 flex-shrink-0">
-                                <button onClick={() => manager.handleEditClick(item)} className="text-sm font-semibold text-blue-500 hover:underline">Edit</button>
-                                <button onClick={() => manager.handleDelete(item.id)} className="text-sm font-semibold text-red-500 hover:underline">Delete</button>
+                                <button onClick={() => manager.handleEditClick(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
+                                <button onClick={() => manager.handleDelete(item.id)} className="text-sm font-semibold text-red-600 hover:underline">Delete</button>
                             </div>
                         </div>
                     ))}
@@ -512,9 +532,70 @@ const ContactManager = () => <PageContentManager
 />;
 
 
+const DashboardView: React.FC = () => {
+    const { data: posts } = useCollection<Post>(query(collection(db, "posts")));
+    const { data: comments } = useCollection<CommentType>(query(collection(db, "comments")));
+    const { data: albums } = useCollection<GalleryAlbum>(query(collection(db, "gallery")));
+    const { data: events } = useCollection<EventType>(query(collection(db, "events")));
+    const { data: teachings } = useCollection<Teaching>(query(collection(db, "teachings")));
+
+    const recentCommentsQuery = useMemo(() => query(collection(db, "comments"), orderBy("createdAt", "desc"), limit(5)), []);
+    const { data: recentComments } = useCollection<CommentType>(recentCommentsQuery);
+
+    const handleDeleteComment = async (id: string) => {
+        if (window.confirm('Are you sure you want to delete this comment?')) {
+            await deleteDoc(doc(db, "comments", id));
+        }
+    };
+
+    const StatCard: React.FC<{ title: string; value: number; icon: React.FC<any> }> = ({ title, value, icon: Icon }) => (
+        <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 flex items-center space-x-4">
+            <div className="bg-amber-100 p-3 rounded-full">
+                <Icon className="w-6 h-6 text-amber-600" />
+            </div>
+            <div>
+                <p className="text-sm font-medium text-gray-500">{title}</p>
+                <p className="text-2xl font-bold text-gray-900">{value}</p>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="space-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                <StatCard title="Feed Posts" value={posts.length} icon={Newspaper} />
+                <StatCard title="Comments" value={comments.length} icon={MessageSquare} />
+                <StatCard title="Gallery Albums" value={albums.length} icon={ImageIcon} />
+                <StatCard title="Events" value={events.length} icon={Calendar} />
+                <StatCard title="Teachings" value={teachings.length} icon={BookOpen} />
+            </div>
+            <AdminSection title="Recent Comments">
+                 <div className="space-y-4">
+                    {recentComments && recentComments.length > 0 ? recentComments.map(comment => (
+                        <div key={comment.id} className="p-4 border border-gray-200 rounded-md bg-white hover:bg-gray-50 transition-colors">
+                            <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <img src={comment.user.photoURL || ''} alt="" className="w-6 h-6 rounded-full"/>
+                                        <p className="font-bold text-gray-900">{comment.user.displayName}</p>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
+                                    <p className="text-gray-800 whitespace-pre-wrap">{comment.text}</p>
+                                </div>
+                                <button onClick={() => handleDeleteComment(comment.id)} className="text-sm font-semibold text-red-600 hover:underline ml-4">Delete</button>
+                            </div>
+                        </div>
+                    )) : <p className="text-gray-500">No recent comments.</p>}
+                </div>
+            </AdminSection>
+        </div>
+    );
+};
+
+
 // --- MAIN ADMIN COMPONENT ---
 const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
-    const [view, setView] = useState<ViewType>('feed');
+    const [view, setView] = useState<ViewType>('dashboard');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
@@ -537,7 +618,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
         return (
             <>
                 <PageMeta title="Authenticating..." description="" robots={metaRobots} />
-                <div className="min-h-screen flex items-center justify-center bg-white"><p>Authenticating...</p></div>
+                <div className="min-h-screen flex items-center justify-center bg-gray-50"><p>Authenticating...</p></div>
             </>
         );
     }
@@ -546,9 +627,9 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
         return (
             <>
                 <PageMeta title="Admin Login" description={metaDescription} robots={metaRobots} />
-                <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 text-center">
-                    <h1 className="text-4xl text-amber-600 mb-4">Admin Access</h1>
-                    <p className="text-gray-500 mb-8 max-w-sm">Please log in with an authorized GitHub account to access the content management dashboard.</p>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+                    <h1 className="text-4xl text-amber-600 font-bold mb-4">Admin Access</h1>
+                    <p className="text-gray-600 mb-8 max-w-sm">Please log in with an authorized GitHub account to access the content management dashboard.</p>
                     <button onClick={handleLogin} className="inline-flex items-center space-x-3 bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-900 transition-colors shadow-lg font-semibold transform hover:scale-105">
                         <GitHubIcon className="w-6 h-6" />
                         <span>Login with GitHub</span>
@@ -562,9 +643,9 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
          return (
             <>
                 <PageMeta title="Access Denied" description={metaDescription} robots={metaRobots} />
-                <div className="min-h-screen flex flex-col items-center justify-center bg-white p-4 text-center">
-                    <h1 className="text-3xl text-red-500 mb-4">Access Denied</h1>
-                    <p className="text-gray-500 mb-8">You are not authorized to view this page.</p>
+                <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4 text-center">
+                    <h1 className="text-3xl text-red-600 font-bold mb-4">Access Denied</h1>
+                    <p className="text-gray-600 mb-8">You are not authorized to view this page.</p>
                     <button onClick={handleLogout} className="inline-flex items-center space-x-3 bg-gray-200 text-gray-800 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors">
                         <LogOut className="w-5 h-5" /><span>Logout</span>
                     </button>
@@ -574,15 +655,15 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     }
     
     const SidebarNav = () => (
-      <nav className="flex flex-col p-4 space-y-2">
+      <nav className="flex flex-col p-2 space-y-1">
           {navItems.map(item => (
               <button
                   key={item.id}
                   onClick={() => { setView(item.id); setIsMenuOpen(false); }}
-                  className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 text-left w-full ${ view === item.id ? 'bg-amber-100 text-amber-800' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }`}
+                  className={`flex items-center space-x-3 px-3 py-2.5 rounded-md transition-all duration-200 text-left w-full text-sm ${ view === item.id ? 'bg-amber-100 text-amber-800 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }`}
               >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="font-semibold">{item.label}</span>
+                  <span className="font-medium">{item.label}</span>
               </button>
           ))}
       </nav>
@@ -590,6 +671,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
 
     const renderView = () => {
         switch (view) {
+            case 'dashboard': return <DashboardView />;
             case 'feed': return <FeedManager user={user} postToEdit={(location.state as any)?.postToEdit} />;
             case 'comments': return <CommentManager />;
             case 'gallery': return <GalleryManager />;
@@ -604,27 +686,33 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     return (
         <>
             <PageMeta title="Admin Dashboard | Wat Serei Mongkol" description={metaDescription} robots={metaRobots} />
-            <div className="min-h-screen bg-gray-100 lg:flex">
-                {/* UI UPGRADE: Improved mobile sidebar overlay */}
+            <div className="min-h-screen bg-gray-50 lg:flex">
                 <div className={`fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity ${isMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsMenuOpen(false)}></div>
-                <aside className={`fixed lg:relative lg:translate-x-0 inset-y-0 left-0 z-50 w-64 bg-white text-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out border-r border-gray-200 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                <aside className={`fixed lg:relative lg:translate-x-0 inset-y-0 left-0 z-50 w-64 bg-white text-gray-800 flex flex-col transform transition-transform duration-300 ease-in-out border-r border-gray-200 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                     <div className="flex items-center justify-between p-4 h-20 border-b border-gray-200">
                         <h1 className="text-xl font-bold text-amber-600">Admin Panel</h1>
                          <button onClick={() => setIsMenuOpen(false)} className="lg:hidden text-gray-500 hover:text-gray-800"> <X className="w-6 h-6" /> </button>
                     </div>
-                    <SidebarNav />
+                    <div className="flex-grow overflow-y-auto">
+                        <SidebarNav />
+                    </div>
+                    <div className="p-4 border-t border-gray-200">
+                        <div className="flex items-center space-x-3">
+                            <img src={user.photoURL || ''} alt={user.displayName || ''} className="w-10 h-10 rounded-full" />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-800 truncate">{user.displayName}</p>
+                            </div>
+                            <button onClick={handleLogout} title="Logout" className="text-gray-500 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-gray-100"> <LogOut className="w-5 h-5"/> </button>
+                        </div>
+                    </div>
                 </aside>
                 
                 <div className="flex-1 flex flex-col min-w-0">
-                    <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-30 border-b border-gray-200">
+                    <header className="bg-white/80 backdrop-blur-sm shadow-sm sticky top-0 z-30 lg:hidden">
                         <div className="container mx-auto px-6 h-20 flex justify-between items-center">
                             <button onClick={() => setIsMenuOpen(true)} className="lg:hidden text-gray-800"> <Menu className="w-6 h-6" /> </button>
-                            <div className="text-lg font-semibold text-gray-800 capitalize hidden sm:block">{navItems.find(i => i.id === view)?.label} Management</div>
-                            <div className="flex items-center space-x-4">
-                                <span className="font-semibold text-gray-800 hidden sm:block">{user.displayName}</span>
-                                <img src={user.photoURL || ''} alt={user.displayName || ''} className="w-10 h-10 rounded-full border-2 border-amber-600" />
-                                <button onClick={handleLogout} title="Logout" className="text-gray-500 hover:text-red-500 transition-colors"> <LogOut className="w-6 h-6"/> </button>
-                            </div>
+                            <div className="text-lg font-semibold text-gray-800 capitalize">{navItems.find(i => i.id === view)?.label}</div>
+                            <div className="w-6"></div>
                         </div>
                     </header>
                     <main className="flex-1 p-4 sm:p-6 lg:p-8"> {renderView()} </main>
