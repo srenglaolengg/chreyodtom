@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Language } from "../types";
 import { DharmaWheelIcon } from "./icons/DharmaWheelIcon";
@@ -87,31 +86,32 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
 
   // ✅ Shared link styles (focus + hover)
   const linkClass =
-    "text-sm hover:text-amber-700 hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-amber-600 rounded-sm";
+    "text-muted-foreground hover:text-primary hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-primary rounded-sm";
 
   return (
     <footer
-      className="bg-amber-50/50 border-t border-amber-200 text-stone-600"
+      /* Styling Change: Updated footer background and text colors to match the new palette. */
+      className="bg-secondary/50 border-t border-border text-foreground"
       aria-label="Website Footer"
     >
-      <div className="container mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-10 gap-x-8 text-left">
+      <div className="container mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-12 gap-x-8 text-left">
           {/* Column 1: About */}
-          <section aria-labelledby="footer-about">
-            <div className="flex items-center justify-start space-x-2">
-              <DharmaWheelIcon className="w-7 h-7 text-amber-600" />
+          <section aria-labelledby="footer-about" className="md:col-span-2 lg:col-span-1">
+            <div className="flex items-center justify-start space-x-3">
+              <DharmaWheelIcon className="w-8 h-8 text-primary" />
               <Link
                 to="/"
-                className={`font-bold text-lg text-amber-800 ${
+                className={`font-bold text-xl text-foreground ${
                   language === "km" ? "font-khmer" : ""
-                } ${linkClass}`}
+                }`}
               >
                 {currentContent.title}
               </Link>
             </div>
             <p
               id="footer-about"
-              className={`text-sm mt-3 leading-relaxed ${
+              className={`text-muted-foreground mt-4 leading-relaxed ${
                 language === "km" ? "font-khmer" : ""
               }`}
             >
@@ -123,13 +123,13 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
           <nav aria-labelledby="footer-links">
             <h3
               id="footer-links"
-              className={`text-lg font-semibold text-amber-800 mb-4 ${
+              className={`text-lg font-semibold text-foreground mb-4 ${
                 language === "km" ? "font-khmer" : ""
               }`}
             >
               {currentContent.quickLinks}
             </h3>
-            <ul className="flex flex-row flex-wrap gap-x-6 gap-y-2">
+            <ul className="space-y-2">
               {currentLinks.map((link) => (
                 <li key={link.path}>
                   <Link
@@ -144,18 +144,18 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
           </nav>
 
           {/* Column 3: Contact Us */}
-          <address aria-labelledby="footer-contact" className="not-italic">
+          <address aria-labelledby="footer-contact" className="not-italic lg:col-span-2">
             <h3
               id="footer-contact"
-              className={`text-lg font-semibold text-amber-800 mb-4 ${
+              className={`text-lg font-semibold text-foreground mb-4 ${
                 language === "km" ? "font-khmer" : ""
               }`}
             >
               {currentContent.contactUs}
             </h3>
-            <ul className="space-y-4 text-sm">
-              <li className="flex items-start space-x-4">
-                <LocationPinIcon className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <ul className="space-y-4 text-muted-foreground">
+              <li className="flex items-start space-x-3">
+                <LocationPinIcon className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                 <span
                   className={`${language === "km" ? "font-khmer" : ""}`}
                   aria-label="Address"
@@ -163,8 +163,8 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
                   {currentContent.address}
                 </span>
               </li>
-              <li className="flex items-start space-x-4">
-                <PhoneIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <li className="flex items-start space-x-3">
+                <PhoneIcon className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
                 <a
                   href={`tel:${currentContent.phone}`}
                   className={linkClass}
@@ -173,8 +173,8 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
                   {currentContent.phone}
                 </a>
               </li>
-              <li className="flex items-start space-x-4">
-                <EmailIcon className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <li className="flex items-start space-x-3">
+                <EmailIcon className="w-5 h-5 text-primary flex-shrink-0 mt-1" />
                 <a
                   href={`mailto:${currentContent.email}`}
                   className={linkClass}
@@ -188,9 +188,9 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-amber-200/80 flex flex-col-reverse sm:flex-row items-center justify-between gap-y-6">
+        <div className="mt-16 pt-8 border-t border-border flex flex-col-reverse sm:flex-row items-center justify-between gap-y-6">
           <p
-            className={`text-xs text-stone-500 text-center sm:text-left ${
+            className={`text-sm text-muted-foreground text-center sm:text-left ${
               language === "km" ? "font-khmer" : ""
             }`}
           >
@@ -202,7 +202,7 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Share on Facebook"
-              className="text-stone-500 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full transition-colors"
+              className="text-muted-foreground hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full transition-colors"
             >
               <FacebookIcon className="w-6 h-6" />
             </a>
@@ -211,7 +211,7 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Share on Telegram"
-              className="text-stone-500 hover:text-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded-full transition-colors"
+              className="text-muted-foreground hover:text-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 rounded-full transition-colors"
             >
               <TelegramIcon className="w-6 h-6" />
             </a>

@@ -20,6 +20,7 @@ import Home from './pages/Home';
 import GalleryDetail from './pages/GalleryDetail';
 import EventDetail from './pages/EventDetail';
 import TeachingDetail from './pages/TeachingDetail';
+import ScrollToTop from './components/ScrollToTop';
 
 const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>(Language.Khmer);
@@ -54,7 +55,9 @@ const App: React.FC = () => {
 
   return (
     <Router>
-      <div className="bg-stone-50 text-stone-700 min-h-screen flex flex-col">
+      <ScrollToTop />
+      {/* Changed background color to use the CSS variable for better theme integration. */}
+      <div className="bg-background text-foreground min-h-screen flex flex-col">
         {/* Header always visible */}
         <Header
           language={language}
@@ -64,7 +67,7 @@ const App: React.FC = () => {
         />
 
         {/* Page content */}
-        <main className="flex-grow pt-14">
+        <main className="flex-grow pt-20"> {/* Increased top padding to account for taller header */}
           {/* Restored Routes and Route syntax for v6/v7 compatibility. */}
           <Routes>
             <Route path="/about" element={<About language={language} />} />

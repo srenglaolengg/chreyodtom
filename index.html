@@ -13,48 +13,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,100..700;1,100..700&family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --background: 210 40% 98%;
-      --foreground: 222 47% 11%;
+      /* Refined color palette for a warmer, more elegant light theme */
+      --background: 40 33% 97%; /* Softer, warmer off-white */
+      --foreground: 20 14% 15%; /* Softer black for text */
       --card: 0 0% 100%;
-      --card-foreground: 222 47% 11%;
+      --card-foreground: 20 14% 15%;
       --popover: 0 0% 100%;
-      --popover-foreground: 222 47% 11%;
-      --primary: 35 78% 55%;
-      --primary-foreground: 355 92% 95%;
-      --secondary: 210 40% 96%;
-      --secondary-foreground: 222 47% 11%;
-      --muted: 210 40% 96%;
-      --muted-foreground: 215 20% 65%;
-      --accent: 210 40% 96%;
-      --accent-foreground: 222 47% 11%;
+      --popover-foreground: 20 14% 15%;
+      --primary: 35 78% 55%; /* Richer amber */
+      --primary-foreground: 20 14% 99%;
+      --secondary: 40 33% 94%; /* Slightly darker for subtle contrast */
+      --secondary-foreground: 20 14% 15%;
+      --muted: 40 33% 92%;
+      --muted-foreground: 20 10% 45%;
+      --accent: 40 33% 94%;
+      --accent-foreground: 20 14% 15%;
       --destructive: 0 84% 60%;
       --destructive-foreground: 0 0% 98%;
-      --border: 214 32% 91%;
-      --input: 214 32% 91%;
-      --ring: 215 20% 65%;
-      --radius: 0.5rem;
+      --border: 40 20% 88%;
+      --input: 40 20% 88%;
+      --ring: 35 78% 55%;
+      --radius: 0.75rem; /* Slightly larger radius for a softer look */
     }
  
     .dark {
-      --background: 222 47% 11%;
+      /* Refined color palette for a deeper, more comfortable dark theme */
+      --background: 224 71% 4%; /* Deep, dark blue */
       --foreground: 210 40% 98%;
-      --card: 222 47% 11%;
+      --card: 224 71% 9%; /* Slightly lighter than background */
       --card-foreground: 210 40% 98%;
-      --popover: 222 47% 11%;
+      --popover: 224 71% 4%;
       --popover-foreground: 210 40% 98%;
-      --primary: 45 93% 47%;
-      --primary-foreground: 222 47% 11%;
-      --secondary: 217 33% 17%;
+      --primary: 45 93% 52%; /* Brighter gold for better contrast */
+      --primary-foreground: 224 71% 4%;
+      --secondary: 224 71% 12%;
       --secondary-foreground: 210 40% 98%;
-      --muted: 217 33% 17%;
+      --muted: 224 71% 12%;
       --muted-foreground: 215 20% 65%;
-      --accent: 217 33% 17%;
+      --accent: 224 71% 12%;
       --accent-foreground: 210 40% 98%;
       --destructive: 0 63% 31%;
       --destructive-foreground: 210 40% 98%;
-      --border: 217 33% 17%;
-      --input: 217 33% 17%;
-      --ring: 215 20% 65%;
+      --border: 224 71% 15%;
+      --input: 224 71% 15%;
+      --ring: 45 93% 52%;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
@@ -64,6 +70,13 @@
       transition-property: color, background-color;
       transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
       transition-duration: 300ms;
+      line-height: 1.7; /* Increased line height for readability */
+    }
+
+    /* Added a subtle dot pattern for the dark theme background for texture */
+    .dark body {
+        background-image: radial-gradient(circle at 1px 1px, hsl(var(--border)) 0.5px, transparent 0);
+        background-size: 1.5rem 1.5rem;
     }
 
     .font-khmer {

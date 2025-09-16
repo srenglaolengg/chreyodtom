@@ -77,20 +77,22 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            <section id="teachings" className="py-20 bg-background">
+            {/* Styling Change: Increased vertical padding (py-24) for better spacing. */}
+            <section id="teachings" className="py-24 bg-background">
                 <div className="container mx-auto px-6">
-                    <div className="text-center mb-12">
+                    <div className="text-center mb-16">
                         <div className="inline-flex items-center justify-center space-x-4">
-                            <DharmaWheelIcon className="w-8 h-8 text-primary" />
-                            <h2 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <DharmaWheelIcon className="w-10 h-10 text-primary" />
+                            <h2 className={`text-4xl md:text-5xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
                                 {currentContent.title}
                             </h2>
-                            <DharmaWheelIcon className="w-8 h-8 text-primary" />
+                            <DharmaWheelIcon className="w-10 h-10 text-primary" />
                         </div>
                     </div>
                      
                     <motion.div 
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                      /* Styling Change: Increased grid gap for more space between cards. */
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
                       variants={containerVariants}
                       initial="hidden"
                       animate={loading ? "hidden" : "visible"}
@@ -100,6 +102,7 @@ const Teachings: React.FC<TeachingsProps> = ({ language }) => {
                         ) : (
                           teachings.map((item) => (
                             <motion.div key={item.id} variants={itemVariants} className="flex">
+                              {/* The Card component now has enhanced styling from components/ui/Card.tsx */}
                               <Card className="flex flex-col h-full w-full group">
                                 <CardImage src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} />
                                 <CardContent className="flex flex-col flex-grow">

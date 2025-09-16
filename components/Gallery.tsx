@@ -77,19 +77,21 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <section id="gallery" className="py-20 bg-background">
+      {/* Styling Change: Increased vertical padding (py-24) for better spacing. */}
+      <section id="gallery" className="py-24 bg-background">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-12">
-            <h2 className={`text-3xl md:text-4xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
+          <div className="text-center mb-16">
+            <h2 className={`text-4xl md:text-5xl font-bold text-primary ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.title}
             </h2>
-            <p className={`mt-2 text-muted-foreground ${language === 'km' ? 'font-khmer' : ''}`}>
+            <p className={`mt-4 text-lg text-muted-foreground ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.subtitle}
             </p>
           </div>
           
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            /* Styling Change: Increased grid gap for more space between cards. */
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
             variants={containerVariants}
             initial="hidden"
             animate={loading ? "hidden" : "visible"}
@@ -99,6 +101,7 @@ const Gallery: React.FC<GalleryProps> = ({ language }) => {
             ) : (
               albums.map((album) => (
                 <motion.div key={album.id} variants={itemVariants} className="flex">
+                  {/* The Card component now has enhanced styling from components/ui/Card.tsx */}
                   <Card className="flex flex-col h-full w-full group">
                     <CardImage src={album.thumbnailUrl} alt={language === 'km' ? album.title_km : album.title_en} />
                     <CardContent className="flex flex-col flex-grow">
