@@ -1,9 +1,6 @@
+// This file contains constants used throughout the application.
 
-
-// FIX: The 'Schedule' type is no longer defined in './types' and was unused.
-// This line has been removed to fix the compilation error.
-
-// The ADMIN_U_IDS constant has been removed. User roles are now managed
-// in the 'user_roles' table in the Supabase database.
-// Data for Gallery, Teachings, and Events has been migrated to Firestore
-// to be managed by the Admin Dashboard.
+// To grant a user admin privileges, add their Firebase Authentication User ID (UID)
+// to this array. You can find a user's UID in the Firebase Console under
+// Authentication > Users.
+export const ADMIN_U_IDS = ['YOUR_ADMIN_FIREBASE_UID_HERE'];

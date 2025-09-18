@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Language, FirebaseUser } from './types';
 import { auth } from './firebase';
 import { onAuthStateChanged, User as FirebaseUserType } from 'firebase/auth';
-import { supabase } from './supabase';
+import { ADMIN_U_IDS } from './constants';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -29,7 +29,7 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser: FirebaseUserType | null) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
       if (currentUser) {
         const userObj = {
           uid: currentUser.uid,
@@ -37,25 +37,8 @@ const App: React.FC = () => {
           photoURL: currentUser.photoURL,
         };
         setUser(userObj);
-        
-        // Check for admin role from Supabase
-        if (supabase) {
-            const { data, error } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', currentUser.uid)
-                .single();
-
-            if (error && error.code !== 'PGRST116') { // Ignore "no rows found" error
-                console.error("Error fetching user role:", error);
-            }
-            
-            // Set admin status based on the role in the database
-            setIsAdmin(data?.role === 'admin');
-        } else {
-            setIsAdmin(false);
-        }
-
+        // Check for admin role using the hardcoded list
+        setIsAdmin(ADMIN_U_IDS.includes(currentUser.uid));
       } else {
         setUser(null);
         setIsAdmin(false);
@@ -67,7 +50,7 @@ const App: React.FC = () => {
 
   const toggleLanguage = () => {
     setLanguage(prev =>
-      prev === Language.Khmer ? Language.English : Language.Khmer
+      prev === Language.Khmer ? Language.English : Language.English
     );
   };
 

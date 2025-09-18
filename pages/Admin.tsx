@@ -1,17 +1,31 @@
 import React, { useState, useEffect, FormEvent, useMemo } from 'react';
-import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo, UserRole } from '../types';
-import { auth, githubProvider } from '../firebase';
+import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
+import { auth, githubProvider, db, storage } from '../firebase';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
     signInWithPopup,
     signOut,
 } from 'firebase/auth';
+import {
+    collection,
+    doc,
+    addDoc,
+    updateDoc,
+    setDoc,
+    deleteDoc,
+    getDoc,
+    serverTimestamp,
+} from 'firebase/firestore';
+import {
+    ref,
+    uploadBytes,
+    getDownloadURL
+} from 'firebase/storage';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 import PageMeta from '../components/PageMeta';
-import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud, LayoutDashboard, Sparkles, Languages, Loader2, Users } from 'lucide-react';
+import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, UploadCloud, LayoutDashboard, Sparkles, Languages, Loader2 } from 'lucide-react';
 import { useCollection } from '../hooks/useCollection';
 import { GoogleGenAI } from '@google/genai';
-import { supabase, BUCKET_NAME } from '../supabase';
 
 // --- CONFIGURATION TYPES ---
 interface FieldConfig {
@@ -39,7 +53,7 @@ interface AdminProps {
     authLoading: boolean;
 }
 
-type ViewType = 'dashboard' | 'feed' | 'comments' | 'gallery' | 'events' | 'teachings' | 'about' | 'contact' | 'user-roles';
+type ViewType = 'dashboard' | 'feed' | 'comments' | 'gallery' | 'events' | 'teachings' | 'about' | 'contact';
 
 const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -50,7 +64,6 @@ const navItems: { id: ViewType; label: string; icon: React.FC<any> }[] = [
     { id: 'teachings', label: 'Teachings', icon: BookOpen },
     { id: 'about', label: 'About Page', icon: Info },
     { id: 'contact', label: 'Contact Page', icon: Phone },
-    { id: 'user-roles', label: 'User Roles', icon: Users },
 ];
 
 
@@ -79,41 +92,18 @@ const ImageUploadInput: React.FC<{ name: string; label: React.ReactNode; value: 
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // FIX: Check if Supabase client is initialized before proceeding.
-        if (!supabase) {
-            setUploadError("Supabase is not configured. Please update your credentials in supabase.ts.");
-            return;
-        }
-
         setIsUploading(true);
         setUploadError(null);
         
-        // Define the path for the file in Supabase Storage.
-        const filePath = `${folder}/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
 
         try {
-            // Upload the file to the specified Supabase bucket and path.
-            const { error: uploadError } = await supabase.storage
-                .from(BUCKET_NAME)
-                .upload(filePath, file);
-
-            if (uploadError) {
-                throw uploadError;
-            }
-
-            // If the upload is successful, get the public URL for the file.
-            const { data: publicUrlData } = supabase.storage
-                .from(BUCKET_NAME)
-                .getPublicUrl(filePath);
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
             
-            if (!publicUrlData.publicUrl) {
-                throw new Error("Could not get public URL for the uploaded file.");
-            }
-            
-            // Trigger the onChange event to update the form state with the new URL.
-            onChange({ target: { name, value: publicUrlData.publicUrl } } as React.ChangeEvent<HTMLInputElement>);
+            onChange({ target: { name, value: downloadURL } } as React.ChangeEvent<HTMLInputElement>);
         } catch (error: any) {
-            console.error("Supabase Upload Error:", error);
+            console.error("Firebase Storage Upload Error:", error);
             setUploadError(`Upload failed: ${error.message}`);
         } finally {
             setIsUploading(false);
@@ -144,47 +134,21 @@ const MultiImageUploadInput: React.FC<{ name: string; label: React.ReactNode; va
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
-
-        // FIX: Check if Supabase client is initialized before proceeding.
-        if (!supabase) {
-            setUploadError("Supabase is not configured. Please update your credentials in supabase.ts.");
-            return;
-        }
-
+        
         setIsUploading(true);
         setUploadError(null);
 
-        // Create an array of promises, one for each file upload.
         const uploadPromises = Array.from(files).map(async (file) => {
-            const filePath = `${folder}/${Date.now()}_${file.name}`;
-            
-            // Upload the file to Supabase Storage.
-            const { error: uploadError } = await supabase.storage
-                .from(BUCKET_NAME)
-                .upload(filePath, file);
-
-            if (uploadError) {
-                throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
-            }
-
-            // Get the public URL for the uploaded file.
-            const { data: publicUrlData } = supabase.storage
-                .from(BUCKET_NAME)
-                .getPublicUrl(filePath);
-
-            if (!publicUrlData.publicUrl) {
-                throw new Error(`Could not get public URL for ${file.name}.`);
-            }
-            return publicUrlData.publicUrl;
+            const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            return getDownloadURL(snapshot.ref);
         });
 
         try {
-            // Wait for all upload promises to resolve.
             const downloadURLs = await Promise.all(uploadPromises);
-            // Combine new URLs with existing ones and update the form state.
             onChange({ target: { name, value: [...value, ...downloadURLs].join('\n') } } as React.ChangeEvent<HTMLTextAreaElement>);
         } catch (error: any) {
-            console.error("Supabase Multi-upload Error:", error);
+            console.error("Firebase Multi-upload Error:", error);
             setUploadError(`Upload failed: ${error.message}`);
         } finally {
             setIsUploading(false);
@@ -273,18 +237,17 @@ const useCmsManager = <T extends {id: string}, F extends Omit<T, 'id'> & {id?: s
     };
 
     const handleDelete = async (id: string) => {
-        if (!supabase) return;
         if (window.confirm(`Delete this item from ${collectionName}?`)) {
-            const { error } = await supabase.from(collectionName).delete().eq('id', id);
-            if (error) console.error(error);
-            // Data will refetch via useCollection hook if it's made real-time or manually triggered.
-            // For now, the user has to refresh to see the change. A manual refetch function could be added to the hook.
+            try {
+                await deleteDoc(doc(db, collectionName, id));
+            } catch (error) {
+                 console.error(error);
+            }
         }
     };
 
     const handleSubmit = async (e: React.FormEvent, onBeforeSubmit?: (data: Omit<F, 'id'>, isEditing: boolean) => any) => {
         e.preventDefault();
-        if (!supabase) return;
         setIsSubmitting(true);
         const { id, ...data } = formState;
 
@@ -292,11 +255,9 @@ const useCmsManager = <T extends {id: string}, F extends Omit<T, 'id'> & {id?: s
 
         try {
             if (isEditing && id) {
-                const { error } = await supabase.from(collectionName).update(dataToSave).eq('id', id);
-                if (error) throw error;
+                await updateDoc(doc(db, collectionName, id), dataToSave);
             } else {
-                const { error } = await supabase.from(collectionName).insert(dataToSave);
-                if (error) throw error;
+                await addDoc(collection(db, collectionName), dataToSave);
             }
             handleCancelEdit();
         } catch (err) { console.error(err); } 
@@ -423,10 +384,8 @@ const CommentManager: React.FC = () => {
     const { data: comments } = useCollection<CommentType>('comments', useMemo(() => ({ orderBy: { column: 'createdAt', ascending: false } }), []));
 
     const handleDelete = async (id: string) => { 
-        if (!supabase) return;
         if (window.confirm('Delete this comment?')) {
-            const { error } = await supabase.from('comments').delete().eq('id', id);
-            if (error) console.error(error);
+            await deleteDoc(doc(db, 'comments', id)).catch(console.error);
         }
     };
 
@@ -441,7 +400,7 @@ const CommentManager: React.FC = () => {
                                     <img src={comment.user.photoURL || ''} alt="" className="w-6 h-6 rounded-full"/>
                                     <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2">{new Date(comment.createdAt).toLocaleString()}</p>
+                                <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
                                 <p className="text-gray-800 whitespace-pre-wrap">{comment.text}</p>
                             </div>
                             <button onClick={() => handleDelete(comment.id)} className="text-sm font-semibold text-red-600 hover:underline ml-4">Delete</button>
@@ -465,17 +424,13 @@ const PageContentManager: React.FC<{
     const [translationLoading, setTranslationLoading] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        if (!supabase) {
-            setIsLoading(false);
-            return;
-        }
         const fetchPage = async () => {
-            const { data, error } = await supabase.from('pages').select('*').eq('id', pageId).single();
-            if (data) {
-                setFormState(data);
-            }
-            if (error && error.code !== 'PGRST116') { // Ignore "no rows found" error
-                console.error(error);
+            const docRef = doc(db, 'pages', pageId);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                setFormState(docSnap.data());
+            } else {
+                console.log(`No document for page: ${pageId}`);
             }
             setIsLoading(false);
         };
@@ -498,11 +453,9 @@ const PageContentManager: React.FC<{
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        if (!supabase) return;
         setIsSubmitting(true);
         try {
-            const { error } = await supabase.from('pages').upsert({ id: pageId, ...formState });
-            if (error) throw error;
+            await setDoc(doc(db, 'pages', pageId), formState, { merge: true });
             alert('Content updated successfully!');
         } catch (error) { console.error(error); alert('Failed to update content.'); } 
         finally { setIsSubmitting(false); }
@@ -586,10 +539,8 @@ const DashboardView: React.FC = () => {
     const { data: recentComments } = useCollection<CommentType>('comments', useMemo(() => ({ orderBy: { column: 'createdAt', ascending: false }, limit: 5 }), []));
 
     const handleDeleteComment = async (id: string) => {
-        if (!supabase) return;
         if (window.confirm('Are you sure you want to delete this comment?')) {
-            const { error } = await supabase.from('comments').delete().eq('id', id);
-            if (error) console.error(error);
+            await deleteDoc(doc(db, 'comments', id)).catch(console.error);
         }
     };
 
@@ -624,7 +575,7 @@ const DashboardView: React.FC = () => {
                                         <img src={comment.user.photoURL || ''} alt="" className="w-6 h-6 rounded-full"/>
                                         <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mb-2">{new Date(comment.createdAt).toLocaleString()}</p>
+                                    <p className="text-xs text-gray-500 mb-2">{comment.createdAt?.toDate().toLocaleString()}</p>
                                     <p className="text-gray-800 whitespace-pre-wrap">{comment.text}</p>
                                 </div>
                                 <button onClick={() => handleDeleteComment(comment.id)} className="text-sm font-semibold text-red-600 hover:underline ml-4">Delete</button>
@@ -636,87 +587,6 @@ const DashboardView: React.FC = () => {
         </div>
     );
 };
-
-const UserRoleManager: React.FC = () => {
-    const { data: roles, loading } = useCollection<UserRole>('user_roles');
-    const [formState, setFormState] = useState({ user_id: '', role: 'editor' });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormState(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!formState.user_id || !formState.role || !supabase) return;
-        
-        setIsSubmitting(true);
-        const { error } = await supabase.from('user_roles').upsert({ user_id: formState.user_id, role: formState.role });
-        
-        if (error) {
-            console.error(error);
-            alert('Failed to save role. Make sure the User ID is correct and you have admin privileges.');
-        } else {
-            alert('Role saved successfully. The user may need to refresh their session to see the changes.');
-            setFormState({ user_id: '', role: 'editor' }); // Reset form
-            // NOTE: A manual page refresh is needed to see the updated list below
-            // due to the current implementation of the useCollection hook.
-        }
-        setIsSubmitting(false);
-    };
-
-    const handleDelete = async (userId: string) => {
-        if (!supabase || !window.confirm('Are you sure you want to remove this user\'s role? This cannot be undone.')) return;
-        
-        const { error } = await supabase.from('user_roles').delete().eq('user_id', userId);
-        if (error) {
-            console.error(error);
-            alert('Failed to delete role.');
-        } else {
-             alert('Role removed successfully.');
-        }
-    };
-
-    return (
-        <div className="space-y-8">
-            <AdminSection title="Assign User Role">
-                <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
-                    <FormInput name="user_id" label="Firebase User ID (UID)" value={formState.user_id} onChange={handleInputChange} required />
-                    <div>
-                        <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                        <select id="role" name="role" value={formState.role} onChange={handleInputChange} className="w-full p-2 border border-gray-300 bg-white rounded-md focus:ring-2 focus:ring-amber-500">
-                            <option value="editor">Editor</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                         <p className="mt-1 text-xs text-gray-500">Admins can manage all content and user roles. Editors can only manage content.</p>
-                    </div>
-                    <div className="pt-2">
-                        <button type="submit" disabled={isSubmitting} className="bg-amber-600 text-white px-6 py-2 rounded-md hover:bg-amber-700 font-semibold disabled:opacity-50 transition-colors">
-                            {isSubmitting ? 'Saving...' : 'Save Role'}
-                        </button>
-                    </div>
-                </form>
-            </AdminSection>
-            <AdminSection title="Current User Roles">
-                {loading ? <p>Loading roles...</p> : (
-                    <div className="divide-y divide-gray-200 border-t border-b">
-                        {roles.map(role => (
-                            <div key={role.user_id} className="p-3 flex justify-between items-center hover:bg-gray-50">
-                                <div>
-                                    <p className="font-semibold text-gray-800 capitalize">{role.role}</p>
-                                    <p className="font-mono text-xs text-gray-500">{role.user_id}</p>
-                                </div>
-                                <button onClick={() => handleDelete(role.user_id)} className="text-sm font-semibold text-red-600 hover:underline">Remove</button>
-                            </div>
-                        ))}
-                         {roles.length === 0 && <p className="p-4 text-center text-gray-500">No user roles have been assigned yet.</p>}
-                    </div>
-                )}
-            </AdminSection>
-        </div>
-    );
-};
-
 
 
 // --- MAIN ADMIN COMPONENT & CONFIGS ---
@@ -743,7 +613,7 @@ const renderFeedItem = (item: Post, onEdit: (item: any) => void, onDelete: (id: 
     <div key={item.id} className="p-4 border border-gray-200 rounded-md flex justify-between items-center gap-4 hover:bg-gray-50 transition-colors">
         <div>
             <h3 className="font-bold text-gray-900">{item.title}</h3>
-            <p className="text-sm text-gray-500">By {item.author} on {item.timestamp ? new Date(item.timestamp).toLocaleDateString() : ''}</p>
+            <p className="text-sm text-gray-500">By {item.author} on {item.timestamp?.toDate().toLocaleDateString() || ''}</p>
         </div>
         <div className="flex items-center space-x-3 flex-shrink-0">
             <button onClick={() => onEdit(item)} className="text-sm font-semibold text-blue-600 hover:underline">Edit</button>
@@ -895,7 +765,6 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
             case 'comments': return <CommentManager />;
             case 'about': return <AboutManager {...managerProps} />;
             case 'contact': return <ContactManager {...managerProps} />;
-            case 'user-roles': return <UserRoleManager />;
 
             case 'feed':
                 return <ContentManager
@@ -907,7 +776,7 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
                     itemToEdit={postToEditFromState}
                     onBeforeSubmit={(data, isEditing) => {
                         if (!isEditing) {
-                            return { ...data, author: user.displayName || 'Admin', timestamp: new Date().toISOString() };
+                            return { ...data, author: user.displayName || 'Admin', timestamp: serverTimestamp() };
                         }
                         return data;
                     }}

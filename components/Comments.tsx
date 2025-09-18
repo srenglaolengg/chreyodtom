@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
-import { auth, githubProvider } from '../firebase';
+import { auth, githubProvider, db } from '../firebase';
 import { 
     signInWithPopup, 
     signOut,
 } from 'firebase/auth';
-import { supabase } from '../supabase'; // Use Supabase client
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { GitHubIcon } from './icons/GitHubIcon';
 import CommentSkeleton from './skeletons/CommentSkeleton';
 import PageMeta from './PageMeta';
@@ -40,21 +40,19 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
 
     const handleSubmitComment = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (newComment.trim() === '' || !user || !supabase) return;
+        if (newComment.trim() === '' || !user) return;
 
         try {
-            const newCommentData = {
+            const commentsCollection = collection(db, 'comments');
+            await addDoc(commentsCollection, {
                 text: newComment,
-                createdAt: new Date().toISOString(),
+                createdAt: serverTimestamp(),
                 user: {
                     uid: user.uid,
                     displayName: user.displayName,
                     photoURL: user.photoURL,
                 }
-            };
-            const { error } = await supabase.from("comments").insert(newCommentData);
-            if (error) throw error;
-            
+            });
             setNewComment('');
         } catch (error) {
             console.error("Error adding comment: ", error);
@@ -144,8 +142,8 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                                         <div className="flex items-baseline space-x-2">
                                             <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                             <p className="text-xs text-gray-500">
-                                                <time dateTime={comment.createdAt}>
-                                                    {comment.createdAt ? new Date(comment.createdAt).toLocaleString() : '...'}
+                                                <time dateTime={comment.createdAt?.toDate().toISOString()}>
+                                                    {comment.createdAt?.toDate().toLocaleString() || '...'}
                                                 </time>
                                             </p>
                                         </div>

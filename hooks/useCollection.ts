@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { db } from '../firebase';
+import { collection, query, orderBy, limit, onSnapshot, QueryConstraint } from 'firebase/firestore';
 
 interface CollectionOptions {
     orderBy?: {
@@ -9,9 +10,7 @@ interface CollectionOptions {
     limit?: number;
 }
 
-// FIX: Relaxed generic constraint from `T extends { id: string }` to `T extends Record<string, any>`
-// This allows the hook to be used with collections that don't have an `id` field, like 'user_roles'.
-export const useCollection = <T extends Record<string, any>>(tableName: string, options?: CollectionOptions) => {
+export const useCollection = <T extends { id: string }>(collectionName: string, options?: CollectionOptions) => {
     const [data, setData] = useState<T[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -20,43 +19,45 @@ export const useCollection = <T extends Record<string, any>>(tableName: string, 
     const memoizedOptions = JSON.stringify(options);
 
     useEffect(() => {
-        if (!supabase) {
-            setLoading(false);
-            setError("Supabase client not initialized.");
-            return;
-        }
+        setLoading(true);
 
-        const fetchCollection = async () => {
-            setLoading(true);
-            
-            // Re-parse options inside useEffect
+        try {
             const currentOptions: CollectionOptions | undefined = memoizedOptions ? JSON.parse(memoizedOptions) : undefined;
-            
-            let query = supabase.from(tableName).select('*');
+            const constraints: QueryConstraint[] = [];
             
             if (currentOptions?.orderBy) {
-                query = query.order(currentOptions.orderBy.column, { ascending: currentOptions.orderBy.ascending ?? true });
+                constraints.push(orderBy(currentOptions.orderBy.column, currentOptions.orderBy.ascending === false ? 'desc' : 'asc'));
             }
             if (currentOptions?.limit) {
-                query = query.limit(currentOptions.limit);
+                constraints.push(limit(currentOptions.limit));
             }
+            
+            const collectionRef = collection(db, collectionName);
+            const q = query(collectionRef, ...constraints);
 
-            const { data: collectionData, error: collectionError } = await query;
-
-            if (collectionError) {
-                console.error(collectionError);
-                setError(`Could not fetch data from ${tableName}.`);
-                setData([]);
-            } else {
-                setData(collectionData as T[]);
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+                const collectionData: T[] = [];
+                querySnapshot.forEach((doc) => {
+                    collectionData.push({ ...doc.data(), id: doc.id } as T);
+                });
+                setData(collectionData);
                 setError(null);
-            }
+                setLoading(false);
+            }, (err) => {
+                console.error(err);
+                setError(`Could not fetch data from ${collectionName}.`);
+                setLoading(false);
+            });
+
+            return () => unsubscribe();
+
+        } catch (err) {
+            console.error(err);
+            setError('An error occurred while setting up the data listener.');
             setLoading(false);
-        };
+        }
 
-        fetchCollection();
-
-    }, [tableName, memoizedOptions]);
+    }, [collectionName, memoizedOptions]);
 
     return { data, loading, error };
 };

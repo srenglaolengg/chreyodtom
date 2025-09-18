@@ -18,12 +18,11 @@
     "react-router-dom": "^7.9.1",
     "lucide-react": "^0.544.0",
     "framer-motion": "^12.23.12",
-    "supabase": "^2.44.4",
-    "@google/genai": "^1.19.0",
-    "@supabase/supabase-js": "^2.57.4"
+    "@google/genai": "^1.19.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

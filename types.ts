@@ -1,6 +1,4 @@
-
-
-// import { Timestamp } from 'firebase/firestore'; // Removed Firestore-specific type
+import { Timestamp } from 'firebase/firestore';
 
 export enum Language {
   Khmer = 'km',
@@ -57,7 +55,7 @@ export interface FirebaseUser {
 export interface Comment {
   id: string;
   text: string;
-  createdAt: string; // Changed from Firestore Timestamp to string
+  createdAt: Timestamp;
   user: FirebaseUser;
 }
 
@@ -66,7 +64,7 @@ export interface Post {
   title: string;
   content: string;
   author: string;
-  timestamp: string; // Changed from Firestore Timestamp to string
+  timestamp: Timestamp;
   imageUrl?: string;
 }
 
@@ -82,9 +80,4 @@ export interface ContactInfo {
   address_km: string;
   phone: string;
   email: string;
-}
-
-export interface UserRole {
-  user_id: string;
-  role: 'admin' | 'editor' | string;
 }
