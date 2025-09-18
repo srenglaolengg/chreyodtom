@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Language } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
@@ -8,15 +8,6 @@ import { Link } from 'react-router-dom';
 interface HeroProps {
   language: Language;
 }
-
-// UPGRADE: Added a collection of high-quality hero images and corresponding overlays
-// to be chosen from randomly, creating a dynamic and fresh experience on each visit.
-const heroData = [
-  { imageUrl: 'https://i.postimg.cc/02xqb4Yy/photo-2025-09-08-23-20-58.jpg', overlay: 'from-black/70 via-black/40 to-transparent' },
-  { imageUrl: 'https://images.unsplash.com/photo-1593223631487-7c165a83ace4?q=80&w=2070&auto=format&fit=crop', overlay: 'from-stone-900/70 via-stone-900/40 to-transparent' },
-  { imageUrl: 'https://images.unsplash.com/photo-1588098226919-2169b363a2d5?q=80&w=1974&auto=format&fit=crop', overlay: 'from-slate-900/70 via-slate-900/40 to-transparent' },
-  { imageUrl: 'https://images.unsplash.com/photo-1620027814425-62a323315228?q=80&w=2070&auto=format&fit=crop', overlay: 'from-amber-950/60 via-amber-950/30 to-transparent' }
-];
 
 const metaContent = {
   en: {
@@ -34,15 +25,6 @@ const metaContent = {
 const Hero: React.FC<HeroProps> = ({ language }) => {
   const currentMeta = metaContent[language];
   
-  // State to hold the randomly selected hero image and overlay
-  const [heroStyle, setHeroStyle] = useState({ imageUrl: heroData[0].imageUrl, overlay: heroData[0].overlay });
-
-  // useEffect hook to select a random hero style when the component mounts
-  useEffect(() => {
-    const randomHero = heroData[Math.floor(Math.random() * heroData.length)];
-    setHeroStyle(randomHero);
-  }, []);
-
   const content = {
     en: {
       subtitle: 'Chray Ut Dom village, Krang Tayong commune, Peam Chor district, Prey Veng province',
@@ -67,14 +49,14 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
       <section 
         className="relative h-[90vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden"
       >
-        {/* Background Image with Ken Burns Effect, now with dynamic image URL */}
+        {/* Background Image with Ken Burns Effect */}
         <div 
             className="absolute inset-0 bg-cover bg-center animate-kenburns"
-            style={{ backgroundImage: `url('${heroStyle.imageUrl}')` }}
+            style={{ backgroundImage: "url('https://i.postimg.cc/02xqb4Yy/photo-2025-09-08-23-20-58.jpg')" }}
         ></div>
         
-        {/* Gradient Overlay, now with dynamic overlay class */}
-        <div className={`absolute inset-0 bg-gradient-to-t ${heroStyle.overlay}`}></div>
+        {/* Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
         
         {/* Content */}
         <div className="relative z-10 p-8 max-w-4xl mx-auto animate-fade-in-up">
@@ -92,7 +74,7 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 to="/feed"
-                className={`w-full sm:w-auto bg-amber-600 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-amber-700 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`w-full sm:w-auto bg-amber-500 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-amber-600 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
               >
                   {currentContent.ctaExplore}
               </Link>
