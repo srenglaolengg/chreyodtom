@@ -68,6 +68,12 @@ export interface Post {
   imageUrl?: string;
 }
 
+// FIX: Added the missing 'Schedule' interface to resolve an import error in constants.ts.
+export interface Schedule {
+  time: string;
+  activity: string;
+}
+
 export interface AboutContent {
   paragraph1_en: string;
   paragraph2_en: string;
