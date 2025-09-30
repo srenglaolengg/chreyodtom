@@ -61,7 +61,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
           <div className="flex flex-col lg:flex-row gap-12">
               <div className="lg:w-1/2">
                   {/* Styling Change: Updated info box to match new card styling. */}
-                  <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200 space-y-8 h-full">
+                  <div className="p-8 space-y-8 h-full">
                       {loading ? (
                         <div className="space-y-6 animate-pulse">
                           <div className="h-5 bg-gray-200 rounded w-3/4"></div>

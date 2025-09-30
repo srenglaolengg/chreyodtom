@@ -61,7 +61,7 @@ const GalleryDetail: React.FC<{ language: Language }> = ({ language }) => {
                                 <span>{currentContent.backLink}</span>
                             </Link>
 
-                            <div className="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg border border-gray-200">
+                            <div className="p-6 sm:p-8 md:p-10">
                                 <h1 className={`text-3xl md:text-4xl font-bold text-amber-600 mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {currentAlbumTitle}
                                 </h1>

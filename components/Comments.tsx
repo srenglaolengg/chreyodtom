@@ -96,7 +96,7 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                       </h2>
                     </div>
                     {/* UI UPGRADE: Polished the main container card with static light theme styles. */}
-                    <div className="max-w-3xl mx-auto bg-white p-4 sm:p-6 md:p-8 rounded-lg shadow-lg border border-gray-200">
+                    <div className="max-w-3xl mx-auto p-4 sm:p-6 md:p-8">
                         {user ? (
                              <form onSubmit={handleSubmitComment} className="mb-8">
                                 <div className="flex items-start space-x-4">
@@ -138,7 +138,7 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                                 /* UI UPGRADE: Refined individual comment appearance for better readability. */
                                 <article key={comment.id} className="flex items-start space-x-4 p-4" aria-label={`Comment by ${comment.user.displayName}`}>
                                     <img src={comment.user.photoURL || ''} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1 border-2 border-gray-200" />
-                                    <div className="flex-1 min-w-0 bg-gray-50 p-4 rounded-lg">
+                                    <div className="flex-1 min-w-0 p-4">
                                         <div className="flex items-baseline space-x-2">
                                             <p className="font-bold text-gray-900">{comment.user.displayName}</p>
                                             <p className="text-xs text-gray-500">

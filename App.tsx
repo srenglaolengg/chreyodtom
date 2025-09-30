@@ -23,12 +23,21 @@ const Feed = lazy(() => import('./components/Feed'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Home = lazy(() => import('./pages/Home'));
 
+// FIX: Define props for MainLayout to pass down to Header and Footer.
+interface MainLayoutProps {
+  children: React.ReactNode;
+  language: Language;
+  toggleLanguage: () => void;
+  user: FirebaseUser | null;
+  isAdmin: boolean;
+}
+
 // ✅ Layout for normal pages
-const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+const MainLayout: React.FC<MainLayoutProps> = ({ children, language, toggleLanguage, user, isAdmin }) => (
   <div className="bg-white text-gray-800 min-h-screen flex flex-col">
-    <Header />
+    <Header language={language} toggleLanguage={toggleLanguage} user={user} isAdmin={isAdmin} />
     <main className="flex-grow pt-20">{children}</main>
-    <Footer />
+    <Footer language={language} />
   </div>
 );
 
@@ -60,6 +69,8 @@ const App: React.FC = () => {
   const toggleLanguage = () => {
     setLanguage(prev => (prev === Language.Khmer ? Language.English : Language.Khmer));
   };
+  
+  const mainLayoutProps = { language, toggleLanguage, user, isAdmin };
 
   return (
     <Router>
@@ -67,17 +78,18 @@ const App: React.FC = () => {
       <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
         <Routes>
           {/* Normal pages */}
-          <Route path="/" element={<MainLayout><Home language={language} /></MainLayout>} />
-          <Route path="/about" element={<MainLayout><About language={language} /></MainLayout>} />
-          <Route path="/gallery" element={<MainLayout><Gallery language={language} /></MainLayout>} />
-          <Route path="/gallery/:id" element={<MainLayout><GalleryDetail language={language} /></MainLayout>} />
-          <Route path="/events" element={<MainLayout><Events language={language} /></MainLayout>} />
-          <Route path="/events/:id" element={<MainLayout><EventDetail language={language} /></MainLayout>} />
-          <Route path="/feed" element={<MainLayout><Feed language={language} user={user} isAdmin={isAdmin} /></MainLayout>} />
-          <Route path="/teachings" element={<MainLayout><Teachings language={language} /></MainLayout>} />
-          <Route path="/teachings/:id" element={<MainLayout><TeachingDetail language={language} /></MainLayout>} />
-          <Route path="/comments" element={<MainLayout><Comments language={language} user={user} /></MainLayout>} />
-          <Route path="/contact" element={<MainLayout><Contact language={language} /></MainLayout>} />
+          {/* FIX: Pass required props to MainLayout component in routes. */}
+          <Route path="/" element={<MainLayout {...mainLayoutProps}><Home language={language} /></MainLayout>} />
+          <Route path="/about" element={<MainLayout {...mainLayoutProps}><About language={language} /></MainLayout>} />
+          <Route path="/gallery" element={<MainLayout {...mainLayoutProps}><Gallery language={language} /></MainLayout>} />
+          <Route path="/gallery/:id" element={<MainLayout {...mainLayoutProps}><GalleryDetail language={language} /></MainLayout>} />
+          <Route path="/events" element={<MainLayout {...mainLayoutProps}><Events language={language} /></MainLayout>} />
+          <Route path="/events/:id" element={<MainLayout {...mainLayoutProps}><EventDetail language={language} /></MainLayout>} />
+          <Route path="/feed" element={<MainLayout {...mainLayoutProps}><Feed language={language} user={user} isAdmin={isAdmin} /></MainLayout>} />
+          <Route path="/teachings" element={<MainLayout {...mainLayoutProps}><Teachings language={language} /></MainLayout>} />
+          <Route path="/teachings/:id" element={<MainLayout {...mainLayoutProps}><TeachingDetail language={language} /></MainLayout>} />
+          <Route path="/comments" element={<MainLayout {...mainLayoutProps}><Comments language={language} user={user} /></MainLayout>} />
+          <Route path="/contact" element={<MainLayout {...mainLayoutProps}><Contact language={language} /></MainLayout>} />
 
           {/* Admin isolated (no header/footer) */}
           <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />} />

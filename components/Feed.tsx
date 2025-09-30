@@ -92,7 +92,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                         )}
                         {!loading && posts.map(post => (
                              /* UI UPGRADE: Updated article styling to match new card design theme. */
-                            <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden transition-shadow hover:shadow-xl border border-gray-200 relative group">
+                            <article key={post.id} className="relative group">
                                 {post.imageUrl && (
                                     <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover" />
                                 )}

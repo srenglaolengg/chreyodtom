@@ -62,7 +62,7 @@ const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
                                 <span>{currentContent.backLink}</span>
                             </Link>
 
-                            <div className="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg border border-gray-200">
+                            <div className="p-6 sm:p-8 md:p-10">
                                 <img src={event.imgSrc} alt={currentEventTitle} className="w-full aspect-video object-cover rounded-lg mb-6" />
 
                                 <div className="flex items-center space-x-3 text-amber-600 mb-4">

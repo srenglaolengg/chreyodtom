@@ -62,7 +62,7 @@ const TeachingDetail: React.FC<{ language: Language }> = ({ language }) => {
                                 <span>{currentLangContent.backLink}</span>
                             </Link>
 
-                            <div className="bg-white p-6 sm:p-8 md:p-10 rounded-lg shadow-lg border border-gray-200">
+                            <div className="p-6 sm:p-8 md:p-10">
                                 <div className="text-center mb-8">
                                     <div className="inline-flex items-center justify-center space-x-4">
                                         <DharmaWheelIcon className="w-8 h-8 text-amber-600" />
