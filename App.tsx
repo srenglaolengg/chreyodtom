@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-// Restored import for react-router-dom v6/v7 compatibility.
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Language, FirebaseUser } from './types';
 import { auth } from './firebase';
@@ -22,6 +21,15 @@ import EventDetail from './pages/EventDetail';
 import TeachingDetail from './pages/TeachingDetail';
 import ScrollToTop from './components/ScrollToTop';
 
+// ✅ Layout for normal pages
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="bg-white text-gray-800 min-h-screen flex flex-col">
+    <Header />
+    <main className="flex-grow pt-20">{children}</main>
+    <Footer />
+  </div>
+);
+
 const App: React.FC = () => {
   const [language, setLanguage] = useState<Language>(Language.Khmer);
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -37,7 +45,6 @@ const App: React.FC = () => {
           photoURL: currentUser.photoURL,
         };
         setUser(userObj);
-        // Check for admin role using the hardcoded list
         setIsAdmin(ADMIN_U_IDS.includes(currentUser.uid));
       } else {
         setUser(null);
@@ -49,46 +56,109 @@ const App: React.FC = () => {
   }, []);
 
   const toggleLanguage = () => {
-    setLanguage(prev =>
-      prev === Language.Khmer ? Language.English : Language.English
-    );
+    setLanguage(prev => (prev === Language.Khmer ? Language.English : Language.Khmer));
   };
 
   return (
     <Router>
       <ScrollToTop />
-      {/* Changed background color to use static Tailwind classes for a consistent light theme. */}
-      <div className="bg-white text-gray-800 min-h-screen flex flex-col">
-        {/* Header always visible */}
-        <Header
-          language={language}
-          toggleLanguage={toggleLanguage}
-          user={user}
-          isAdmin={isAdmin}
+      <Routes>
+        {/* Normal pages wrapped in MainLayout */}
+        <Route
+          path="/"
+          element={
+            <MainLayout>
+              <Home language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/about"
+          element={
+            <MainLayout>
+              <About language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/gallery"
+          element={
+            <MainLayout>
+              <Gallery language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/gallery/:id"
+          element={
+            <MainLayout>
+              <GalleryDetail language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <MainLayout>
+              <Events language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/events/:id"
+          element={
+            <MainLayout>
+              <EventDetail language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <MainLayout>
+              <Feed language={language} user={user} isAdmin={isAdmin} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/teachings"
+          element={
+            <MainLayout>
+              <Teachings language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/teachings/:id"
+          element={
+            <MainLayout>
+              <TeachingDetail language={language} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/comments"
+          element={
+            <MainLayout>
+              <Comments language={language} user={user} />
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/contact"
+          element={
+            <MainLayout>
+              <Contact language={language} />
+            </MainLayout>
+          }
         />
 
-        {/* Page content */}
-        <main className="flex-grow pt-20"> {/* Increased top padding to account for taller header */}
-          {/* Restored Routes and Route syntax for v6/v7 compatibility. */}
-          <Routes>
-            <Route path="/about" element={<About language={language} />} />
-            <Route path="/gallery/:id" element={<GalleryDetail language={language} />} />
-            <Route path="/gallery" element={<Gallery language={language} />} />
-            <Route path="/events/:id" element={<EventDetail language={language} />} />
-            <Route path="/events" element={<Events language={language} />} />
-            <Route path="/feed" element={<Feed language={language} user={user} isAdmin={isAdmin} />} />
-            <Route path="/teachings/:id" element={<TeachingDetail language={language} />} />
-            <Route path="/teachings" element={<Teachings language={language} />} />
-            <Route path="/comments" element={<Comments language={language} user={user} />} />
-            <Route path="/contact" element={<Contact language={language} />} />
-            <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />} />
-            <Route path="/" element={<Home language={language} />} />
-          </Routes>
-        </main>
-
-        {/* Footer always visible */}
-        <Footer language={language} />
-      </div>
+        {/* Admin page isolated (no header/footer) */}
+        <Route
+          path="/admin"
+          element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />}
+        />
+      </Routes>
     </Router>
   );
 };
