@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Language, FirebaseUser } from './types';
 import { auth } from './firebase';
@@ -7,19 +7,21 @@ import { ADMIN_U_IDS } from './constants';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
-import About from './components/About';
-import Gallery from './components/Gallery';
-import Teachings from './components/Teachings';
-import Events from './components/Events';
-import Contact from './components/Contact';
-import Comments from './components/Comments';
-import Feed from './components/Feed';
-import Admin from './pages/Admin';
-import Home from './pages/Home';
-import GalleryDetail from './pages/GalleryDetail';
-import EventDetail from './pages/EventDetail';
-import TeachingDetail from './pages/TeachingDetail';
 import ScrollToTop from './components/ScrollToTop';
+
+// ✅ Lazy load heavy pages
+const About = lazy(() => import('./components/About'));
+const Gallery = lazy(() => import('./components/Gallery'));
+const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
+const Teachings = lazy(() => import('./components/Teachings'));
+const TeachingDetail = lazy(() => import('./pages/TeachingDetail'));
+const Events = lazy(() => import('./components/Events'));
+const EventDetail = lazy(() => import('./pages/EventDetail'));
+const Contact = lazy(() => import('./components/Contact'));
+const Comments = lazy(() => import('./components/Comments'));
+const Feed = lazy(() => import('./components/Feed'));
+const Admin = lazy(() => import('./pages/Admin'));
+const Home = lazy(() => import('./pages/Home'));
 
 // ✅ Layout for normal pages
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -62,103 +64,25 @@ const App: React.FC = () => {
   return (
     <Router>
       <ScrollToTop />
-      <Routes>
-        {/* Normal pages wrapped in MainLayout */}
-        <Route
-          path="/"
-          element={
-            <MainLayout>
-              <Home language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/about"
-          element={
-            <MainLayout>
-              <About language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/gallery"
-          element={
-            <MainLayout>
-              <Gallery language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/gallery/:id"
-          element={
-            <MainLayout>
-              <GalleryDetail language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/events"
-          element={
-            <MainLayout>
-              <Events language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/events/:id"
-          element={
-            <MainLayout>
-              <EventDetail language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/feed"
-          element={
-            <MainLayout>
-              <Feed language={language} user={user} isAdmin={isAdmin} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/teachings"
-          element={
-            <MainLayout>
-              <Teachings language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/teachings/:id"
-          element={
-            <MainLayout>
-              <TeachingDetail language={language} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/comments"
-          element={
-            <MainLayout>
-              <Comments language={language} user={user} />
-            </MainLayout>
-          }
-        />
-        <Route
-          path="/contact"
-          element={
-            <MainLayout>
-              <Contact language={language} />
-            </MainLayout>
-          }
-        />
+      <Suspense fallback={<div className="flex justify-center items-center h-screen">Loading...</div>}>
+        <Routes>
+          {/* Normal pages */}
+          <Route path="/" element={<MainLayout><Home language={language} /></MainLayout>} />
+          <Route path="/about" element={<MainLayout><About language={language} /></MainLayout>} />
+          <Route path="/gallery" element={<MainLayout><Gallery language={language} /></MainLayout>} />
+          <Route path="/gallery/:id" element={<MainLayout><GalleryDetail language={language} /></MainLayout>} />
+          <Route path="/events" element={<MainLayout><Events language={language} /></MainLayout>} />
+          <Route path="/events/:id" element={<MainLayout><EventDetail language={language} /></MainLayout>} />
+          <Route path="/feed" element={<MainLayout><Feed language={language} user={user} isAdmin={isAdmin} /></MainLayout>} />
+          <Route path="/teachings" element={<MainLayout><Teachings language={language} /></MainLayout>} />
+          <Route path="/teachings/:id" element={<MainLayout><TeachingDetail language={language} /></MainLayout>} />
+          <Route path="/comments" element={<MainLayout><Comments language={language} user={user} /></MainLayout>} />
+          <Route path="/contact" element={<MainLayout><Contact language={language} /></MainLayout>} />
 
-        {/* Admin page isolated (no header/footer) */}
-        <Route
-          path="/admin"
-          element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />}
-        />
-      </Routes>
+          {/* Admin isolated (no header/footer) */}
+          <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />} />
+        </Routes>
+      </Suspense>
     </Router>
   );
 };
