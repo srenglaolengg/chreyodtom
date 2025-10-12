@@ -44,9 +44,9 @@ const itemVariants: Variants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 100,
+    transition: { 
+      duration: 0.5, 
+      ease: [0.25, 1, 0.5, 1] // easeOutQuint
     },
   },
 };
@@ -90,7 +90,14 @@ const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
           />
       )}
       {/* UI UPGRADE: Standardized vertical padding and background for consistent design. */}
-      <section id="events" className="py-20 md:py-28 bg-gray-50">
+      <motion.section 
+        id="events" 
+        className="py-20 md:py-28 bg-gray-50"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
@@ -141,7 +148,7 @@ const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
             </div>
           )}
         </div>
-      </section>
+      </motion.section>
     </>
   );
 };

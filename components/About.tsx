@@ -4,6 +4,7 @@ import { LotusIcon } from './icons/LotusIcon';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { useDocument } from '../hooks/useDocument';
+import { motion } from 'framer-motion';
 
 interface AboutProps {
   language: Language;
@@ -40,7 +41,14 @@ const About: React.FC<AboutProps> = ({ language }) => {
         keywords={currentMeta.keywords}
       />
       {/* UI UPGRADE: Standardized vertical padding for consistent spacing across all sections and screen sizes. */}
-      <section id="about" className="py-20 md:py-28 bg-gray-50">
+      <motion.section 
+        id="about" 
+        className="py-20 md:py-28 bg-gray-50"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <div className="inline-flex items-center justify-center space-x-4">
@@ -69,7 +77,7 @@ const About: React.FC<AboutProps> = ({ language }) => {
             )}
           </div>
         </div>
-      </section>
+      </motion.section>
     </>
   );
 };

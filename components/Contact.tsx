@@ -4,6 +4,7 @@ import { LotusIcon } from './icons/LotusIcon';
 import PageMeta from './PageMeta';
 import { useDocument } from '../hooks/useDocument';
 import { MapPin, Phone, Mail } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface ContactProps {
   language: Language;
@@ -52,7 +53,14 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
         keywords={currentMeta.keywords}
       />
       {/* UI UPGRADE: Standardized vertical padding for consistent spacing. */}
-      <section id="contact" className="py-20 md:py-28 bg-white">
+      <motion.section 
+        id="contact" 
+        className="py-20 md:py-28 bg-white"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
               <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
@@ -114,7 +122,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
               </div>
           </div>
         </div>
-      </section>
+      </motion.section>
     </>
   );
 };

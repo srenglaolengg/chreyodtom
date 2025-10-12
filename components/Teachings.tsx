@@ -46,9 +46,9 @@ const itemVariants: Variants = {
   visible: {
     y: 0,
     opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 100,
+    transition: { 
+      duration: 0.5, 
+      ease: [0.25, 1, 0.5, 1] // easeOutQuint
     },
   },
 };
@@ -90,7 +90,14 @@ const Teachings: React.FC<TeachingsProps> = ({ language, isHomePage = false }) =
                 />
             )}
             {/* UI UPGRADE: Standardized vertical padding for consistent spacing. */}
-            <section id="teachings" className="py-20 md:py-28 bg-white">
+            <motion.section 
+              id="teachings" 
+              className="py-20 md:py-28 bg-white"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
                         <div className="inline-flex items-center justify-center space-x-4">
@@ -141,7 +148,7 @@ const Teachings: React.FC<TeachingsProps> = ({ language, isHomePage = false }) =
                         </div>
                     )}
                 </div>
-            </section>
+            </motion.section>
         </>
     );
 };
