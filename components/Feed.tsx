@@ -2,7 +2,6 @@
 import React, { useMemo } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
 import { db } from '../firebase';
-// FIX: Use Firebase v8 compatible firestore methods. `doc` and `deleteDoc` are v9.
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -45,7 +44,6 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
     const handleDelete = async (id: string) => {
         if (!isAdmin) return;
         if (window.confirm(language === 'km' ? 'តើអ្នកពិតជាចង់លុបប្រកាសនេះមែនទេ?' : 'Are you sure you want to delete this post?')) {
-            // FIX: Use v8 `delete` method on a document reference.
             try {
                 await db.collection('posts').doc(id).delete();
             } catch (error) {
@@ -69,11 +67,10 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            {/* UI UPGRADE: Standardized vertical padding and background color. */}
             <section id="feed" className="py-20 md:py-28 bg-gray-50">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
-                        <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+                        <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
                             {currentContent.title}
                         </h2>
                     </div>
@@ -92,12 +89,11 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                             </p>
                         )}
                         {!loading && posts.map(post => (
-                             /* UI UPGRADE: Updated article styling to match new card design theme. */
-                            <article key={post.id} id={`post-${post.id}`} className="relative group scroll-mt-20">
+                            <article key={post.id} id={`post-${post.id}`} className="relative group scroll-mt-20 bg-white p-6 sm:p-8 md:p-10 rounded-lg border border-gray-200">
                                 {post.imageUrl && (
-                                    <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover" />
+                                    <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover mb-6 rounded-md" />
                                 )}
-                                <div className="p-6 sm:p-8 md:p-10">
+                                <div >
                                     <h3 className={`text-3xl font-bold text-gray-900 mb-3 ${language === 'km' ? 'font-khmer' : ''}`}>
                                         {post.title}
                                     </h3>
@@ -115,7 +111,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                             remarkPlugins={[remarkGfm, remarkBreaks]}
                                             children={post.content}
                                             components={{
-                                                a: ({node, ...props}) => <a className="text-amber-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                                                a: ({node, ...props}) => <a className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
                                                 pre: ({node, ...props}) => <pre className="bg-gray-100 text-gray-900 p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
                                                 // @ts-ignore
                                                 code: ({node, inline, className, children, ...props}) => {
@@ -131,7 +127,6 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                                 </div>
 
                                 {isAdmin && (
-                                    /* UI UPGRADE: Improved visibility and style of admin action buttons, making them appear on hover. */
                                     <div className="absolute top-4 right-4 flex space-x-2 bg-black/50 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
                                         <Link to="/admin" state={{ postToEdit: post }} className="p-2 text-white hover:text-yellow-300 transition-colors" aria-label="Edit Post">
                                           <Edit className="w-5 h-5" />

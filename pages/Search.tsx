@@ -130,10 +130,10 @@ const Search: React.FC<SearchProps> = ({ language }) => {
     
     const getTypeLabel = (type: SearchResult['type']) => {
         switch (type) {
-            case 'post': return { label: currentContent.typePost, Icon: Newspaper, color: 'bg-sky-100 text-sky-800' };
-            case 'event': return { label: currentContent.typeEvent, Icon: Calendar, color: 'bg-rose-100 text-rose-800' };
-            case 'teaching': return { label: currentContent.typeTeaching, Icon: BookOpen, color: 'bg-amber-100 text-amber-800' };
-            case 'album': return { label: currentContent.typeAlbum, Icon: ImageIcon, color: 'bg-emerald-100 text-emerald-800' };
+            case 'post': return { label: currentContent.typePost, Icon: Newspaper, color: 'bg-blue-100 text-blue-800' };
+            case 'event': return { label: currentContent.typeEvent, Icon: Calendar, color: 'bg-red-100 text-red-800' };
+            case 'teaching': return { label: currentContent.typeTeaching, Icon: BookOpen, color: 'bg-yellow-100 text-yellow-800' };
+            case 'album': return { label: currentContent.typeAlbum, Icon: ImageIcon, color: 'bg-green-100 text-green-800' };
         }
     }
 
@@ -143,19 +143,16 @@ const Search: React.FC<SearchProps> = ({ language }) => {
             <section className="py-20 md:py-28 bg-gray-50 min-h-[60vh]">
                 <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
-                        <div className="inline-flex items-center justify-center space-x-4">
-                            <SearchIcon className="w-10 h-10 text-amber-600/80" />
-                            <h1 className={`text-3xl md:text-4xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
-                                {query ? currentContent.title : (language === 'km' ? 'ស្វែងរក' : 'Search')}
-                            </h1>
-                        </div>
+                        <h1 className={`text-3xl md:text-4xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+                            {query ? currentContent.title : (language === 'km' ? 'ស្វែងរក' : 'Search')}
+                        </h1>
                     </div>
                     
                     <div className="max-w-4xl mx-auto">
                         {loading && (
                              <div className="grid grid-cols-1 gap-6">
                                 {Array.from({ length: 3 }).map((_, i) => (
-                                    <div key={i} className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 animate-pulse flex space-x-4">
+                                    <div key={i} className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 animate-pulse flex space-x-4">
                                         <div className="w-24 h-24 bg-gray-200 rounded-md flex-shrink-0"></div>
                                         <div className="flex-1 space-y-3 py-1">
                                             <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -175,7 +172,7 @@ const Search: React.FC<SearchProps> = ({ language }) => {
                                 {results.map(result => {
                                     const { label, Icon, color } = getTypeLabel(result.type);
                                     return (
-                                        <Link key={`${result.type}-${result.id}`} to={result.link} className="block bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-transparent hover:border-amber-400 hover:shadow-md transition-all duration-300">
+                                        <Link key={`${result.type}-${result.id}`} to={result.link} className="block bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 hover:border-gray-400 hover:shadow-md transition-all duration-300">
                                             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                                                 {result.imageUrl && (
                                                     <img src={result.imageUrl} alt={result.title} className="w-full sm:w-32 h-32 sm:h-auto object-cover rounded-md flex-shrink-0" />
@@ -187,7 +184,7 @@ const Search: React.FC<SearchProps> = ({ language }) => {
                                                             {label}
                                                         </span>
                                                     </div>
-                                                    <h3 className={`text-xl font-bold text-gray-800 hover:text-amber-700 truncate ${language === 'km' ? 'font-khmer' : ''}`}>
+                                                    <h3 className={`text-xl font-bold text-gray-800 hover:text-black truncate ${language === 'km' ? 'font-khmer' : ''}`}>
                                                         {result.title}
                                                     </h3>
                                                     <p className={`mt-2 text-gray-600 line-clamp-2 ${language === 'km' ? 'font-khmer' : ''}`}>

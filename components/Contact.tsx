@@ -1,9 +1,7 @@
 import React from 'react';
 import { Language, ContactInfo } from '../types';
-import { LotusIcon } from './icons/LotusIcon';
 import PageMeta from './PageMeta';
 import { useDocument } from '../hooks/useDocument';
-import { MapPin, Phone, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface ContactProps {
@@ -52,7 +50,6 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      {/* UI UPGRADE: Standardized vertical padding for consistent spacing. */}
       <motion.section 
         id="contact" 
         className="py-20 md:py-28 bg-white"
@@ -63,13 +60,12 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
       >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-              <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+              <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
                   {currentContent.title}
               </h2>
           </div>
           <div className="flex flex-col lg:flex-row gap-12">
               <div className="lg:w-1/2">
-                  {/* Styling Change: Updated info box to match new card styling. */}
                   <div className="p-8 space-y-8 h-full">
                       {loading ? (
                         <div className="space-y-6 animate-pulse">
@@ -79,37 +75,26 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
                         </div>
                       ) : info ? (
                         <>
-                          <div className="flex items-start space-x-4">
-                              <MapPin className="w-7 h-7 text-amber-600 flex-shrink-0 mt-1" />
-                              <div>
-                                <h3 className="font-semibold text-lg text-gray-900">Address</h3>
-                                <p className={`text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>{currentContent.address}</p>
-                              </div>
+                          <div>
+                              <h3 className="font-semibold text-lg text-gray-900">Address</h3>
+                              <p className={`text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>{currentContent.address}</p>
                           </div>
-                          <div className="flex items-start space-x-4">
-                              <Phone className="w-7 h-7 text-amber-600 flex-shrink-0 mt-1" />
-                              <div>
-                                <h3 className="font-semibold text-lg text-gray-900">Phone</h3>
-                                <a href={`tel:${currentContent.phone}`} className="hover:text-amber-600 transition-colors text-gray-600">{currentContent.phone}</a>
-                              </div>
+                          <div>
+                              <h3 className="font-semibold text-lg text-gray-900">Phone</h3>
+                              <a href={`tel:${currentContent.phone}`} className="hover:text-black transition-colors text-gray-600">{currentContent.phone}</a>
                           </div>
-                          <div className="flex items-start space-x-4">
-                              <Mail className="w-7 h-7 text-amber-600 flex-shrink-0 mt-1" />
-                              <div>
-                                <h3 className="font-semibold text-lg text-gray-900">Email</h3>
-                                <a href={`mailto:${currentContent.email}`} className="hover:text-amber-600 transition-colors text-gray-600">{currentContent.email}</a>
-                              </div>
+                          <div>
+                              <h3 className="font-semibold text-lg text-gray-900">Email</h3>
+                              <a href={`mailto:${currentContent.email}`} className="hover:text-black transition-colors text-gray-600">{currentContent.email}</a>
                           </div>
-                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center space-x-2 w-full mt-6 bg-amber-600 text-white px-6 py-3 rounded-full hover:bg-amber-700 transition-all duration-300 shadow-lg transform hover:scale-105 text-lg font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>
-                              <MapPin className="w-5 h-5" />
+                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center space-x-2 w-full mt-6 bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-700 transition-colors shadow-sm font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>
                               <span>{currentContent.button}</span>
                           </a>
                         </>
                       ) : <p>Contact info could not be loaded.</p>}
                   </div>
               </div>
-              {/* Styling Change: Added a subtle border to the map container. */}
-              <div className="lg:w-1/2 h-80 lg:h-auto rounded-lg shadow-lg overflow-hidden border border-gray-200">
+              <div className="lg:w-1/2 h-80 lg:h-auto rounded-lg shadow-sm overflow-hidden border border-gray-200">
                   <iframe 
                       src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d2448517.3097365843!2d106.81625760642393!3d15.909701021967841!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310bcf0006805b1b%3A0xea9539e131d76908!2z4Z6c4Z6P4Z-S4Z6P4Z6f4Z634Z6a4Z644Z6Y4Z6E4Z-S4Z6C4Z6bIOGeoOGfheGeh-GfkuGemuGfg-Gep-Gej-GfkuGej-GemA!5e1!3m2!1skm!2skh!4v1757831086635!5m2!1skm!2skh"
                       width="100%" 

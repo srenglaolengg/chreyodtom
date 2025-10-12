@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Language } from '../types';
-import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { Link } from 'react-router-dom';
 
@@ -47,40 +46,26 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
         keywords={currentMeta.keywords}
       />
       <section 
-        className="relative h-[90vh] min-h-[600px] flex items-center justify-center text-center text-white overflow-hidden"
+        className="bg-gray-50 flex items-center justify-center text-center"
       >
-        {/* Background Image with Ken Burns Effect */}
-        <div 
-            className="absolute inset-0 bg-cover bg-center animate-kenburns"
-            style={{ backgroundImage: "url('https://i.postimg.cc/02xqb4Yy/photo-2025-09-08-23-20-58.jpg')" }}
-        ></div>
-        
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent"></div>
-        
-        {/* Content */}
-        <div className="relative z-10 p-8 max-w-4xl mx-auto animate-fade-in-up">
-          <div className="flex justify-center mb-6">
-              <DharmaWheelIcon className="w-24 h-24 text-yellow-300/90 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]" />
-          </div>
-          <h1 className="font-khmer text-5xl md:text-7xl font-bold tracking-wide" style={{textShadow: '2px 3px 8px rgba(0,0,0,0.8)'}}>
+        <div className="container mx-auto px-6 py-24 md:py-32">
+          <h1 className="font-khmer text-5xl md:text-7xl font-bold tracking-tight text-gray-900">
             វត្តសិរីមង្គលហៅជ្រៃឧត្តម
           </h1>
-          <p className="mt-4 text-lg md:text-2xl font-light text-yellow-50 max-w-2xl mx-auto" style={{textShadow: '1px 2px 4px rgba(0,0,0,0.7)'}}>
+          <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
               {currentContent.subtitle}
           </p>
           
-          {/* Call to Action Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link 
                 to="/feed"
-                className={`w-full sm:w-auto bg-amber-500 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-amber-600 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`w-full sm:w-auto bg-gray-900 text-white font-semibold text-base px-6 py-3 rounded-md shadow-sm hover:bg-gray-700 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
               >
                   {currentContent.ctaExplore}
               </Link>
               <Link
                 to="/about"
-                className={`w-full sm:w-auto bg-transparent border-2 border-white text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-white/10 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`w-full sm:w-auto bg-white border border-gray-300 text-gray-800 font-semibold text-base px-6 py-3 rounded-md shadow-sm hover:bg-gray-100 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
               >
                   {currentContent.ctaLearn}
               </Link>

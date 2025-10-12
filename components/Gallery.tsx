@@ -1,19 +1,16 @@
 import React, { useMemo } from 'react';
 import { Language, GalleryAlbum } from '../types';
 import PageMeta from './PageMeta';
-// import { db } from '../firebase'; // Removed Firestore
-// import { collection, query, orderBy, limit, QueryConstraint } from 'firebase/firestore'; // Removed Firestore
 import { Link } from 'react-router-dom';
 import CardSkeleton from './skeletons/CardSkeleton';
 import { ArrowRightIcon } from './icons/ArrowRightIcon';
 import { useCollection } from '../hooks/useCollection';
-// @ts-ignore
 import { motion, Variants } from 'framer-motion';
 import { Card, CardContent, CardImage } from './ui/Card';
 
 interface GalleryProps {
   language: Language;
-  isHomePage?: boolean; // BUGFIX/UPGRADE: Added prop to control content for homepage view
+  isHomePage?: boolean;
 }
 
 const metaContent = {
@@ -46,14 +43,12 @@ const itemVariants: Variants = {
     opacity: 1,
     transition: { 
       duration: 0.5, 
-      ease: [0.25, 1, 0.5, 1] // easeOutQuint
+      ease: [0.25, 1, 0.5, 1]
     },
   },
 };
 
 const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
-  // UPGRADE: Conditionally limit the number of albums fetched for the homepage.
-  // This now uses the refactored useCollection hook for Supabase.
   const collectionOptions = useMemo(() => ({
     orderBy: { column: 'order', ascending: true },
     ...(isHomePage && { limit: 3 })
@@ -81,7 +76,6 @@ const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
 
   return (
     <>
-      {/* Only render PageMeta on the dedicated gallery page, not on the homepage section */}
       {!isHomePage && (
         <PageMeta 
           title={currentMeta.title}
@@ -89,10 +83,9 @@ const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
           keywords={currentMeta.keywords}
         />
       )}
-      {/* UI UPGRADE: Standardized vertical padding for consistent spacing. */}
       <motion.section 
         id="gallery" 
-        className="py-20 md:py-28 bg-white"
+        className="py-20 md:py-28 bg-gray-50"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
@@ -100,16 +93,15 @@ const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
       >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+            <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.title}
             </h2>
-            <p className={`mt-4 text-lg text-gray-500 ${language === 'km' ? 'font-khmer' : ''}`}>
+            <p className={`mt-4 text-lg text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>
               {currentContent.subtitle}
             </p>
           </div>
           
           <motion.div 
-            // UI UPGRADE: Increased grid gap for better visual separation of cards.
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
             variants={containerVariants}
             initial="hidden"
@@ -120,13 +112,12 @@ const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
             ) : (
               albums.map((album) => (
                 <motion.div key={album.id} variants={itemVariants} className="flex">
-                  {/* The Card component uses enhanced styling from components/ui/Card.tsx */}
                   <Card className="flex flex-col h-full w-full group">
                     <CardImage src={album.thumbnailUrl} alt={language === 'km' ? album.title_km : album.title_en} />
                     <CardContent className="flex flex-col flex-grow">
                       <h3 className={`text-xl font-bold text-gray-900 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? album.title_km : album.title_en}</h3>
-                      <p className={`text-gray-500 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? album.description_km : album.description_en}</p>
-                      <Link to={`/gallery/${album.id}`} className={`inline-flex items-center space-x-2 mt-4 text-amber-600 font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
+                      <p className={`text-gray-600 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? album.description_km : album.description_en}</p>
+                      <Link to={`/gallery/${album.id}`} className={`inline-flex items-center space-x-2 mt-4 text-gray-800 font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
                         <span>{currentContent.viewMore}</span>
                         <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>
                       </Link>
@@ -137,10 +128,9 @@ const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
             )}
           </motion.div>
 
-          {/* UPGRADE: Conditionally render a "View All" button for the homepage section */}
           {isHomePage && (
             <div className="text-center mt-16">
-              <Link to="/gallery" className={`inline-flex items-center space-x-2 bg-amber-600 text-white font-bold text-lg px-8 py-3 rounded-full shadow-lg hover:bg-amber-700 transform hover:scale-105 transition-all duration-300 ${language === 'km' ? 'font-khmer' : ''}`}>
+              <Link to="/gallery" className={`inline-flex items-center space-x-2 bg-gray-900 text-white font-semibold text-base px-6 py-3 rounded-md shadow-sm hover:bg-gray-700 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}>
                 <span>{currentContent.viewAll}</span>
                 <ArrowRightIcon className="w-5 h-5" />
               </Link>

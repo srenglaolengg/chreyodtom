@@ -42,35 +42,34 @@ const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-             {/* UI UPGRADE: Standardized vertical padding and background. */}
-             <section className="py-20 md:py-28 bg-gray-100">
+             <section className="py-20 md:py-28 bg-white">
                 <div className="container mx-auto px-6">
                     {loading ? (
                         <PostSkeleton />
                     ) : error || !event ? (
                         <div className="text-center">
                             <h2 className="text-2xl font-bold text-red-500 mb-4">{error || 'Could not load event.'}</h2>
-                             <Link to="/events" className={`inline-flex items-center space-x-2 text-amber-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
+                             <Link to="/events" className={`inline-flex items-center space-x-2 text-gray-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
                                 <ArrowLeft className="w-5 h-5"/>
                                 <span>{currentContent.backLink}</span>
                             </Link>
                         </div>
                     ) : (
                         <article className="max-w-4xl mx-auto">
-                             <Link to="/events" className={`inline-flex items-center space-x-2 text-amber-600 font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
+                             <Link to="/events" className={`inline-flex items-center space-x-2 text-gray-600 font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
                                 <ArrowLeft className="w-5 h-5"/>
                                 <span>{currentContent.backLink}</span>
                             </Link>
 
-                            <div className="p-6 sm:p-8 md:p-10">
+                            <div>
                                 <img src={event.imgSrc} alt={currentEventTitle} className="w-full aspect-video object-cover rounded-lg mb-6" />
 
-                                <div className="flex items-center space-x-3 text-amber-600 mb-4">
+                                <div className="flex items-center space-x-3 text-gray-600 mb-4">
                                     <Calendar className="w-5 h-5" />
                                     <p className={`font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>{currentEventDate}</p>
                                 </div>
 
-                                <h1 className={`text-3xl md:text-4xl font-bold text-amber-600 mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <h1 className={`text-3xl md:text-4xl font-bold text-gray-900 mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {currentEventTitle}
                                 </h1>
                                 <p className={`text-gray-700 leading-relaxed whitespace-pre-line ${language === 'km' ? 'font-khmer' : ''}`}>
@@ -85,9 +84,8 @@ const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
                                         </h2>
                                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                             {event.imageUrls.map((url, index) => (
-                                                <div key={index} className="group relative overflow-hidden rounded-lg shadow-md">
-                                                    <img src={url} alt={`${currentEventTitle} - Image ${index + 1}`} className="w-full h-full object-cover aspect-square transform group-hover:scale-110 transition-transform duration-500" />
-                                                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/40 transition-colors"></div>
+                                                <div key={index} className="group relative overflow-hidden rounded-lg shadow-sm border border-gray-200">
+                                                    <img src={url} alt={`${currentEventTitle} - Image ${index + 1}`} className="w-full h-full object-cover aspect-square" />
                                                 </div>
                                             ))}
                                         </div>

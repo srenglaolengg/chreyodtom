@@ -8,10 +8,8 @@ interface CardProps {
 
 export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
-    /* Styling Change: Upgraded card design with a subtle border, softer shadows, and a more pronounced hover effect. */
     <motion.article
-      className={`transition-all duration-300 overflow-hidden ${className}`}
-      whileHover={{ y: -8, transition: { type: 'spring', stiffness: 300 } }}
+      className={`bg-white border border-gray-200 rounded-lg shadow-sm transition-shadow hover:shadow-md overflow-hidden ${className}`}
     >
       {children}
     </motion.article>
@@ -29,7 +27,7 @@ export const CardImage: React.FC<CardImageProps> = ({ src, alt }) => {
         <img 
             src={src} 
             alt={alt} 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            className="w-full h-full object-cover" 
         />
     </div>
   );
@@ -42,7 +40,6 @@ interface CardContentProps {
 
 export const CardContent: React.FC<CardContentProps> = ({ children, className = '' }) => {
   return (
-    /* Styling Change: Increased default padding for card content. */
     <div className={`p-6 ${className}`}>
       {children}
     </div>

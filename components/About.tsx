@@ -1,7 +1,5 @@
 import React from 'react';
 import { Language, AboutContent } from '../types';
-import { LotusIcon } from './icons/LotusIcon';
-import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import PageMeta from './PageMeta';
 import { useDocument } from '../hooks/useDocument';
 import { motion } from 'framer-motion';
@@ -40,10 +38,9 @@ const About: React.FC<AboutProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      {/* UI UPGRADE: Standardized vertical padding for consistent spacing across all sections and screen sizes. */}
       <motion.section 
         id="about" 
-        className="py-20 md:py-28 bg-gray-50"
+        className="py-20 md:py-28 bg-white"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.3 }}
@@ -51,15 +48,11 @@ const About: React.FC<AboutProps> = ({ language }) => {
       >
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center justify-center space-x-4">
-                <LotusIcon className="w-10 h-10 text-amber-600/80" />
-                <h2 className={`text-4xl md:text-5xl font-bold text-amber-600 ${language === 'km' ? 'font-khmer' : ''}`}>
-                  {currentContent.title}
-                </h2>
-                <DharmaWheelIcon className="w-10 h-10 text-amber-600/80" />
-            </div>
+            <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+              {currentContent.title}
+            </h2>
           </div>
-          <div className={`max-w-4xl mx-auto text-lg text-gray-800 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
+          <div className={`max-w-4xl mx-auto text-lg text-gray-700 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
             {loading ? (
                 <div className="space-y-4 animate-pulse">
                   <div className="h-4 bg-gray-200 rounded w-full mx-auto"></div>

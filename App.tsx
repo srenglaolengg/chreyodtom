@@ -5,15 +5,11 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Language, FirebaseUser } from './types';
 import { auth } from './firebase';
 import { AnimatePresence, motion } from 'framer-motion';
-// FIX: Use Firebase v8 compatible auth method and rely on type inference.
-// `onAuthStateChanged` is a method on the auth object, not a standalone import.
 import { ADMIN_U_IDS } from './constants';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
-// import ScrollToTop from './components/ScrollToTop'; // Removed in favor of onExitComplete in AnimatePresence
 
-// ✅ Lazy load heavy pages
 const About = lazy(() => import('./components/About'));
 const Gallery = lazy(() => import('./components/Gallery'));
 const GalleryDetail = lazy(() => import('./pages/GalleryDetail'));
@@ -28,7 +24,6 @@ const Admin = lazy(() => import('./pages/Admin'));
 const Home = lazy(() => import('./pages/Home'));
 const Search = lazy(() => import('./pages/Search'));
 
-// FIX: Define props for MainLayout to pass down to Header and Footer.
 interface MainLayoutProps {
   children: React.ReactNode;
   language: Language;
@@ -37,11 +32,10 @@ interface MainLayoutProps {
   isAdmin: boolean;
 }
 
-// ✅ Layout for normal pages
 const MainLayout: React.FC<MainLayoutProps> = ({ children, language, toggleLanguage, user, isAdmin }) => (
   <div className="bg-white text-gray-800 min-h-screen flex flex-col">
     <Header language={language} toggleLanguage={toggleLanguage} user={user} isAdmin={isAdmin} />
-    <main className="flex-grow pt-20">{children}</main>
+    <main className="flex-grow pt-16">{children}</main>
     <Footer language={language} />
   </div>
 );
@@ -78,7 +72,6 @@ const AppRoutes: React.FC<Omit<MainLayoutProps, 'children'> & { authLoading: boo
   return (
     <AnimatePresence mode="wait" onExitComplete={() => window.scrollTo(0, 0)}>
       <Routes location={location} key={location.pathname}>
-        {/* Normal pages */}
         <Route path="/" element={<MainLayout {...mainLayoutProps}><PageWrapper><Home language={language} /></PageWrapper></MainLayout>} />
         <Route path="/about" element={<MainLayout {...mainLayoutProps}><PageWrapper><About language={language} /></PageWrapper></MainLayout>} />
         <Route path="/gallery" element={<MainLayout {...mainLayoutProps}><PageWrapper><Gallery language={language} /></PageWrapper></MainLayout>} />
@@ -92,7 +85,6 @@ const AppRoutes: React.FC<Omit<MainLayoutProps, 'children'> & { authLoading: boo
         <Route path="/contact" element={<MainLayout {...mainLayoutProps}><PageWrapper><Contact language={language} /></PageWrapper></MainLayout>} />
         <Route path="/search" element={<MainLayout {...mainLayoutProps}><PageWrapper><Search language={language} /></PageWrapper></MainLayout>} />
 
-        {/* Admin isolated (no header/footer) */}
         <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />} />
       </Routes>
     </AnimatePresence>
@@ -107,7 +99,6 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    // FIX: Use v8 `onAuthStateChanged` method from the `auth` object.
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
         const userObj = {
