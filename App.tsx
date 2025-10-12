@@ -24,6 +24,7 @@ const Comments = lazy(() => import('./components/Comments'));
 const Feed = lazy(() => import('./components/Feed'));
 const Admin = lazy(() => import('./pages/Admin'));
 const Home = lazy(() => import('./pages/Home'));
+const Search = lazy(() => import('./pages/Search'));
 
 // FIX: Define props for MainLayout to pass down to Header and Footer.
 interface MainLayoutProps {
@@ -93,6 +94,7 @@ const App: React.FC = () => {
           <Route path="/teachings/:id" element={<MainLayout {...mainLayoutProps}><TeachingDetail language={language} /></MainLayout>} />
           <Route path="/comments" element={<MainLayout {...mainLayoutProps}><Comments language={language} user={user} /></MainLayout>} />
           <Route path="/contact" element={<MainLayout {...mainLayoutProps}><Contact language={language} /></MainLayout>} />
+          <Route path="/search" element={<MainLayout {...mainLayoutProps}><Search language={language} /></MainLayout>} />
 
           {/* Admin isolated (no header/footer) */}
           <Route path="/admin" element={<Admin user={user} isAdmin={isAdmin} authLoading={authLoading} />} />

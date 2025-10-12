@@ -2,10 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { auth, githubProvider } from '../firebase';
 // FIX: Remove Firebase v9 modular imports.
 import { GitHubIcon } from './icons/GitHubIcon';
+import { Search as SearchIcon } from 'lucide-react';
 
 interface HeaderProps {
   language: Language;
@@ -16,6 +17,8 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
@@ -32,6 +35,17 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
       await auth.signOut();
     } catch (error) {
       console.error("Logout error:", error);
+    }
+  };
+  
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+      if (isMenuOpen) {
+        setIsMenuOpen(false);
+      }
     }
   };
 
@@ -94,6 +108,20 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
               </Link>
             ))}
 
+            <form onSubmit={handleSearchSubmit} className="relative">
+                <input
+                    type="search"
+                    placeholder={language === 'km' ? 'ស្វែងរក...' : 'Search...'}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-32 md:w-32 bg-stone-100 border border-stone-300 rounded-full py-1 pl-4 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:w-48 transition-all duration-300"
+                    aria-label="Search site"
+                />
+                <button type="submit" aria-label="Submit search" className="absolute right-0 top-0 mt-1 mr-2 text-stone-500 hover:text-amber-700">
+                    <SearchIcon className="w-5 h-5" />
+                </button>
+            </form>
+
             <button
               onClick={toggleLanguage}
               className="bg-amber-500 text-white px-3 py-1 rounded-full hover:bg-amber-600 transition-colors text-sm"
@@ -102,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
             </button>
 
             {user ? (
-              <div className="flex items-center space-x-3 ml-4">
+              <div className="flex items-center space-x-3">
                 {user.photoURL && <img src={user.photoURL} alt={user.displayName || 'User'} className="w-8 h-8 rounded-full" />}
                 <span className="font-semibold text-stone-700">{user.displayName}</span>
                 <button onClick={handleLogout} className="bg-stone-500 text-white px-3 py-1 rounded-full hover:bg-stone-600 transition-colors text-sm">
@@ -152,7 +180,21 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
             </svg>
           </button>
         </div>
-        <div className="flex flex-col items-center justify-center h-full space-y-8">
+        <div className="flex flex-col items-center justify-center h-full space-y-6 px-4">
+          <form onSubmit={handleSearchSubmit} className="relative w-full max-w-xs">
+              <input
+                  type="search"
+                  placeholder={language === 'km' ? 'ស្វែងរក...' : 'Search...'}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white border border-stone-300 rounded-full py-3 px-5 text-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  aria-label="Search site"
+              />
+              <button type="submit" aria-label="Submit search" className="absolute right-0 top-0 mt-3 mr-4 text-stone-600 hover:text-amber-700">
+                  <SearchIcon className="w-6 h-6" />
+              </button>
+          </form>
+
           {currentLinks.map(link => (
             <Link
               key={link.path}
