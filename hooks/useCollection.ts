@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, QueryConstraint } from 'firebase/firestore';
+// FIX: Use Firebase v9 'compat' imports to provide the v8 API.
+import firebase from 'firebase/compat/app';
 
 interface CollectionOptions {
     orderBy?: {
@@ -23,19 +24,18 @@ export const useCollection = <T extends { id: string }>(collectionName: string, 
 
         try {
             const currentOptions: CollectionOptions | undefined = memoizedOptions ? JSON.parse(memoizedOptions) : undefined;
-            const constraints: QueryConstraint[] = [];
+            
+            // FIX: Use v8 query building syntax.
+            let q: firebase.firestore.Query = db.collection(collectionName);
             
             if (currentOptions?.orderBy) {
-                constraints.push(orderBy(currentOptions.orderBy.column, currentOptions.orderBy.ascending === false ? 'desc' : 'asc'));
+                q = q.orderBy(currentOptions.orderBy.column, currentOptions.orderBy.ascending === false ? 'desc' : 'asc');
             }
             if (currentOptions?.limit) {
-                constraints.push(limit(currentOptions.limit));
+                q = q.limit(currentOptions.limit);
             }
-            
-            const collectionRef = collection(db, collectionName);
-            const q = query(collectionRef, ...constraints);
 
-            const unsubscribe = onSnapshot(q, (querySnapshot) => {
+            const unsubscribe = q.onSnapshot((querySnapshot) => {
                 const collectionData: T[] = [];
                 querySnapshot.forEach((doc) => {
                     collectionData.push({ ...doc.data(), id: doc.id } as T);

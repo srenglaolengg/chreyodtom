@@ -1,7 +1,8 @@
+
 import React, { useMemo } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
 import { db } from '../firebase';
-import { doc, deleteDoc } from 'firebase/firestore';
+// FIX: Use Firebase v8 compatible firestore methods. `doc` and `deleteDoc` are v9.
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -44,9 +45,9 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
     const handleDelete = async (id: string) => {
         if (!isAdmin) return;
         if (window.confirm(language === 'km' ? 'តើអ្នកពិតជាចង់លុបប្រកាសនេះមែនទេ?' : 'Are you sure you want to delete this post?')) {
-            const postDoc = doc(db, 'posts', id);
+            // FIX: Use v8 `delete` method on a document reference.
             try {
-                await deleteDoc(postDoc);
+                await db.collection('posts').doc(id).delete();
             } catch (error) {
                 console.error("Error deleting post:", error);
                 alert("Failed to delete post.");

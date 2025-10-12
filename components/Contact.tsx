@@ -24,6 +24,7 @@ const metaContent = {
 
 const Contact: React.FC<ContactProps> = ({ language }) => {
     const { data: info, loading } = useDocument<ContactInfo & { id: string }>('pages', 'contact');
+    const mapUrl = `https://www.google.com/maps/search/?api=1&query=Wat+Serei+Mongkol+Hou+Chray+Ut+Dom,Prey+Veng,Cambodia`;
 
     const content = {
         en: {
@@ -91,7 +92,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
                                 <a href={`mailto:${currentContent.email}`} className="hover:text-amber-600 transition-colors text-gray-600">{currentContent.email}</a>
                               </div>
                           </div>
-                          <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center space-x-2 w-full mt-6 bg-amber-600 text-white px-6 py-3 rounded-full hover:bg-amber-700 transition-all duration-300 shadow-lg transform hover:scale-105 text-lg font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>
+                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center space-x-2 w-full mt-6 bg-amber-600 text-white px-6 py-3 rounded-full hover:bg-amber-700 transition-all duration-300 shadow-lg transform hover:scale-105 text-lg font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>
                               <MapPin className="w-5 h-5" />
                               <span>{currentContent.button}</span>
                           </a>
@@ -106,7 +107,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
                       width="100%" 
                       height="100%" 
                       style={{ border: 0 }} 
-                      allowFullScreen={true}
+                      allowFullScreen
                       loading="lazy"
                       title="Pagoda Location Map"
                   ></iframe>

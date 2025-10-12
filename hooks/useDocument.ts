@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+// FIX: Use Firebase v8 compatible firestore methods.
 
 export const useDocument = <T extends { id: string }>(collectionName: string, docId: string) => {
     const [data, setData] = useState<T | null>(null);
@@ -15,10 +16,11 @@ export const useDocument = <T extends { id: string }>(collectionName: string, do
         }
 
         setLoading(true);
-        const docRef = doc(db, collectionName, docId);
+        // FIX: Use v8 document reference and onSnapshot method.
+        const docRef = db.collection(collectionName).doc(docId);
 
-        const unsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
+        const unsubscribe = docRef.onSnapshot((docSnap) => {
+            if (docSnap.exists) {
                 setData({ ...docSnap.data(), id: docSnap.id } as T);
                 setError(null);
             } else {

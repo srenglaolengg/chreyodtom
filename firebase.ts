@@ -1,7 +1,8 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, GithubAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+// FIX: Use Firebase v9 'compat' imports to provide the v8 API, matching the v12 SDK.
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
+import "firebase/compat/storage";
 
 
 // Your web app's Firebase configuration
@@ -15,11 +16,15 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// FIX: Use the v8 initialization method.
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 
 
 // Export Firebase services
-export const auth = getAuth(app);
-export const githubProvider = new GithubAuthProvider();
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// FIX: Export v8-style namespaced services.
+export const auth = firebase.auth();
+export const githubProvider = new firebase.auth.GithubAuthProvider();
+export const db = firebase.firestore();
+export const storage = firebase.storage();

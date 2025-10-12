@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Language, FirebaseUser } from './types';
 import { auth } from './firebase';
-import { onAuthStateChanged, User as FirebaseUserType } from 'firebase/auth';
+// FIX: Use Firebase v8 compatible auth method and rely on type inference.
+// `onAuthStateChanged` is a method on the auth object, not a standalone import.
 import { ADMIN_U_IDS } from './constants';
 
 import Header from './components/Header';
@@ -48,7 +50,8 @@ const App: React.FC = () => {
   const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser: FirebaseUserType | null) => {
+    // FIX: Use v8 `onAuthStateChanged` method from the `auth` object.
+    const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
         const userObj = {
           uid: currentUser.uid,

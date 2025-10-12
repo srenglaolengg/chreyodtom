@@ -1,15 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { Language, FirebaseUser, Comment as CommentType } from '../types';
 import { auth, githubProvider, db } from '../firebase';
-import { 
-    signInWithPopup, 
-    signOut,
-} from 'firebase/auth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+// FIX: Use Firebase v9 'compat' imports to provide the v8 API.
+import firebase from 'firebase/compat/app';
 import { GitHubIcon } from './icons/GitHubIcon';
 import CommentSkeleton from './skeletons/CommentSkeleton';
 import PageMeta from './PageMeta';
 import { useCollection } from '../hooks/useCollection';
+import { UserIcon } from './icons/UserIcon';
 
 interface CommentsProps {
   language: Language;
@@ -35,18 +33,20 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
     const collectionOptions = useMemo(() => ({ orderBy: { column: 'createdAt', ascending: false } }), []);
     const { data: comments, loading, error } = useCollection<CommentType>('comments', collectionOptions);
 
-    const handleLogin = async () => await signInWithPopup(auth, githubProvider).catch(error => console.error("Authentication error: ", error));
-    const handleLogout = async () => await signOut(auth).catch(error => console.error("Sign out error: ", error));
+    // FIX: Use v8 `signInWithPopup` method from the `auth` object.
+    const handleLogin = async () => await auth.signInWithPopup(githubProvider).catch(error => console.error("Authentication error: ", error));
+    // FIX: Use v8 `signOut` method from the `auth` object.
+    const handleLogout = async () => await auth.signOut().catch(error => console.error("Sign out error: ", error));
 
     const handleSubmitComment = async (e: React.FormEvent) => {
         e.preventDefault();
         if (newComment.trim() === '' || !user) return;
 
         try {
-            const commentsCollection = collection(db, 'comments');
-            await addDoc(commentsCollection, {
+            // FIX: Use v8 `add` method on a collection reference and v8 serverTimestamp.
+            await db.collection('comments').add({
                 text: newComment,
-                createdAt: serverTimestamp(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 user: {
                     uid: user.uid,
                     displayName: user.displayName,
@@ -100,7 +100,13 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                         {user ? (
                              <form onSubmit={handleSubmitComment} className="mb-8">
                                 <div className="flex items-start space-x-4">
-                                  <img src={user.photoURL || ''} alt={user.displayName || 'User'} className="w-11 h-11 rounded-full flex-shrink-0 border-2 border-amber-600/50" />
+                                  {user.photoURL ? (
+                                      <img src={user.photoURL} alt={user.displayName || 'User'} className="w-11 h-11 rounded-full flex-shrink-0 border-2 border-amber-600/50" />
+                                  ) : (
+                                      <div className="w-11 h-11 rounded-full flex-shrink-0 border-2 border-amber-600/50 bg-gray-200 flex items-center justify-center">
+                                          <UserIcon className="w-6 h-6 text-gray-400" />
+                                      </div>
+                                  )}
                                   <div className="flex-1">
                                       <textarea
                                           value={newComment}
@@ -137,7 +143,13 @@ const Comments: React.FC<CommentsProps> = ({ language, user }) => {
                             {!loading && comments.map(comment => (
                                 /* UI UPGRADE: Refined individual comment appearance for better readability. */
                                 <article key={comment.id} className="flex items-start space-x-4 p-4" aria-label={`Comment by ${comment.user.displayName}`}>
-                                    <img src={comment.user.photoURL || ''} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1 border-2 border-gray-200" />
+                                    {comment.user.photoURL ? (
+                                        <img src={comment.user.photoURL} alt={`${comment.user.displayName}'s avatar`} className="w-10 h-10 rounded-full flex-shrink-0 mt-1 border-2 border-gray-200" />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-200 border-2 border-gray-200 flex-shrink-0 mt-1">
+                                            <UserIcon className="w-6 h-6 text-gray-400" />
+                                        </div>
+                                    )}
                                     <div className="flex-1 min-w-0 p-4">
                                         <div className="flex items-baseline space-x-2">
                                             <p className="font-bold text-gray-900">{comment.user.displayName}</p>

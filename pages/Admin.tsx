@@ -2,24 +2,8 @@ import React, { useState, useEffect, FormEvent } from 'react';
 import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
 import { auth, db, githubProvider, storage } from '../firebase';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-    signInWithPopup,
-    signOut,
-} from 'firebase/auth';
-import {
-    collection,
-    query,
-    orderBy,
-    onSnapshot,
-    addDoc,
-    updateDoc,
-    setDoc,
-    deleteDoc,
-    doc,
-    serverTimestamp,
-    getDoc,
-} from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+// FIX: Use Firebase v9 'compat' imports to provide the v8 API.
+import firebase from 'firebase/compat/app';
 import { GitHubIcon } from '../components/icons/GitHubIcon';
 import PageMeta from '../components/PageMeta';
 import { Newspaper, MessageSquare, Image as ImageIcon, Calendar, BookOpen, Info, Phone, Menu, X, LogOut, Edit, Trash2, Languages, Wand2, UploadCloud } from 'lucide-react';
@@ -42,12 +26,14 @@ const AiTranslateButton: React.FC<{
     }
     setIsTranslating(true);
     try {
+      // FIX: Correctly initialize GoogleGenAI with the apiKey in an object.
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const prompt = `Translate the following ${sourceLang} text to ${targetLang}. Return ONLY the translated text, without any additional introductory phrases, formatting, or explanations.\n\nText: "${sourceText}"`;
       const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
       });
+      // FIX: Access the translated text via the .text property
       const translatedText = response.text.trim();
       onTranslated(translatedText);
     } catch (error) {
@@ -128,9 +114,10 @@ const ImageUploadInput: React.FC<{
         setUploadError(null);
 
         try {
-            const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+            // FIX: Use v8 storage methods.
+            const storageRef = storage.ref(`${folder}/${Date.now()}_${file.name}`);
+            const snapshot = await storageRef.put(file);
+            const downloadURL = await snapshot.ref.getDownloadURL();
             
             const syntheticEvent = {
                 target: { name, value: downloadURL }
@@ -199,9 +186,10 @@ const MultiImageUploadInput: React.FC<{
 
         try {
             const uploadPromises = Array.from(files).map(async (file) => {
-                const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-                const snapshot = await uploadBytes(storageRef, file);
-                return await getDownloadURL(snapshot.ref);
+                // FIX: Use v8 storage methods.
+                const storageRef = storage.ref(`${folder}/${Date.now()}_${file.name}`);
+                const snapshot = await storageRef.put(file);
+                return await snapshot.ref.getDownloadURL();
             });
             
             const downloadURLs = await Promise.all(uploadPromises);
@@ -268,8 +256,10 @@ const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
         }
     }, [location, navigate]);
     
-    const handleLogin = async () => await signInWithPopup(auth, githubProvider);
-    const handleLogout = async () => await signOut(auth);
+    // FIX: Use v8 `signInWithPopup` method from the `auth` object.
+    const handleLogin = async () => await auth.signInWithPopup(githubProvider);
+    // FIX: Use v8 `signOut` method from the `auth` object.
+    const handleLogout = async () => await auth.signOut();
 
     const metaDescription = "Content management system for the Wat Serei Mongkol website.";
     const metaRobots = "noindex, nofollow";
@@ -398,8 +388,9 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-        const unsub = onSnapshot(q, snap => setPosts(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as Post)));
+        // FIX: Use v8 firestore query syntax.
+        const q = db.collection("posts").orderBy("timestamp", "desc");
+        const unsub = q.onSnapshot(snap => setPosts(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as Post)));
         return () => unsub();
     }, []);
     
@@ -412,7 +403,8 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
         setFormState({ id: post.id, title: post.title, content: post.content, imageUrl: post.imageUrl || '' });
         window.scrollTo(0, 0);
     };
-    const handleDelete = async (id: string) => { if (window.confirm('Are you sure you want to delete this post?')) await deleteDoc(doc(db, "posts", id)); };
+    // FIX: Use v8 `delete` method on a document reference.
+    const handleDelete = async (id: string) => { if (window.confirm('Are you sure you want to delete this post?')) await db.collection("posts").doc(id).delete(); };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -420,9 +412,11 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
         setIsSubmitting(true);
         try {
             if (isEditing && formState.id) {
-                await updateDoc(doc(db, "posts", formState.id), { title: formState.title, content: formState.content, imageUrl: formState.imageUrl || '' });
+                // FIX: Use v8 `update` method on a document reference.
+                await db.collection("posts").doc(formState.id).update({ title: formState.title, content: formState.content, imageUrl: formState.imageUrl || '' });
             } else {
-                await addDoc(collection(db, "posts"), { ...formState, author: user.displayName || 'Admin', timestamp: serverTimestamp() });
+                // FIX: Use v8 `add` method on a collection reference and v8 serverTimestamp.
+                await db.collection("posts").add({ ...formState, author: user.displayName || 'Admin', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
             }
             handleCancelEdit();
         } catch (err) { console.error(err); } 
@@ -476,12 +470,14 @@ const FeedManager: React.FC<{user: FirebaseUser, postToEdit?: Post}> = ({ user, 
 const CommentManager: React.FC = () => {
     const [comments, setComments] = useState<CommentType[]>([]);
     useEffect(() => {
-        const q = query(collection(db, "comments"), orderBy("createdAt", "desc"));
-        const unsub = onSnapshot(q, snap => setComments(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as CommentType)));
+        // FIX: Use v8 firestore query syntax.
+        const q = db.collection("comments").orderBy("createdAt", "desc");
+        const unsub = q.onSnapshot(snap => setComments(snap.docs.map(d => Object.assign({ id: d.id }, d.data()) as CommentType)));
         return () => unsub();
     }, []);
 
-    const handleDelete = async (id: string) => { if (window.confirm('Delete this comment permanently?')) await deleteDoc(doc(db, "comments", id)); };
+    // FIX: Use v8 `delete` method on a document reference.
+    const handleDelete = async (id: string) => { if (window.confirm('Delete this comment permanently?')) await db.collection("comments").doc(id).delete(); };
 
     return (
         <AdminSection title="Comment Moderation">
@@ -535,8 +531,9 @@ const ContentManagerBase: React.FC<{
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        const q = query(collection(db, collectionName), orderBy("order", "asc"));
-        const unsub = onSnapshot(q, snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+        // FIX: Use v8 firestore query syntax.
+        const q = db.collection(collectionName).orderBy("order", "asc");
+        const unsub = q.onSnapshot(snap => setItems(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
         return () => unsub();
     }, [collectionName]);
 
@@ -558,7 +555,8 @@ const ContentManagerBase: React.FC<{
         setFormState({ ...item, imageUrls: item.imageUrls || [] });
         window.scrollTo(0, 0);
     };
-    const handleDelete = async (id: string) => { if (window.confirm(`Delete this ${itemTypeLabel}?`)) await deleteDoc(doc(db, collectionName, id)); };
+    // FIX: Use v8 `delete` method on a document reference.
+    const handleDelete = async (id: string) => { if (window.confirm(`Delete this ${itemTypeLabel}?`)) await db.collection(collectionName).doc(id).delete(); };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -567,9 +565,11 @@ const ContentManagerBase: React.FC<{
 
         try {
             if (isEditing && formState.id) {
-                await updateDoc(doc(db, collectionName, formState.id), dataToSave);
+                // FIX: Use v8 `update` method on a document reference.
+                await db.collection(collectionName).doc(formState.id).update(dataToSave);
             } else {
-                await addDoc(collection(db, collectionName), dataToSave);
+                // FIX: Use v8 `add` method on a collection reference.
+                await db.collection(collectionName).add(dataToSave);
             }
             handleCancelEdit();
         } catch (err) { console.error(err); } 
@@ -698,9 +698,10 @@ const PageContentManager: React.FC<{pageId: 'about' | 'contact', fields: Record<
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const docRef = doc(db, 'pages', pageId);
-        const unsub = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) setFormState(docSnap.data());
+        // FIX: Use v8 `onSnapshot` method on a document reference.
+        const docRef = db.collection('pages').doc(pageId);
+        const unsub = docRef.onSnapshot((docSnap) => {
+            if (docSnap.exists) setFormState(docSnap.data());
             setIsLoading(false);
         });
         return () => unsub();
@@ -711,7 +712,8 @@ const PageContentManager: React.FC<{pageId: 'about' | 'contact', fields: Record<
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        await setDoc(doc(db, 'pages', pageId), formState);
+        // FIX: Use v8 `set` method on a document reference.
+        await db.collection('pages').doc(pageId).set(formState);
         setIsSubmitting(false);
         alert('Content updated successfully!');
     };

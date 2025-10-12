@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser } from '../types';
 import { DharmaWheelIcon } from './icons/DharmaWheelIcon';
 import { Link } from 'react-router-dom';
 import { auth, githubProvider } from '../firebase';
-import { signInWithPopup, signOut } from 'firebase/auth';
+// FIX: Remove Firebase v9 modular imports.
 import { GitHubIcon } from './icons/GitHubIcon';
 
 interface HeaderProps {
@@ -18,7 +19,8 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
   const handleLogin = async () => {
     try {
-      await signInWithPopup(auth, githubProvider);
+      // FIX: Use v8 `signInWithPopup` method from the `auth` object.
+      await auth.signInWithPopup(githubProvider);
     } catch (error) {
       console.error("Login error:", error);
     }
@@ -26,7 +28,8 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      // FIX: Use v8 `signOut` method from the `auth` object.
+      await auth.signOut();
     } catch (error) {
       console.error("Logout error:", error);
     }
