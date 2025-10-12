@@ -2,7 +2,6 @@ import React from 'react';
 import { Language, AboutContent } from '../types';
 import PageMeta from './PageMeta';
 import { useDocument } from '../hooks/useDocument';
-import { motion } from 'framer-motion';
 
 interface AboutProps {
   language: Language;
@@ -38,27 +37,19 @@ const About: React.FC<AboutProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <motion.section 
-        id="about" 
-        className="py-20 md:py-28 bg-white"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      >
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+      <section id="about">
+        <div className="container">
+          <div className="text-center" style={{ marginBottom: '3rem' }}>
+            <h2 className={language === 'km' ? 'font-khmer' : ''}>
               {currentContent.title}
             </h2>
           </div>
-          <div className={`max-w-4xl mx-auto text-lg text-gray-700 leading-relaxed space-y-6 text-center ${language === 'km' ? 'font-khmer' : ''}`}>
+          <div className={`text-center ${language === 'km' ? 'font-khmer' : ''}`} style={{ maxWidth: '800px', margin: '0 auto' }}>
             {loading ? (
-                <div className="space-y-4 animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-full mx-auto"></div>
-                  <div className="h-4 bg-gray-200 rounded w-5/6 mx-auto"></div>
-                  <div className="h-4 bg-gray-200 rounded w-full mx-auto"></div>
-                  <div className="h-4 bg-gray-200 rounded w-4/6 mx-auto"></div>
+                <div>
+                  <div className="skeleton" style={{ height: '1rem', width: '100%', marginBottom: '0.5rem' }}></div>
+                  <div className="skeleton" style={{ height: '1rem', width: '80%', marginBottom: '1.5rem' }}></div>
+                  <div className="skeleton" style={{ height: '1rem', width: '100%' }}></div>
                 </div>
             ) : content ? (
               <>
@@ -70,7 +61,7 @@ const About: React.FC<AboutProps> = ({ language }) => {
             )}
           </div>
         </div>
-      </motion.section>
+      </section>
     </>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { Language, Post, FirebaseUser } from '../types';
 import { db } from '../firebase';
@@ -9,7 +8,6 @@ import PostSkeleton from './skeletons/PostSkeleton';
 import PageMeta from './PageMeta';
 import { Link } from 'react-router-dom';
 import { useCollection } from '../hooks/useCollection';
-import { Edit, Trash2 } from 'lucide-react';
 
 interface FeedProps {
   language: Language;
@@ -37,7 +35,7 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
     const formatTimestamp = (timestamp: any) => {
         if (!timestamp || typeof timestamp.toDate !== 'function') return '';
         return timestamp.toDate().toLocaleString(language === 'km' ? 'km-KH' : 'en-US', {
-            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            year: 'numeric', month: 'long', day: 'numeric'
         });
     };
 
@@ -67,75 +65,50 @@ const Feed: React.FC<FeedProps> = ({ language, user, isAdmin }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-            <section id="feed" className="py-20 md:py-28 bg-gray-50">
-                <div className="container mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+            <section id="feed" style={{ backgroundColor: 'var(--surface-color)' }}>
+                <div className="container">
+                    <div className="text-center" style={{ marginBottom: '3rem' }}>
+                        <h2 className={language === 'km' ? 'font-khmer' : ''}>
                             {currentContent.title}
                         </h2>
                     </div>
 
-                    <div className="max-w-3xl mx-auto space-y-12">
-                        {loading && (
-                            <>
-                                <PostSkeleton />
-                                <PostSkeleton />
-                            </>
-                        )}
-                        {error && <p className="text-center text-red-500">{error}</p>}
+                    <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+                        {loading && ( <> <PostSkeleton /> <PostSkeleton /> </> )}
+                        {error && <p className="text-center">{error}</p>}
                         {!loading && posts.length === 0 && (
-                            <p className={`text-center text-gray-500 ${language === 'km' ? 'font-khmer' : ''}`}>
+                            <p className={`text-center ${language === 'km' ? 'font-khmer' : ''}`}>
                                 {currentContent.noPosts}
                             </p>
                         )}
                         {!loading && posts.map(post => (
-                            <article key={post.id} id={`post-${post.id}`} className="relative group scroll-mt-20 bg-white p-6 sm:p-8 md:p-10 rounded-lg border border-gray-200">
-                                {post.imageUrl && (
-                                    <img src={post.imageUrl} alt={post.title} className="w-full h-72 object-cover mb-6 rounded-md" />
-                                )}
-                                <div >
-                                    <h3 className={`text-3xl font-bold text-gray-900 mb-3 ${language === 'km' ? 'font-khmer' : ''}`}>
-                                        {post.title}
-                                    </h3>
-                                    <div className="text-sm text-gray-500 mb-6 flex flex-col sm:flex-row sm:items-center sm:gap-x-2">
-                                        <span className={`${language === 'km' ? 'font-khmer' : ''}`}>
-                                            {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
-                                        </span>
-                                        <span className="hidden sm:inline">&bull;</span>
-                                        <time dateTime={post.timestamp?.toDate().toISOString()}>
-                                            {formatTimestamp(post.timestamp)}
-                                        </time>
-                                    </div>
-                                    <div className={`prose max-w-none text-gray-800 leading-relaxed break-words ${language === 'km' ? 'font-khmer' : ''}`}>
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkGfm, remarkBreaks]}
-                                            children={post.content}
-                                            components={{
-                                                a: ({node, ...props}) => <a className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                                                pre: ({node, ...props}) => <pre className="bg-gray-100 text-gray-900 p-4 rounded-md overflow-x-auto my-4 text-sm" {...props} />,
-                                                // @ts-ignore
-                                                code: ({node, inline, className, children, ...props}) => {
-                                                    return !inline ? (
-                                                      <code className={className} {...props}>{children}</code>
-                                                    ) : (
-                                                      <code className="bg-gray-100 text-gray-900 text-sm rounded px-1.5 py-1" {...props}>{children}</code>
-                                                    );
-                                                },
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
+                            <article key={post.id} id={`post-${post.id}`} className="feed-article">
                                 {isAdmin && (
-                                    <div className="absolute top-4 right-4 flex space-x-2 bg-black/50 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                                        <Link to="/admin" state={{ postToEdit: post }} className="p-2 text-white hover:text-yellow-300 transition-colors" aria-label="Edit Post">
-                                          <Edit className="w-5 h-5" />
-                                        </Link>
-                                        <button onClick={() => handleDelete(post.id)} className="p-2 text-white hover:text-red-400 transition-colors" aria-label="Delete Post">
-                                            <Trash2 className="w-5 h-5" />
-                                        </button>
+                                    <div style={{ float: 'right', marginLeft: '1rem' }}>
+                                        <Link to="/admin" state={{ postToEdit: post }} className="btn btn-secondary btn-sm">Edit</Link>
+                                        <button onClick={() => handleDelete(post.id)} className="btn btn-secondary btn-sm" style={{ marginLeft: '0.5rem' }}>Delete</button>
                                     </div>
                                 )}
+                                {post.imageUrl && (
+                                    <img src={post.imageUrl} alt={post.title} style={{ width: '100%', height: 'auto', marginBottom: '1.5rem', borderRadius: '0.25rem' }}/>
+                                )}
+                                
+                                <h3 className={language === 'km' ? 'font-khmer' : ''}>{post.title}</h3>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                                    <span className={language === 'km' ? 'font-khmer' : ''}>
+                                        {language === 'km' ? `ដោយ ` : 'By '}<strong>{post.author}</strong>
+                                    </span>
+                                    <span style={{ margin: '0 0.5rem' }}>&bull;</span>
+                                    <time dateTime={post.timestamp?.toDate().toISOString()}>
+                                        {formatTimestamp(post.timestamp)}
+                                    </time>
+                                </div>
+                                <div className={`prose ${language === 'km' ? 'font-khmer' : ''}`}>
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm, remarkBreaks]}
+                                        children={post.content}
+                                    />
+                                </div>
                             </article>
                         ))}
                     </div>

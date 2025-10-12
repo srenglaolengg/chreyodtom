@@ -3,10 +3,7 @@ import { Language, Event } from '../types';
 import PageMeta from './PageMeta';
 import { Link } from 'react-router-dom';
 import CardSkeleton from './skeletons/CardSkeleton';
-import { ArrowRightIcon } from './icons/ArrowRightIcon';
 import { useCollection } from '../hooks/useCollection';
-import { motion, Variants } from 'framer-motion';
-import { Card, CardContent, CardImage } from './ui/Card';
 
 interface EventsProps {
   language: Language;
@@ -26,27 +23,6 @@ const metaContent = {
   }
 };
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: { 
-      duration: 0.5, 
-      ease: [0.25, 1, 0.5, 1]
-    },
-  },
-};
 
 const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
   const collectionOptions = useMemo(() => ({
@@ -83,62 +59,46 @@ const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
               keywords={currentMeta.keywords}
           />
       )}
-      <motion.section 
-        id="events" 
-        className="py-20 md:py-28 bg-gray-50"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      >
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+      <section id="events" style={{ backgroundColor: 'var(--surface-color)' }}>
+        <div className="container">
+          <div className="text-center" style={{ marginBottom: '3rem' }}>
+            <h2 className={language === 'km' ? 'font-khmer' : ''}>
               {currentContent.title}
             </h2>
-            <p className={`mt-4 text-lg text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>
+            <p className={language === 'km' ? 'font-khmer' : ''}>
               {currentContent.subtitle}
             </p>
           </div>
           
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate={loading ? "hidden" : "visible"}
-          >
+          <div className="grid grid-cols-3">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
             ) : (
               events.map((event) => (
-                <motion.div key={event.id} variants={itemVariants} className="flex">
-                  <Card className="flex flex-col h-full w-full group">
-                    <CardImage src={event.imgSrc} alt={language === 'km' ? event.title_km : event.title_en} />
-                    <CardContent className="flex flex-col flex-grow">
-                      <p className={`text-sm font-semibold text-gray-500 mb-1 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.date_km : event.date_en}</p>
-                      <h3 className={`text-xl font-bold text-gray-900 mb-2 ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.title_km : event.title_en}</h3>
-                      <p className={`text-gray-600 line-clamp-3 flex-grow ${language === 'km' ? 'font-khmer' : ''}`}>{language === 'km' ? event.description_km : event.description_en}</p>
-                      <Link to={`/events/${event.id}`} className={`inline-flex items-center space-x-2 mt-4 text-gray-800 font-semibold hover:underline group ${language === 'km' ? 'font-khmer' : ''}`}>
-                        <span>{currentContent.viewMore}</span>
-                        <ArrowRightIcon className="w-5 h-5 transition-transform group-hover:translate-x-1"/>
+                <div key={event.id} className="card">
+                    <img src={event.imgSrc} alt={language === 'km' ? event.title_km : event.title_en} className="card-image"/>
+                    <div className="card-content">
+                      <p className={language === 'km' ? 'font-khmer' : ''} style={{ fontSize: '0.9rem', color: 'var(--text-muted)'}}>{language === 'km' ? event.date_km : event.date_en}</p>
+                      <h3 className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? event.title_km : event.title_en}</h3>
+                      <p className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? event.description_km : event.description_en}</p>
+                      <Link to={`/events/${event.id}`} className={language === 'km' ? 'font-khmer' : ''} style={{ marginTop: 'auto' }}>
+                        {currentContent.viewMore} &rarr;
                       </Link>
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                    </div>
+                </div>
               ))
             )}
-          </motion.div>
+          </div>
 
           {isHomePage && (
-            <div className="text-center mt-16">
-              <Link to="/events" className={`inline-flex items-center space-x-2 bg-gray-900 text-white font-semibold text-base px-6 py-3 rounded-md shadow-sm hover:bg-gray-700 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}>
+            <div className="text-center" style={{ marginTop: '3rem' }}>
+              <Link to="/events" className={`btn btn-primary ${language === 'km' ? 'font-khmer' : ''}`}>
                 <span>{currentContent.viewAll}</span>
-                <ArrowRightIcon className="w-5 h-5" />
               </Link>
             </div>
           )}
         </div>
-      </motion.section>
+      </section>
     </>
   );
 };

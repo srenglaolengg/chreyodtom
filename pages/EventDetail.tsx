@@ -2,7 +2,6 @@ import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Language, Event as EventType } from '../types';
 import PageMeta from '../components/PageMeta';
-import { ArrowLeft, Calendar } from 'lucide-react';
 import PostSkeleton from '../components/skeletons/PostSkeleton';
 import { useDocument } from '../hooks/useDocument';
 
@@ -42,50 +41,45 @@ const EventDetail: React.FC<{ language: Language }> = ({ language }) => {
                 description={currentMeta.description}
                 keywords={currentMeta.keywords}
             />
-             <section className="py-20 md:py-28 bg-white">
-                <div className="container mx-auto px-6">
+             <section>
+                <div className="container">
                     {loading ? (
                         <PostSkeleton />
                     ) : error || !event ? (
                         <div className="text-center">
-                            <h2 className="text-2xl font-bold text-red-500 mb-4">{error || 'Could not load event.'}</h2>
-                             <Link to="/events" className={`inline-flex items-center space-x-2 text-gray-600 font-semibold hover:underline ${language === 'km' ? 'font-khmer' : ''}`}>
-                                <ArrowLeft className="w-5 h-5"/>
-                                <span>{currentContent.backLink}</span>
+                            <h2>{error || 'Could not load event.'}</h2>
+                             <Link to="/events" className={language === 'km' ? 'font-khmer' : ''}>
+                                &larr; {currentContent.backLink}
                             </Link>
                         </div>
                     ) : (
-                        <article className="max-w-4xl mx-auto">
-                             <Link to="/events" className={`inline-flex items-center space-x-2 text-gray-600 font-semibold hover:underline mb-8 ${language === 'km' ? 'font-khmer' : ''}`}>
-                                <ArrowLeft className="w-5 h-5"/>
-                                <span>{currentContent.backLink}</span>
+                        <article style={{ maxWidth: '900px', margin: '0 auto' }}>
+                             <Link to="/events" className={language === 'km' ? 'font-khmer' : ''} style={{ marginBottom: '2rem', display: 'inline-block' }}>
+                                &larr; {currentContent.backLink}
                             </Link>
 
                             <div>
-                                <img src={event.imgSrc} alt={currentEventTitle} className="w-full aspect-video object-cover rounded-lg mb-6" />
+                                <img src={event.imgSrc} alt={currentEventTitle} style={{ width: '100%', height: 'auto', borderRadius: '0.25rem', marginBottom: '1.5rem' }}/>
 
-                                <div className="flex items-center space-x-3 text-gray-600 mb-4">
-                                    <Calendar className="w-5 h-5" />
-                                    <p className={`font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>{currentEventDate}</p>
-                                </div>
-
-                                <h1 className={`text-3xl md:text-4xl font-bold text-gray-900 mb-4 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <p className={language === 'km' ? 'font-khmer' : ''} style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>{currentEventDate}</p>
+                                
+                                <h1 className={language === 'km' ? 'font-khmer' : ''}>
                                     {currentEventTitle}
                                 </h1>
-                                <p className={`text-gray-700 leading-relaxed whitespace-pre-line ${language === 'km' ? 'font-khmer' : ''}`}>
+                                <p className={`prose ${language === 'km' ? 'font-khmer' : ''}`}>
                                     {currentEventContent}
                                 </p>
                                 
                                 {event.imageUrls && event.imageUrls.length > 0 && (
                                     <>
-                                        <div className="border-t border-gray-200 my-8"></div>
-                                        <h2 className={`text-2xl font-bold text-gray-900 mb-6 ${language === 'km' ? 'font-khmer' : ''}`}>
+                                        <hr style={{ margin: '2rem 0' }}/>
+                                        <h2 className={language === 'km' ? 'font-khmer' : ''}>
                                             {language === 'km' ? 'រូបភាពបន្ថែម' : 'More Images'}
                                         </h2>
-                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-3">
                                             {event.imageUrls.map((url, index) => (
-                                                <div key={index} className="group relative overflow-hidden rounded-lg shadow-sm border border-gray-200">
-                                                    <img src={url} alt={`${currentEventTitle} - Image ${index + 1}`} className="w-full h-full object-cover aspect-square" />
+                                                <div key={index}>
+                                                    <img src={url} alt={`${currentEventTitle} - Image ${index + 1}`} style={{ width: '100%', height: 'auto', borderRadius: '0.25rem' }}/>
                                                 </div>
                                             ))}
                                         </div>

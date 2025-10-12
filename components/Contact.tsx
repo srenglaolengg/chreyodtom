@@ -2,7 +2,6 @@ import React from 'react';
 import { Language, ContactInfo } from '../types';
 import PageMeta from './PageMeta';
 import { useDocument } from '../hooks/useDocument';
-import { motion } from 'framer-motion';
 
 interface ContactProps {
   language: Language;
@@ -50,51 +49,40 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <motion.section 
-        id="contact" 
-        className="py-20 md:py-28 bg-white"
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.2 }}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
-      >
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-              <h2 className={`text-4xl md:text-5xl font-bold text-gray-900 ${language === 'km' ? 'font-khmer' : ''}`}>
+      <section id="contact">
+        <div className="container">
+          <div className="text-center" style={{ marginBottom: '3rem' }}>
+              <h2 className={language === 'km' ? 'font-khmer' : ''}>
                   {currentContent.title}
               </h2>
           </div>
-          <div className="flex flex-col lg:flex-row gap-12">
-              <div className="lg:w-1/2">
-                  <div className="p-8 space-y-8 h-full">
+          <div className="grid grid-cols-2" style={{alignItems: 'center'}}>
+              <div>
+                  <div style={{ padding: '1rem' }}>
                       {loading ? (
-                        <div className="space-y-6 animate-pulse">
-                          <div className="h-5 bg-gray-200 rounded w-3/4"></div>
-                          <div className="h-5 bg-gray-200 rounded w-1/2"></div>
-                          <div className="h-5 bg-gray-200 rounded w-2/3"></div>
-                        </div>
+                        <div>Loading...</div>
                       ) : info ? (
                         <>
                           <div>
-                              <h3 className="font-semibold text-lg text-gray-900">Address</h3>
-                              <p className={`text-gray-600 ${language === 'km' ? 'font-khmer' : ''}`}>{currentContent.address}</p>
+                              <h3>Address</h3>
+                              <p className={language === 'km' ? 'font-khmer' : ''}>{currentContent.address}</p>
                           </div>
-                          <div>
-                              <h3 className="font-semibold text-lg text-gray-900">Phone</h3>
-                              <a href={`tel:${currentContent.phone}`} className="hover:text-black transition-colors text-gray-600">{currentContent.phone}</a>
+                          <div style={{marginTop: '1.5rem'}}>
+                              <h3>Phone</h3>
+                              <a href={`tel:${currentContent.phone}`}>{currentContent.phone}</a>
                           </div>
-                          <div>
-                              <h3 className="font-semibold text-lg text-gray-900">Email</h3>
-                              <a href={`mailto:${currentContent.email}`} className="hover:text-black transition-colors text-gray-600">{currentContent.email}</a>
+                          <div style={{marginTop: '1.5rem'}}>
+                              <h3>Email</h3>
+                              <a href={`mailto:${currentContent.email}`}>{currentContent.email}</a>
                           </div>
-                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`inline-flex items-center justify-center space-x-2 w-full mt-6 bg-gray-900 text-white px-6 py-3 rounded-md hover:bg-gray-700 transition-colors shadow-sm font-semibold ${language === 'km' ? 'font-khmer' : ''}`}>
-                              <span>{currentContent.button}</span>
+                          <a href={mapUrl} target="_blank" rel="noopener noreferrer" className={`btn btn-primary ${language === 'km' ? 'font-khmer' : ''}`} style={{marginTop: '2rem'}}>
+                              {currentContent.button}
                           </a>
                         </>
                       ) : <p>Contact info could not be loaded.</p>}
                   </div>
               </div>
-              <div className="lg:w-1/2 h-80 lg:h-auto rounded-lg shadow-sm overflow-hidden border border-gray-200">
+              <div style={{border: '1px solid var(--border-color)', borderRadius: '0.25rem', overflow: 'hidden', height: '400px'}}>
                   <iframe 
                       src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d2448517.3097365843!2d106.81625760642393!3d15.909701021967841!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310bcf0006805b1b%3A0xea9539e131d76908!2z4Z6c4Z6P4Z-S4Z6P4Z6f4Z634Z6a4Z644Z6Y4Z6E4Z-S4Z6C4Z6bIOGeoOGfheGeh-GfkuGemuGfg-Gep-Gej-GfkuGej-GemA!5e1!3m2!1skm!2skh!4v1757831086635!5m2!1skm!2skh"
                       width="100%" 
@@ -107,7 +95,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
               </div>
           </div>
         </div>
-      </motion.section>
+      </section>
     </>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Language } from '../types';
 import PageMeta from './PageMeta';
@@ -45,27 +44,26 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
         description={currentMeta.description}
         keywords={currentMeta.keywords}
       />
-      <section 
-        className="bg-gray-50 flex items-center justify-center text-center"
-      >
-        <div className="container mx-auto px-6 py-24 md:py-32">
-          <h1 className="font-khmer text-5xl md:text-7xl font-bold tracking-tight text-gray-900">
+      <section className="hero-section">
+        <div className="container">
+          <h1 className="font-khmer">
             វត្តសិរីមង្គលហៅជ្រៃឧត្តម
           </h1>
-          <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+          <p>
               {currentContent.subtitle}
           </p>
           
-          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div style={{ marginTop: '2rem' }}>
               <Link 
                 to="/feed"
-                className={`w-full sm:w-auto bg-gray-900 text-white font-semibold text-base px-6 py-3 rounded-md shadow-sm hover:bg-gray-700 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`btn btn-primary ${language === 'km' ? 'font-khmer' : ''}`}
               >
                   {currentContent.ctaExplore}
               </Link>
               <Link
                 to="/about"
-                className={`w-full sm:w-auto bg-white border border-gray-300 text-gray-800 font-semibold text-base px-6 py-3 rounded-md shadow-sm hover:bg-gray-100 transition-colors ${language === 'km' ? 'font-khmer' : ''}`}
+                className={`btn btn-secondary ${language === 'km' ? 'font-khmer' : ''}`}
+                style={{ marginLeft: '1rem' }}
               >
                   {currentContent.ctaLearn}
               </Link>
