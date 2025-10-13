@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser } from '../types';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { auth, githubProvider } from '../firebase';
 
 interface HeaderProps {
@@ -53,14 +53,19 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
   const currentLinks = language === 'km' ? navLinks.km : navLinks.en;
 
   useEffect(() => {
-    document.body.style.overflow = isMenuOpen ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    const body = document.body;
+    if (isMenuOpen) {
+      body.style.overflow = 'hidden';
+    } else {
+      body.style.overflow = 'unset';
+    }
+    return () => { body.style.overflow = 'unset'; };
   }, [isMenuOpen]);
 
   const handleLinkClick = () => setIsMenuOpen(false);
   
-  const SearchForm = ({isMobile = false}) => (
-    <form onSubmit={handleSearchSubmit}>
+  const SearchForm: React.FC<{isMobile?: boolean}> = ({ isMobile = false }) => (
+    <form onSubmit={handleSearchSubmit} style={isMobile ? { width: '100%', marginBottom: '1.5rem' } : {}}>
         <input
             type="search"
             placeholder={language === 'km' ? 'ស្វែងរក...' : 'Search...'}
@@ -86,9 +91,13 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
 
             <div className="header-links">
               {currentLinks.map(link => (
-                <Link key={link.path} to={link.path} className={language === 'km' ? 'font-khmer' : ''}>
+                <NavLink 
+                  key={link.path} 
+                  to={link.path} 
+                  className={({ isActive }) => `header-link ${isActive ? 'active' : ''} ${language === 'km' ? 'font-khmer' : ''}`}
+                >
                   {link.label}
-                </Link>
+                </NavLink>
               ))}
             </div>
 
@@ -118,6 +127,10 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
       </header>
 
       {/* Mobile Menu Overlay */}
+      <div 
+        className={`mobile-menu-overlay ${isMenuOpen ? 'open' : ''}`}
+        onClick={() => setIsMenuOpen(false)}
+      ></div>
       <div className={`mobile-menu ${isMenuOpen ? 'open' : ''}`} role="dialog" aria-modal="true">
         <button onClick={() => setIsMenuOpen(false)} className="mobile-close-button" aria-label="Close menu">
           &times;
@@ -125,26 +138,31 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
         
         <SearchForm isMobile />
 
-        {currentLinks.map(link => (
-          <Link
-            key={link.path}
-            to={link.path}
-            onClick={handleLinkClick}
-            className={language === 'km' ? 'font-khmer' : ''}
-          >
-            {link.label}
-          </Link>
-        ))}
+        <div style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%'}}>
+          {currentLinks.map(link => (
+            <NavLink
+              key={link.path}
+              to={link.path}
+              onClick={handleLinkClick}
+              className={({ isActive }) => `header-link ${isActive ? 'active' : ''} ${language === 'km' ? 'font-khmer' : ''}`}
+            >
+              {link.label}
+            </NavLink>
+          ))}
+        </div>
 
-        <button onClick={toggleLanguage} className="btn btn-secondary">
-          {language === 'km' ? 'Switch to English' : 'ប្តូរទៅជាភាសាខ្មែរ'}
-        </button>
+        <div style={{ marginTop: 'auto', width: '100%' }}>
+          <button onClick={toggleLanguage} className="btn btn-secondary">
+            {language === 'km' ? 'Switch to English' : 'ប្តូរទៅជាភាសាខ្មែរ'}
+          </button>
 
-        {user ? (
-          <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
-        ) : (
-          <button onClick={handleLogin} className="btn btn-primary">Login with GitHub</button>
-        )}
+          {user ? (
+            <button onClick={handleLogout} className="btn btn-secondary">Logout</button>
+          ) : (
+            <button onClick={handleLogin} className="btn btn-primary">Login with GitHub</button>
+          )}
+        </div>
+
       </div>
     </>
   );

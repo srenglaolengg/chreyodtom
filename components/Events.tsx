@@ -59,7 +59,7 @@ const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
               keywords={currentMeta.keywords}
           />
       )}
-      <section id="events" style={{ backgroundColor: 'var(--surface-color)' }}>
+      <section id="events">
         <div className="container">
           <div className="text-center" style={{ marginBottom: '3rem' }}>
             <h2 className={language === 'km' ? 'font-khmer' : ''}>
@@ -76,7 +76,9 @@ const Events: React.FC<EventsProps> = ({ language, isHomePage = false }) => {
             ) : (
               events.map((event) => (
                 <div key={event.id} className="card">
-                    <img src={event.imgSrc} alt={language === 'km' ? event.title_km : event.title_en} className="card-image"/>
+                    <div className="card-image-wrapper">
+                      <img src={event.imgSrc} alt={language === 'km' ? event.title_km : event.title_en} className="card-image"/>
+                    </div>
                     <div className="card-content">
                       <p className={language === 'km' ? 'font-khmer' : ''} style={{ fontSize: '0.9rem', color: 'var(--text-muted)'}}>{language === 'km' ? event.date_km : event.date_en}</p>
                       <h3 className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? event.title_km : event.title_en}</h3>

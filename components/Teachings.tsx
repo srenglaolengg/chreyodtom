@@ -57,7 +57,7 @@ const Teachings: React.FC<TeachingsProps> = ({ language, isHomePage = false }) =
                     keywords={currentMeta.keywords}
                 />
             )}
-            <section id="teachings">
+            <section id="teachings" style={{ backgroundColor: 'var(--surface-color)' }}>
                 <div className="container">
                     <div className="text-center" style={{ marginBottom: '3rem' }}>
                         <h2 className={language === 'km' ? 'font-khmer' : ''}>
@@ -71,7 +71,9 @@ const Teachings: React.FC<TeachingsProps> = ({ language, isHomePage = false }) =
                         ) : (
                           teachings.map((item) => (
                             <div key={item.id} className="card">
-                                <img src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} className="card-image"/>
+                                <div className="card-image-wrapper">
+                                  <img src={item.thumbnailUrl} alt={language === 'km' ? item.title_km : item.title_en} className="card-image"/>
+                                </div>
                                 <div className="card-content">
                                   <h3 className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? item.title_km : item.title_en}</h3>
                                   <p className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? item.excerpt_km : item.excerpt_en}</p>

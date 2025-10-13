@@ -76,7 +76,9 @@ const Gallery: React.FC<GalleryProps> = ({ language, isHomePage = false }) => {
             ) : (
               albums.map((album) => (
                 <div key={album.id} className="card">
-                    <img src={album.thumbnailUrl} alt={language === 'km' ? album.title_km : album.title_en} className="card-image" />
+                    <div className="card-image-wrapper">
+                      <img src={album.thumbnailUrl} alt={language === 'km' ? album.title_km : album.title_en} className="card-image" />
+                    </div>
                     <div className="card-content">
                       <h3 className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? album.title_km : album.title_en}</h3>
                       <p className={language === 'km' ? 'font-khmer' : ''}>{language === 'km' ? album.description_km : album.description_en}</p>

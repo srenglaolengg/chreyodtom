@@ -1,6 +1,8 @@
 import React from "react";
 import { Language } from "../types";
 import { Link } from "react-router-dom";
+import { FacebookIcon } from "./icons/FacebookIcon";
+import { TelegramIcon } from "./icons/TelegramIcon";
 
 interface FooterProps {
   language: Language;
@@ -15,6 +17,7 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
       about: "A beacon of spiritual heritage and tranquility, serving as a center for Buddhist teachings and cultural preservation.",
       quickLinks: "Quick Links",
       contactUs: "Contact Us",
+      followUs: "Follow Us",
       address: "Chray Ut Dom village, Krang Tayong commune, Peam Chor district, Prey Veng province, Cambodia",
       phone: "+85512345678",
       email: "contact@watsereimongkol.org",
@@ -25,6 +28,7 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
       about: "ជាប្រទីបនៃបេតិកភណ្ឌខាងវិញ្ញាណ និងភាពស្ងប់ស្ងាត់ បម្រើជាមជ្ឈមណ្ឌលអប់រំព្រះពុទ្ធសាសនា និងការអភិរក្សវប្បធម៌។",
       quickLinks: "តំណររហ័ស",
       contactUs: "ទំនាក់ទំនង",
+      followUs: "តាមដានយើង",
       address: "ភូមិជ្រៃឧត្តម ឃុំក្រាំងតាយ៉ង ស្រុកពាមជរ ខេត្តព្រៃវែង",
       phone: "+៨៥៥១២៣៤៥៦៧៨",
       email: "contact@watsereimongkol.org",
@@ -91,6 +95,18 @@ const Footer: React.FC<FooterProps> = ({ language }) => {
               </li>
             </ul>
           </address>
+
+          <section>
+            <h3 className={language === "km" ? "font-khmer" : ""}>{currentContent.followUs}</h3>
+            <div className="social-links">
+                <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                    <FacebookIcon className="social-icon" />
+                </a>
+                <a href="https://telegram.org" target="_blank" rel="noopener noreferrer" aria-label="Telegram">
+                    <TelegramIcon className="social-icon" />
+                </a>
+            </div>
+          </section>
         </div>
 
         <div className="footer-copyright">

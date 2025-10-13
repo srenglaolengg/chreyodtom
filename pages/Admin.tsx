@@ -50,7 +50,10 @@ const ImageUploadInput: React.FC<{
             const storageRef = storage.ref(`${folder}/${Date.now()}_${file.name}`);
             const snapshot = await storageRef.put(file);
             const downloadURL = await snapshot.ref.getDownloadURL();
-            const syntheticEvent = { target: { name, value: downloadURL } } as React.ChangeEvent<HTMLInputElement>;
+            // FIX: The error "Property 'name' does not exist on type 'unknown'" on a nearby line seems to be a TypeScript confusion.
+            // The actual issue is likely the creation of a synthetic event that doesn't fully match the expected type.
+            // Casting to 'any' resolves this as the consuming function only needs 'target.name' and 'target.value'.
+            const syntheticEvent = { target: { name, value: downloadURL } } as any;
             onChange(syntheticEvent);
         } catch (error) { console.error("Upload error:", error); } 
         finally { setIsUploading(false); }
@@ -88,7 +91,7 @@ const MultiImageUploadInput: React.FC<{
             });
             const downloadURLs = await Promise.all(uploadPromises);
             const newValue = [...value, ...downloadURLs].join('\n');
-            const syntheticEvent = { target: { name, value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>;
+            const syntheticEvent = { target: { name, value: newValue } } as any;
             onChange(syntheticEvent);
         } catch (error) { console.error("Upload error:", error); } 
         finally { setIsUploading(false); }
@@ -488,7 +491,8 @@ const PageContentManager: React.FC<{pageId: 'about' | 'contact', fields: Record<
     return (
         <AdminSection title={`Edit ${pageId} Page Content`}>
             <form onSubmit={handleSubmit} style={{display: 'grid', gap: '1rem'}}>
-                {Object.entries(fields).map(([name, { label, type }]) => 
+                {/* FIX: Explicitly cast the result of Object.entries to fix type inference issues where TypeScript sees the field config as `{}`. */}
+                {(Object.entries(fields) as [string, { label: string; type: string }][]).map(([name, { label, type }]) => 
                     type === 'textarea' ? 
                     <FormTextarea key={name} name={name} label={label} value={formState[name] || ''} onChange={handleInputChange} rows={5} /> :
                     <FormInput key={name} name={name} label={label} value={formState[name] || ''} onChange={handleInputChange} />

@@ -25,12 +25,12 @@ const Hero: React.FC<HeroProps> = ({ language }) => {
   
   const content = {
     en: {
-      subtitle: 'Chray Ut Dom village, Krang Tayong commune, Peam Chor district, Prey Veng province',
+      subtitle: 'A sanctuary of peace and spiritual heritage in Prey Veng, Cambodia.',
       ctaExplore: 'Explore Feed',
       ctaLearn: 'Learn More'
     },
     km: {
-      subtitle: 'ភូមិជ្រៃឧត្តម ឃុំក្រាំងតាយ៉ង ស្រុកពាមជរ ខេត្តព្រៃវែង',
+      subtitle: 'ដែនជម្រកនៃសន្តិភាព និងបេតិកភណ្ឌខាងវិញ្ញាណនៅខេត្តព្រៃវែង។',
       ctaExplore: 'ព័ត៌មាន',
       ctaLearn: 'អំពីវត្ត'
     }
