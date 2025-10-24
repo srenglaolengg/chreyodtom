@@ -1,5 +1,5 @@
 {
-  "name": "wat-serei-mongkol-hou-chray-ut-dom",
+  "name": "base-react-application",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -9,16 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-markdown": "9.0.1",
-    "remark-gfm": "4.0.0",
-    "remark-breaks": "4.0.0",
-    "firebase": "^12.2.1",
-    "react-router-dom": "^7.9.1",
-    "lucide-react": "^0.544.0",
-    "framer-motion": "^12.23.12",
-    "@google/genai": "^1.19.0"
+    "react": "^19.2.0",
+    "@google/genai": "^1.19.0",
+    "firebase": "^12.4.0",
+    "react-router-dom": "^7.9.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "react-dom": "^19.2.0",
+    "framer-motion": "^12.23.24",
+    "remark-breaks": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
 import { auth, db, githubProvider, storage } from '../firebase';
-import { useLocation, useNavigate } from 'react-router-dom';
+// FIX: Replaced useNavigate with useHistory for react-router-dom v5 compatibility.
+import { useLocation, useHistory } from 'react-router-dom';
 import firebase from 'firebase/compat/app';
 import PageMeta from '../components/PageMeta';
 
@@ -111,15 +112,18 @@ const MultiImageUploadInput: React.FC<{
 const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [view, setView] = useState<ViewType>('feed');
     const location = useLocation();
-    const navigate = useNavigate();
+    // FIX: Use useHistory hook instead of useNavigate.
+    const history = useHistory();
 
     useEffect(() => {
         const postToEditFromState = (location.state as any)?.postToEdit as Post | undefined;
         if (postToEditFromState) {
             setView('feed');
-            navigate(location.pathname, { replace: true });
+            // FIX: Use history.replace to change URL without adding to history. This clears the state.
+            history.replace(location.pathname);
         }
-    }, [location, navigate]);
+    // FIX: Update dependency array.
+    }, [location, history]);
     
     const handleLogin = async () => await auth.signInWithPopup(githubProvider);
     const handleLogout = async () => await auth.signOut();

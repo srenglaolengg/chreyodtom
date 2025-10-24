@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Language, FirebaseUser } from '../types';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+// FIX: Replaced useNavigate with useHistory for react-router-dom v5 compatibility.
+import { Link, NavLink, useHistory } from 'react-router-dom';
 import { auth, githubProvider } from '../firebase';
 
 interface HeaderProps {
@@ -13,7 +14,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const navigate = useNavigate();
+  // FIX: Use useHistory hook instead of useNavigate.
+  const history = useHistory();
 
   const handleLogin = async () => await auth.signInWithPopup(githubProvider).catch(console.error);
   const handleLogout = async () => await auth.signOut().catch(console.error);
@@ -21,7 +23,8 @@ const Header: React.FC<HeaderProps> = ({ language, toggleLanguage, user, isAdmin
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      // FIX: Use history.push for navigation.
+      history.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
       if (isMenuOpen) setIsMenuOpen(false);
     }
