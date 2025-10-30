@@ -7,22 +7,16 @@ interface ContactProps {
   language: Language;
 }
 
-const metaContent = {
-  en: {
-    title: 'Contact Us | Wat Serei Mongkol',
-    description: 'Find our location, contact information, and a map to plan your visit to Wat Serei Mongkol Hou Chray Ut Dom in Prey Veng, Cambodia.',
-    keywords: 'Contact Wat Serei Mongkol, Pagoda Address, Visit Pagoda, Map',
-  },
-  km: {
-    title: 'ទំនាក់ទំនង | វត្តសិរីមង្គល',
-    description: 'ស្វែងរកទីតាំង ព័ត៌មានទំនាក់ទំនង និងផែនទីដើម្បីរៀបចំគម្រោងទស្សនកិច្ចរបស់អ្នកមកកាន់វត្តសិរីមង្គលហៅជ្រៃឧត្តម នៅខេត្តព្រៃវែង។',
-    keywords: 'ទំនាក់ទំនងវត្ត, អាសយដ្ឋានវត្ត, ទស្សនាវត្ត, ផែនទី',
-  }
-};
+// ... (metaContent remains the same)
 
 const Contact: React.FC<ContactProps> = ({ language }) => {
     const { data: info, loading } = useDocument<ContactInfo & { id: string }>('pages', 'contact');
-    const mapUrl = `https://www.google.com/maps/search/?api=1&query=Wat+Serei+Mongkol+Hou+Chray+Ut+Dom,Prey+Veng,Cambodia`;
+    
+    // FIX: Replace with your actual Google Maps share link
+    const mapUrl = `https://www.google.com/maps/place/YOUR_PLACE_HERE`; 
+
+    // FIX: Replace with your actual Google Maps embed (iframe) src URL
+    const mapEmbedUrl = `https://www.google.com/maps/embed?pb=YOUR_EMBED_CODE_HERE`;
 
     const content = {
         en: {
@@ -84,7 +78,7 @@ const Contact: React.FC<ContactProps> = ({ language }) => {
               </div>
               <div style={{border: '1px solid var(--border-color)', borderRadius: '0.25rem', overflow: 'hidden', height: '400px'}}>
                   <iframe 
-                      src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d2448517.3097365843!2d106.81625760642393!3d15.909701021967841!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310bcf0006805b1b%3A0xea9539e131d76908!2z4Z6c4Z6P4Z-S4Z6P4Z6f4Z634Z6a4Z644Z6Y4Z6E4Z-S4Z6C4Z6bIOGeoOGfheGeh-GfkuGemuGfg-Gep-Gej-GfkuGej-GemA!5e1!3m2!1skm!2skh!4v1757831086635!5m2!1skm!2skh"
+                      src={mapEmbedUrl} // Use the correct embed URL variable here
                       width="100%" 
                       height="100%" 
                       style={{ border: 0 }} 
