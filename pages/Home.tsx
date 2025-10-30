@@ -1,6 +1,7 @@
 import React from 'react';
 import { Language } from '../types';
-import { motion } from 'framer-motion';
+// FIX: Import Variants type from framer-motion to correctly type animation variants.
+import { motion, Variants } from 'framer-motion';
 
 import Hero from '../components/Hero';
 import About from '../components/About';
@@ -13,7 +14,8 @@ interface HomeProps {
     language: Language;
 }
 
-const sectionVariants = {
+// FIX: Explicitly type `sectionVariants` with `Variants` from framer-motion to fix type error with `ease` property.
+const sectionVariants: Variants = {
   hidden: { opacity: 0, y: 50 },
   visible: { 
     opacity: 1, 

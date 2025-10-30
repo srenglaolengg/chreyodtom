@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Replaced useSearchParams with useLocation for react-router-dom v5 compatibility.
-import { useLocation, Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { Language, Post, Event, Teaching, GalleryAlbum } from '../types';
 import { useCollection } from '../hooks/useCollection';
 import PageMeta from '../components/PageMeta';
@@ -19,9 +18,8 @@ type SearchResult = {
 };
 
 const Search: React.FC<SearchProps> = ({ language }) => {
-    // FIX: Use useLocation and URLSearchParams to get search query for v5 compatibility.
-    const { search } = useLocation();
-    const query = new URLSearchParams(search).get('q') || '';
+    const [searchParams] = useSearchParams();
+    const query = searchParams.get('q') || '';
     const [results, setResults] = useState<SearchResult[]>([]);
 
     const { data: posts, loading: loadingPosts } = useCollection<Post>('posts');

@@ -1,8 +1,7 @@
 import React, { useState, useEffect, FormEvent } from 'react';
 import { FirebaseUser, Post, Comment as CommentType, GalleryAlbum, Event as EventType, Teaching, AboutContent, ContactInfo } from '../types';
 import { auth, db, githubProvider, storage } from '../firebase';
-// FIX: Replaced useNavigate with useHistory for react-router-dom v5 compatibility.
-import { useLocation, useHistory } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import firebase from 'firebase/compat/app';
 import PageMeta from '../components/PageMeta';
 
@@ -51,9 +50,6 @@ const ImageUploadInput: React.FC<{
             const storageRef = storage.ref(`${folder}/${Date.now()}_${file.name}`);
             const snapshot = await storageRef.put(file);
             const downloadURL = await snapshot.ref.getDownloadURL();
-            // FIX: The error "Property 'name' does not exist on type 'unknown'" on a nearby line seems to be a TypeScript confusion.
-            // The actual issue is likely the creation of a synthetic event that doesn't fully match the expected type.
-            // Casting to 'any' resolves this as the consuming function only needs 'target.name' and 'target.value'.
             const syntheticEvent = { target: { name, value: downloadURL } } as any;
             onChange(syntheticEvent);
         } catch (error) { console.error("Upload error:", error); } 
@@ -112,18 +108,16 @@ const MultiImageUploadInput: React.FC<{
 const Admin: React.FC<AdminProps> = ({ user, isAdmin, authLoading }) => {
     const [view, setView] = useState<ViewType>('feed');
     const location = useLocation();
-    // FIX: Use useHistory hook instead of useNavigate.
-    const history = useHistory();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const postToEditFromState = (location.state as any)?.postToEdit as Post | undefined;
         if (postToEditFromState) {
             setView('feed');
-            // FIX: Use history.replace to change URL without adding to history. This clears the state.
-            history.replace(location.pathname);
+            // Clear location state by replacing the current entry in the history stack.
+            navigate(location.pathname, { replace: true, state: {} });
         }
-    // FIX: Update dependency array.
-    }, [location, history]);
+    }, [location.state, location.pathname, navigate]);
     
     const handleLogin = async () => await auth.signInWithPopup(githubProvider);
     const handleLogout = async () => await auth.signOut();
@@ -495,7 +489,6 @@ const PageContentManager: React.FC<{pageId: 'about' | 'contact', fields: Record<
     return (
         <AdminSection title={`Edit ${pageId} Page Content`}>
             <form onSubmit={handleSubmit} style={{display: 'grid', gap: '1rem'}}>
-                {/* FIX: Explicitly cast the result of Object.entries to fix type inference issues where TypeScript sees the field config as `{}`. */}
                 {(Object.entries(fields) as [string, { label: string; type: string }][]).map(([name, { label, type }]) => 
                     type === 'textarea' ? 
                     <FormTextarea key={name} name={name} label={label} value={formState[name] || ''} onChange={handleInputChange} rows={5} /> :
