@@ -7,7 +7,19 @@ interface ContactProps {
   language: Language;
 }
 
-// ... (metaContent remains the same)
+// FIX: Defined the missing metaContent constant.
+const metaContent = {
+  en: {
+    title: 'Contact Us | Wat Serei Mongkol',
+    description: 'Get in touch with Wat Serei Mongkol. Find our address, phone number, email, and location on Google Maps.',
+    keywords: 'Contact Wat Serei Mongkol, Pagoda Address, Phone Number, Email, Map',
+  },
+  km: {
+    title: 'ទំនាក់ទំនង | វត្តសិរីមង្គល',
+    description: 'ទាក់ទងមកកាន់វត្តសិរីមង្គល។ ស្វែងរកអាសយដ្ឋាន លេខទូរស័ព្ទ អ៊ីមែល និងទីតាំងនៅលើផែនទី Google។',
+    keywords: 'ទំនាក់ទំនងវត្តសិរីមង្គល, អាសយដ្ឋានវត្ត, លេខទូរស័ព្ទ, អ៊ីមែល, ផែនទី',
+  }
+};
 
 const Contact: React.FC<ContactProps> = ({ language }) => {
     const { data: info, loading } = useDocument<ContactInfo & { id: string }>('pages', 'contact');
